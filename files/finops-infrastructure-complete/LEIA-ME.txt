@@ -1,0 +1,173 @@
+# FinOps Insight Engine - Pacote Completo de Infraestrutura
+
+## 📦 CONTEÚDO DESTE PACOTE (19 arquivos)
+
+```
+finops-infrastructure-complete.zip
+│
+├── 📄 COMECE_AQUI.md ⭐ LEIA PRIMEIRO!
+│   └── Resumo executivo, FAQ, próximos passos
+│
+├── 📄 finops_hybrid_architecture.md
+│   └── Arquitetura completa do sistema
+│
+├── 📁 database/ (1 arquivo)
+│   └── schema.sql (890 linhas)
+│       └── Schema SQL completo com 23 tabelas, 4 views, 3 stored procedures
+│
+└── 📁 bicep/ (14 arquivos)
+    │
+    ├── 📄 README.md ⭐ DOCUMENTAÇÃO TÉCNICA COMPLETA
+    │   └── Guia de deployment de 250+ linhas
+    │
+    ├── 📄 main.bicep
+    │   └── Template principal de infraestrutura
+    │
+    ├── 📄 parameters.dev.json ⚙️ CONFIGURE AQUI!
+    │   └── Parâmetros de deployment (EDITE ANTES DE USAR!)
+    │
+    ├── 📄 deploy.ps1 🚀 EXECUTE ESTE SCRIPT
+    │   └── Script PowerShell de deployment automatizado
+    │
+    └── 📁 modules/ (11 arquivos)
+        ├── sql.bicep
+        ├── storage.bicep
+        ├── keyvault.bicep
+        ├── servicebus.bicep
+        ├── container-registry.bicep
+        ├── managed-identity.bicep
+        ├── monitoring.bicep
+        ├── container-app-environment.bicep
+        ├── container-app-api.bicep
+        ├── container-app-worker.bicep
+        └── database-init-job.bicep
+```
+
+---
+
+## 🚀 INÍCIO RÁPIDO (3 passos)
+
+### 1️⃣ Extrair o ZIP
+```bash
+unzip finops-infrastructure-complete.zip
+cd bicep
+```
+
+### 2️⃣ Editar configuração
+```bash
+# Abrir: bicep/parameters.dev.json
+# Alterar:
+#   - customerPrefix: "seu-nome" (3-10 caracteres)
+#   - contactEmail: "seu@email.com"
+#   - sqlAdminPassword: "SenhaForte123!@#"
+```
+
+### 3️⃣ Executar deployment
+```powershell
+# No diretório bicep/
+az login
+az account set --subscription "SUA_SUBSCRIPTION_ID"
+./deploy.ps1 -SubscriptionId "SUA_SUBSCRIPTION_ID"
+```
+
+---
+
+## 📚 DOCUMENTAÇÃO
+
+| Arquivo | Quando Ler |
+|---------|-----------|
+| **COMECE_AQUI.md** | Agora! Resumo de tudo |
+| **bicep/README.md** | Antes de fazer deploy |
+| **finops_hybrid_architecture.md** | Para entender a arquitetura |
+
+---
+
+## 🎯 O QUE SERÁ CRIADO
+
+Após executar `deploy.ps1`, você terá no Azure:
+
+- ✅ SQL Server + Database (2GB, 23 tabelas)
+- ✅ 2x Container Apps (API + Worker)
+- ✅ Storage Account (reports, exports, backups)
+- ✅ Service Bus (filas de análise)
+- ✅ Container Registry (imagens Docker)
+- ✅ Key Vault (secrets)
+- ✅ Managed Identity (permissões)
+- ✅ Log Analytics + App Insights
+
+**Custo:** ~$68-143/mês (ambiente dev)
+
+---
+
+## ⚙️ ARQUIVOS QUE VOCÊ PRECISA EDITAR
+
+### ✏️ bicep/parameters.dev.json
+
+**OBRIGATÓRIO:** Edite antes de fazer deploy!
+
+```json
+{
+  "customerPrefix": {
+    "value": "MUDE_AQUI"  // 3-10 caracteres, sem espaços
+  },
+  "contactEmail": {
+    "value": "MUDE_AQUI"  // Seu email
+  },
+  "sqlAdminPassword": {
+    "value": "MUDE_AQUI"  // Senha FORTE!
+  }
+}
+```
+
+---
+
+## 🗄️ APÓS O DEPLOYMENT: Inicializar Database
+
+```powershell
+# Opção 1: Azure Portal
+# SQL Server → Query Editor → Execute: database/schema.sql
+
+# Opção 2: Azure CLI
+az sql db query \
+  --server sql-finops-teste-xyz123 \
+  --database finopsdb \
+  --admin-user finopsadmin \
+  --admin-password "SuaSenha" \
+  --input ../database/schema.sql
+```
+
+---
+
+## ✅ CHECKLIST
+
+- [ ] ZIP extraído
+- [ ] `parameters.dev.json` editado
+- [ ] Azure CLI instalado
+- [ ] PowerShell 7+ instalado
+- [ ] Logged in no Azure
+- [ ] Subscription correta selecionada
+- [ ] Deploy executado com sucesso
+- [ ] Database schema inicializado
+- [ ] Recursos verificados no Azure Portal
+
+---
+
+## 🆘 PROBLEMAS?
+
+1. **Leia:** `bicep/README.md` → seção Troubleshooting
+2. **Teste primeiro:** Execute com `-WhatIf` para simular
+3. **Verifique:** Mensagens de erro no console
+
+---
+
+## 📞 PRÓXIMOS PASSOS
+
+Depois do deployment bem-sucedido:
+
+1. ✅ Infraestrutura rodando
+2. ⏳ **FASE 2:** Código da aplicação (API + Worker)
+3. ⏳ **FASE 3:** Build containers e primeiro teste
+
+---
+
+**BOA SORTE! 🚀**

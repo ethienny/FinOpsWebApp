@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "brazilsouth"
+    },
+    "customerPrefix": {
+      "value": "teste"
+    },
+    "licenseKey": {
+      "value": "FINOPS-PROF-TESTE-ABC12345"
+    },
+    "customerName": {
+      "value": "Test Customer"
+    },
+    "contactEmail": {
+      "value": "your-email@example.com"
+    },
+    "sqlAdminUsername": {
+      "value": "finopsadmin"
+    },
+    "sqlAdminPassword": {
+      "value": "CHANGE_ME_Strong_P@ssw0rd_123!"
+    },
+    "tags": {
+      "value": {
+        "Environment": "dev",
+        "ManagedBy": "FinOpsInsightEngine",
+        "Version": "1.0",
+        "Owner": "YourName",
+        "CostCenter": "IT"
+      }
+    }
+  }
+}
