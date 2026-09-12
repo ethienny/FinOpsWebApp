@@ -20,6 +20,10 @@ FinOpsRepository contract
 
 Official executive numbers always come from `vw_finops_latest_complete_run.csv`. Multi-run recommendation history lives in `azure_finops_multiservice_recommendation.csv` and is used only for cross-run trends.
 
+Each CSV is parsed on first use and cached for the process, so a page only pays for the datasets it reads. Client tables receive `ResourceSummary`, a projection with the rendered columns only, never the full recommendation row.
+
+Loading skeletons live in each route folder instead of the app root. A root `loading.tsx` would wrap `/resources/[resourceId]` in a streaming boundary and force a 200 response on resources that do not exist, so `/` and `/resources` keep their skeletons inside route groups.
+
 ## Folder structure
 
 ```

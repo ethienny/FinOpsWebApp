@@ -276,6 +276,32 @@ export interface DualNamedValue {
   savings: number;
 }
 
+/**
+ * Projection of FinOpsRecommendation carrying only the fields the resource,
+ * opportunity and executive tables render. Keeps the payload sent to client
+ * tables small instead of shipping every CSV column.
+ */
+export interface ResourceSummary {
+  ResourceId: string;
+  ResourceName: string;
+  ResourceGroup: string;
+  ServiceType: string;
+  TenantName: string;
+  SubscriptionName: string;
+  Location: string;
+  MonthlyCost: number | null;
+  CostCurrency: string;
+  ActionLabel: string;
+  ActionSummary: string;
+  Priority: string;
+  Confidence: string;
+  SavingsReliability: string;
+  EstimatedMonthlySavings: number | null;
+  MetricCollectionStatus: string;
+  TagOwner: string;
+  TagEnvironment: string;
+}
+
 export interface ExecutiveData {
   currency: string;
   publishedRun: FinOpsRun | null;
@@ -290,7 +316,7 @@ export interface ExecutiveData {
   reliabilityDistribution: NamedValue[];
   priorityDistribution: NamedValue[];
   costVsSavingsByService: DualNamedValue[];
-  topResources: FinOpsRecommendation[];
+  topResources: ResourceSummary[];
 }
 
 export interface ShowbackRow {
@@ -324,7 +350,7 @@ export interface OpportunitiesData {
   validatedSavings: number;
   estimatedOpportunity: number;
   averageSavingsPerActionable: number;
-  rows: FinOpsRecommendation[];
+  rows: ResourceSummary[];
 }
 
 export interface SizingRow extends TargetOption {
@@ -353,7 +379,7 @@ export interface ResourcesData {
   resourcesWithRecommendations: number;
   monthlyCost: number;
   serviceTypesAnalyzed: number;
-  rows: FinOpsRecommendation[];
+  rows: ResourceSummary[];
 }
 
 export interface ResourceDetailData {

@@ -9,6 +9,7 @@ import type {
   OpportunitiesData,
   ResourceDetailData,
   ResourcesData,
+  ResourceSummary,
   RunHistoryData,
   ShowbackData,
   ShowbackRow,
@@ -38,6 +39,29 @@ function currency(rows: FinOpsRecommendation[]): string {
 
 function serviceName(row: { ServiceType?: string; ResourceType?: string }): string {
   return row.ServiceType || friendlyService(row.ResourceType || "Unknown");
+}
+
+function toSummary(row: FinOpsRecommendation): ResourceSummary {
+  return {
+    ResourceId: row.ResourceId,
+    ResourceName: row.ResourceName,
+    ResourceGroup: row.ResourceGroup,
+    ServiceType: row.ServiceType,
+    TenantName: row.TenantName,
+    SubscriptionName: row.SubscriptionName,
+    Location: row.Location,
+    MonthlyCost: row.MonthlyCost,
+    CostCurrency: row.CostCurrency,
+    ActionLabel: row.ActionLabel,
+    ActionSummary: row.ActionSummary,
+    Priority: row.Priority,
+    Confidence: row.Confidence,
+    SavingsReliability: row.SavingsReliability,
+    EstimatedMonthlySavings: row.EstimatedMonthlySavings,
+    MetricCollectionStatus: row.MetricCollectionStatus,
+    TagOwner: row.TagOwner,
+    TagEnvironment: row.TagEnvironment,
+  };
 }
 
 function riskScore(risk: string): number {
@@ -88,7 +112,8 @@ export class CsvFinOpsRepository implements FinOpsRepository {
     const heuristic = rows.filter((r) => r.SavingsReliability === "HEURISTIC");
     const topResources = [...priced]
       .sort((a, b) => (b.EstimatedMonthlySavings ?? 0) - (a.EstimatedMonthlySavings ?? 0))
-      .slice(0, 10);
+      .slice(0, 10)
+      .map(toSummary);
 
     const costByService = groupSum(rows, (r) => serviceName(r), (r) => r.MonthlyCost, 8);
     const savingsByService = groupSum(priced, (r) => serviceName(r), (r) => r.EstimatedMonthlySavings, 8);
@@ -174,7 +199,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       validatedSavings: sum(priced.map((r) => r.EstimatedMonthlySavings)),
       estimatedOpportunity: sum(heuristic.map((r) => r.EstimatedMonthlySavings)),
       averageSavingsPerActionable: actionable.length ? actionableSavings / actionable.length : 0,
-      rows,
+      rows: rows.map(toSummary),
     };
   }
 
@@ -234,7 +259,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       resourcesWithRecommendations: rows.filter((r) => Boolean(r.ActionLabel) && r.IsActionable).length,
       monthlyCost: sum(rows.map((r) => r.MonthlyCost)),
       serviceTypesAnalyzed: uniqueSorted(rows.map((r) => r.ServiceType)).length,
-      rows,
+      rows: rows.map(toSummary),
     };
   }
 

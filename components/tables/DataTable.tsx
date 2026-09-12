@@ -1,5 +1,10 @@
 "use client";
 
+// Generic client table used by every page. It receives plain rows and column
+// descriptors, then handles search, per column filters, sorting and pagination
+// in the browser. Heavy work is memoized, so callers should pass stable
+// column and searchKey references.
+
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/kpi/States";
 import { cn } from "@/lib/cn";
@@ -19,18 +24,35 @@ export function DataTable<T extends object>({
   searchKeys,
   pageSize = 12,
   onRowClick,
+  rowKey,
 }: {
   rows: T[];
   columns: Column<T>[];
   searchKeys?: Array<keyof T>;
   pageSize?: number;
   onRowClick?: (row: T) => void;
+  rowKey?: (row: T) => string;
 }) {
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [dir, setDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(0);
   const [colFilters, setColFilters] = useState<Record<string, string>>({});
+
+  /** Distinct values offered by each filterable column. */
+  const filterValues = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const col of columns) {
+      if (!col.filterable) continue;
+      const values = new Set<string>();
+      for (const row of rows) {
+        const value = String((row as Record<string, unknown>)[col.key] ?? "");
+        if (value) values.add(value);
+      }
+      map[col.key] = [...values].sort();
+    }
+    return map;
+  }, [rows, columns]);
 
   const filtered = useMemo(() => {
     let next = rows;
@@ -69,6 +91,7 @@ export function DataTable<T extends object>({
       setSortKey(key);
       setDir("desc");
     }
+    setPage(0);
   }
 
   if (!rows.length) return <EmptyState title="No rows in the current scope." />;
@@ -107,13 +130,11 @@ export function DataTable<T extends object>({
                       }}
                     >
                       <option value="">All</option>
-                      {[...new Set(rows.map((r) => String((r as Record<string, unknown>)[col.key] ?? "")).filter(Boolean))]
-                        .sort()
-                        .map((v) => (
-                          <option key={v} value={v}>
-                            {v}
-                          </option>
-                        ))}
+                      {(filterValues[col.key] ?? []).map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
                     </select>
                   ) : null}
                 </th>
@@ -123,7 +144,7 @@ export function DataTable<T extends object>({
           <tbody>
             {slice.map((row, i) => (
               <tr
-                key={i}
+                key={rowKey ? rowKey(row) : i}
                 onClick={() => onRowClick?.(row)}
                 className={cn(onRowClick && "cursor-pointer")}
               >
