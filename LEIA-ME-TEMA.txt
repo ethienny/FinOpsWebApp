@@ -1,0 +1,35 @@
+NOVA VERSAO — AURORA FINOPS
+
+Tema inspirado nas referencias: azul profundo, ciano, orbitas luminosas,
+paineis com gradientes, novas hierarquias de texto e tabelas mais espacadas.
+Aplicado a Executive, Showback, Opportunities, Sizing, Resources,
+Resource Detail, Engine Health, Run History, loading e not-found.
+
+INSTALACAO RECOMENDADA
+Use finops-aurora-atualizacao.zip sobre seu projeto atual. Extraia na raiz
+Produto_FinOps_Insight_Engine, nunca dentro de app/resources.
+Esse pacote contem somente arquivos de interface, as tabelas corrigidas e
+a correcao do layout de Resources. Nao substitui CSVs, repositorios, .env
+ou package-lock.json. Faca uma copia do projeto antes de substituir arquivos.
+Reinicie npm run dev e atualize a pagina.
+
+O pacote finops-aurora-completo.zip e uma versao completa baseada no ZIP
+original enviado nesta conversa. Contem os dados daquela versao, que podem
+ser diferentes dos seus dados atuais. Use em uma pasta separada para avaliar.
+Nao inclui node_modules, .next ou package-lock.json (nao recebido originalmente).
+Execute npm install para instalar dependencias na copia separada.
+
+MUDANCAS
+- Navegacao lateral fixa no desktop; menu com fechamento ao navegar no celular.
+- Cabecalhos com ilustracao CSS original e titulos especificos para cada pagina.
+- Filtros agrupados em painel de escopo.
+- Indicadores, graficos e tabelas com estilo consistente.
+- Detalhe do recurso preserva recomendacao, metricas e evidencias.
+- Foco visivel por teclado, link para pular ao conteudo e adaptacao para celular.
+- Sem alteracao de calculos e regras de negocio nesta revisao visual.
+- Consultas continuam no servidor.
+
+VALIDACAO
+TypeScript: passou.
+Consulte a resposta da entrega para o resultado final de lint e compilacao CSS.
+Nao foi realizada validacao visual no navegador ou build de producao.
