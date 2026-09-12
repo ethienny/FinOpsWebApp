@@ -10,19 +10,19 @@ export function HoloEmblem({ className }: { className?: string }) {
           position: "absolute",
           inset: -16,
           borderRadius: "9999px",
-          background: "radial-gradient(circle, rgba(46,230,214,0.55), transparent 68%)",
+          background: "radial-gradient(circle, rgba(56,214,255,0.55), transparent 68%)",
           filter: "blur(14px)",
         }}
       />
 
       {/* spokes */}
-      <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(46,230,214,0.35), transparent)", transformOrigin: "0 50%", transform: "rotate(-45deg)" }} />
+      <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(56,214,255,0.35), transparent)", transformOrigin: "0 50%", transform: "rotate(-45deg)" }} />
       <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(59,130,246,0.45), transparent)", transformOrigin: "0 50%", transform: "rotate(45deg)" }} />
-      <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(46,230,214,0.35), transparent)", transformOrigin: "0 50%", transform: "rotate(135deg)" }} />
+      <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(56,214,255,0.35), transparent)", transformOrigin: "0 50%", transform: "rotate(135deg)" }} />
       <div style={{ position: "absolute", left: 76, top: 76, width: 47, height: 1, background: "linear-gradient(90deg, rgba(59,130,246,0.45), transparent)", transformOrigin: "0 50%", transform: "rotate(-135deg)" }} />
 
       {/* rings */}
-      <div style={{ position: "absolute", inset: 9, borderRadius: "9999px", border: "1px dashed rgba(46,230,214,0.35)" }} />
+      <div style={{ position: "absolute", inset: 9, borderRadius: "9999px", border: "1px dashed rgba(56,214,255,0.35)" }} />
       <div style={{ position: "absolute", inset: 29, borderRadius: "9999px", border: "1px solid rgba(59,130,246,0.3)" }} />
 
       {/* center orb */}
@@ -31,8 +31,8 @@ export function HoloEmblem({ className }: { className?: string }) {
           position: "absolute",
           inset: 50,
           borderRadius: "9999px",
-          background: "linear-gradient(135deg, #2ee6d6, #3b82f6)",
-          boxShadow: "0 0 26px rgba(46,230,214,0.35)",
+          background: "linear-gradient(135deg, #38d6ff, #3b82f6)",
+          boxShadow: "0 0 26px rgba(56,214,255,0.35)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -45,8 +45,8 @@ export function HoloEmblem({ className }: { className?: string }) {
       </div>
 
       {/* orbit nodes: cloud / lock / cost trend / engine */}
-      <div style={{ position: "absolute", left: 98, top: 32, width: 23, height: 23, borderRadius: 7, background: "rgba(7,17,29,0.9)", border: "1px solid rgba(46,230,214,0.35)", boxShadow: "0 0 10px rgba(46,230,214,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5eead4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{ position: "absolute", left: 98, top: 32, width: 23, height: 23, borderRadius: 7, background: "rgba(7,17,29,0.9)", border: "1px solid rgba(56,214,255,0.35)", boxShadow: "0 0 10px rgba(56,214,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.4-1.5A4.5 4.5 0 0 0 6.5 19h11z" />
         </svg>
       </div>
@@ -56,8 +56,8 @@ export function HoloEmblem({ className }: { className?: string }) {
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
       </div>
-      <div style={{ position: "absolute", left: 32, top: 98, width: 23, height: 23, borderRadius: 7, background: "rgba(7,17,29,0.9)", border: "1px solid rgba(46,230,214,0.35)", boxShadow: "0 0 10px rgba(46,230,214,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#5eead4" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <div style={{ position: "absolute", left: 32, top: 98, width: 23, height: 23, borderRadius: 7, background: "rgba(7,17,29,0.9)", border: "1px solid rgba(56,214,255,0.35)", boxShadow: "0 0 10px rgba(56,214,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#67e8f9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 17l6-6 4 4 8-8" />
           <path d="M21 7v6h-6" />
         </svg>

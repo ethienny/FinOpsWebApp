@@ -19,6 +19,7 @@ import type { FilterOptions, SidebarMeta } from "@/types/finops";
 import { FilterBar } from "@/components/filters/FilterBar";
 import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/badges";
+import { NetworkGlyph } from "@/components/layout/NetworkGlyph";
 
 const NAV = [
   { href: "/", label: "Executive", icon: LayoutDashboard },
@@ -170,7 +171,7 @@ export function AppShell({
             </button>
             <div className="min-w-0 flex-1 space-y-4">
               <div className="page-hero">
-                <div className="hero-orbit" aria-hidden="true"><span /><span /><span /><i /></div>
+                <NetworkGlyph className="hero-network" />
                 <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">CLOUD INTELLIGENCE / FINOPS</p>
                 <h1 className="hero-title">{copy.title}</h1>
                 <p className="mt-1 text-sm text-slate-400">{copy.subtitle}</p>
