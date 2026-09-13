@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/restore-mock-data.mjs",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "data:restore": "node scripts/restore-mock-data.mjs",
     "lint": "eslint app components lib types",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
