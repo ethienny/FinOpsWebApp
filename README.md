@@ -119,7 +119,7 @@ Two analyses derive from the multi run history and the recommendation evidence.
 
 **Quick win score.** Value rank is the percentile of `RiskAdjustedMonthlySavings` among PRICED actionable rows in the current scope. Execution safety is the mean of four factors: confidence (HIGH 1, MEDIUM 0.6, LOW 0.3), conservative sizing performance risk (Low 1, Medium 0.6, High 0.2), metric coverage ratio, and destructiveness (destructive 0.4). Score = 100 × (0.5 × value rank + 0.5 × safety). Execution risk is low at safety 0.75 or more, medium at 0.5, high below. A quick win is a PRICED actionable row with low execution risk in the upper half of value.
 
-Both surface on Executive (Cost of Inaction and Quick Wins sections), Opportunities (Age, Missed so far, Quick win score and Execution risk columns) and the resource detail page. The rules live in `lib/insights` and are unit tested.
+Both live on the Insights page (Cost of Inaction and Quick Wins sections), with headline figures on Executive, columns on Opportunities (Age, Missed so far, Quick win score and Execution risk) and a strip on the resource detail page. The rules live in `lib/insights` and are unit tested.
 
 ## Recommendation decisions
 

@@ -9,6 +9,7 @@ import {
   Gauge,
   History,
   LayoutDashboard,
+  Lightbulb,
   Menu,
   Scale,
   Sparkles,
@@ -27,6 +28,7 @@ const NAV = [
   { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
   { href: "/opportunities", label: "Opportunities", icon: Sparkles },
   { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
+  { href: "/insights", label: "Insights", icon: Lightbulb },
   { href: "/sizing", label: "Sizing", icon: Scale },
   { href: "/resources", label: "Resources", icon: Boxes },
   { href: "/engine-health", label: "Engine Health", icon: Gauge },
@@ -114,6 +116,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   "/tracking": {
     title: "Recommendation Tracking",
     subtitle: "What the teams decided on each recommendation, who owns it and the savings under way or delivered.",
+  },
+  "/insights": {
+    title: "Insights",
+    subtitle: "What it costs to wait and which actions are worth taking first.",
   },
   "/sizing": {
     title: "Sizing",

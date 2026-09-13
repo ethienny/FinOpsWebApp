@@ -25,6 +25,9 @@ export default async function ShowbackPage({
         <ChartCard title="Cost Allocation by Owner">
           <DonutChart data={data.costByOwner} />
         </ChartCard>
+        <ChartCard title="Validated Savings by Owner" subtitle="PRICED savings only">
+          <HorizontalBars data={data.savingsByOwner} currency={data.currency} />
+        </ChartCard>
         <ChartCard title="Cost by Environment">
           <HorizontalBars data={data.costByEnvironment} currency={data.currency} />
         </ChartCard>

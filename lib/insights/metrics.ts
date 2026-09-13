@@ -13,6 +13,7 @@ export function agingSummary(rows: InsightRow[]): AgingSummary {
   return {
     missedSavings: actionable.reduce((a, r) => a + r.missedSavings, 0),
     persistentCount: actionable.filter((r) => r.ageBucket === "persistent").length,
+    newCount: actionable.filter((r) => r.ageBucket === "new").length,
     averageRunsOpen: actionable.length ? runs / actionable.length : 0,
     actionableCount: actionable.length,
   };

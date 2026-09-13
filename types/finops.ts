@@ -347,6 +347,7 @@ export interface ShowbackData {
   costByApplication: NamedValue[];
   costBySubscription: NamedValue[];
   costByTenant: NamedValue[];
+  savingsByOwner: NamedValue[];
   rows: ShowbackRow[];
 }
 
@@ -356,6 +357,8 @@ export interface OpportunitiesData {
   validatedSavings: number;
   estimatedOpportunity: number;
   averageSavingsPerActionable: number;
+  reliabilityDistribution: NamedValue[];
+  priorityDistribution: NamedValue[];
   rows: ResourceSummary[];
 }
 
@@ -472,6 +475,7 @@ export type InsightRow = ResourceSummary & InsightFields;
 export interface AgingSummary {
   missedSavings: number;
   persistentCount: number;
+  newCount: number;
   averageRunsOpen: number;
   actionableCount: number;
 }

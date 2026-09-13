@@ -8,6 +8,7 @@ import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
+import { ChartCard, DonutChart } from "@/components/charts/Charts";
 
 function toggleDismissedHref(sp: Record<string, string | string[] | undefined>, show: boolean): string {
   const next = new URLSearchParams();
@@ -67,6 +68,15 @@ export default async function OpportunitiesPage({
           hint="Any status other than open"
           accent="teal"
         />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ChartCard title="Savings Reliability Distribution" subtitle="Recommendations in scope by reliability">
+          <DonutChart data={data.reliabilityDistribution} />
+        </ChartCard>
+        <ChartCard title="Priority Distribution">
+          <DonutChart data={data.priorityDistribution} />
+        </ChartCard>
       </div>
 
       <section className="card-surface p-5">
