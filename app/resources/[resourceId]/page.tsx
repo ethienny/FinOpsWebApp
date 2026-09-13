@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getRepository } from "@/lib/repositories";
 import { decodeResourceId } from "@/lib/data/parse";
+import { getDecisionRepository } from "@/lib/decisions/store";
 import { ResourceDetail } from "@/components/resource/ResourceDetail";
 
 export default async function ResourceDetailPage({
@@ -10,7 +11,10 @@ export default async function ResourceDetailPage({
 }) {
   const { resourceId } = await params;
   const id = decodeResourceId(resourceId);
-  const data = await getRepository().getResourceById(id);
+  const [data, decision] = await Promise.all([
+    getRepository().getResourceById(id),
+    getDecisionRepository().get(id),
+  ]);
   if (!data) notFound();
-  return <ResourceDetail data={data} />;
+  return <ResourceDetail data={data} decision={decision} />;
 }

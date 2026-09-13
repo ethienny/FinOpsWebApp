@@ -5,23 +5,31 @@
 
 import { formatMoney } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
-import { ConfidenceBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge } from "@/components/badges";
+import { ConfidenceBadge, DecisionBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
-import type { ResourceSummary } from "@/types/finops";
+import type { OpportunityRow } from "@/types/finops";
 
-const SEARCH_KEYS: Array<keyof ResourceSummary> = [
+const SEARCH_KEYS: Array<keyof OpportunityRow> = [
   "ResourceName",
   "SubscriptionName",
   "ActionLabel",
   "TagOwner",
+  "decisionOwner",
 ];
 
-const COLUMNS: Column<ResourceSummary>[] = [
+const COLUMNS: Column<OpportunityRow>[] = [
   {
     key: "ResourceName",
     header: "ResourceName",
     render: (r) => <ResourceLink resourceId={r.ResourceId} name={r.ResourceName} />,
   },
+  {
+    key: "decisionLabel",
+    header: "Decision",
+    filterable: true,
+    render: (r) => <DecisionBadge value={r.decisionStatus} />,
+  },
+  { key: "decisionOwner", header: "Assigned to" },
   { key: "ServiceType", header: "ServiceType", filterable: true },
   { key: "SubscriptionName", header: "SubscriptionName" },
   { key: "ResourceGroup", header: "ResourceGroup" },
@@ -52,9 +60,9 @@ const COLUMNS: Column<ResourceSummary>[] = [
   },
 ];
 
-export function OpportunitiesTable({ rows }: { rows: ResourceSummary[] }) {
+export function OpportunitiesTable({ rows }: { rows: OpportunityRow[] }) {
   return (
-    <DataTable<ResourceSummary>
+    <DataTable<OpportunityRow>
       rows={rows}
       searchKeys={SEARCH_KEYS}
       pageSize={15}

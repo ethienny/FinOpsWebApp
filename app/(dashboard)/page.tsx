@@ -1,6 +1,7 @@
 import { ExecutiveResourcesTable } from "@/components/tables/ExecutiveResourcesTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
+import { getDecisionTracking } from "@/lib/decisions/service";
 import { formatMoney, formatNumber, formatPercent, formatDate } from "@/lib/formatters";
 import { KpiCard, QualityMetricCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart, GroupedBars, HorizontalBars, VerticalBars } from "@/components/charts/Charts";
@@ -11,7 +12,11 @@ export default async function ExecutivePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const data = await getRepository().getExecutiveData(filtersFromSearchParams(sp));
+  const filters = filtersFromSearchParams(sp);
+  const [data, tracking] = await Promise.all([
+    getRepository().getExecutiveData(filters),
+    getDecisionTracking(filters),
+  ]);
   const run = data.publishedRun;
 
   return (
@@ -61,6 +66,33 @@ export default async function ExecutivePage({
           accent="blue"
         />
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Recommendation Tracking</h3>
+          <p className="text-xs text-slate-400">What the teams decided and delivered on the current scope. PRICED savings only.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <KpiCard
+            label="Savings In Progress"
+            value={formatMoney(tracking.savings.inProgress, data.currency)}
+            hint="Accepted or in progress"
+            accent="blue"
+          />
+          <KpiCard
+            label="Realized Savings"
+            value={formatMoney(tracking.savings.realized, data.currency)}
+            hint="Recommendations marked done"
+            accent="green"
+          />
+          <KpiCard
+            label="Recommendations Decided"
+            value={formatNumber(tracking.savings.decided, false)}
+            hint="Any status other than open"
+            accent="teal"
+          />
+        </div>
+      </section>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Cloud Cost by Service Type">

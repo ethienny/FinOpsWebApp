@@ -33,6 +33,7 @@ Loading skeletons live in each route folder instead of the app root. A root `loa
 /lib/repositories     FinOpsRepository implementations
 /lib/formatters       money, percent, compact numbers
 /lib/aggregations     shared filter matching
+/lib/decisions        recommendation decisions: rules, JSON store, page service
 /types                TypeScript models generated from CSV schemas
 /data                 simulated Databricks tables/views
 ```
@@ -56,6 +57,7 @@ npm run build
 npm start
 npm run lint
 npm run typecheck
+npm test
 ```
 
 ## CSV data sources
@@ -101,6 +103,21 @@ Resource names link to `/resources/[encoded-resource-id]` (base64url of `Resourc
 Detail tabs: Overview, Cost & Usage, Recommendation, Sizing, Metrics, History, JSON.
 
 Raw JSON appears only in the JSON tab.
+
+## Recommendation decisions
+
+The product emulation tracks what teams decide about each recommendation. A resource carries one decision with a status (`open`, `accepted`, `in_progress`, `done`, `dismissed`), an owner and a note. Decisions are recorded on the resource detail page and surface on Opportunities (status column, dismissed rows hidden by default), Executive (tracking KPIs) and Run History (decision activity log).
+
+Tracking rules:
+
+- Savings In Progress = `SUM(EstimatedMonthlySavings) WHERE SavingsReliability = PRICED AND status IN (accepted, in_progress)`
+- Realized Savings = `SUM(EstimatedMonthlySavings) WHERE SavingsReliability = PRICED AND status = done`
+- HEURISTIC and UNPRICED savings never enter tracked totals, whatever the status.
+- Dismissed and open rows contribute nothing to either amount.
+
+Decisions are stored in `data/state/decisions.json`, outside version control, through the `DecisionRepository` contract in `lib/decisions/store.ts`. Writes go through the `saveDecision` server action and are attributed to a fixed demo identity until authentication exists. Replace `JsonDecisionRepository` with a database implementation without touching pages.
+
+`npm test` runs the unit tests for these rules with Vitest.
 
 ## Repository abstraction
 

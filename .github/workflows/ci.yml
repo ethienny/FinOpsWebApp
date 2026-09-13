@@ -1,5 +1,5 @@
 # Runs the same checks a contributor runs locally on every pull request and on
-# every push to main: dependency install, typecheck, lint and production build.
+# every push to main: dependency install, typecheck, lint, tests and production build.
 
 name: CI
 
@@ -37,6 +37,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
