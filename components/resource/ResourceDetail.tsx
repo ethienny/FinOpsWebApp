@@ -2,7 +2,7 @@
 
 import { MetricEvidence, RecommendationEvidence } from "./ResourceEvidence";
 import { useState } from "react";
-import type { ResourceDetailData } from "@/types/finops";
+import type { RecommendationDecision, ResourceDetailData } from "@/types/finops";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { Breadcrumbs } from "@/components/layout/PageHeader";
 import {
@@ -15,6 +15,7 @@ import {
 import { JsonViewer } from "@/components/resource/JsonViewer";
 import { ChartCard, DualLine, VerticalBars } from "@/components/charts/Charts";
 import { DataTable } from "@/components/tables/DataTable";
+import { DecisionPanel } from "@/components/resource/DecisionPanel";
 import { cn } from "@/lib/cn";
 import type { TargetOptionHistory } from "@/types/finops";
 
@@ -29,7 +30,13 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function ResourceDetail({ data }: { data: ResourceDetailData }) {
+export function ResourceDetail({
+  data,
+  decision,
+}: {
+  data: ResourceDetailData;
+  decision: RecommendationDecision | null;
+}) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const r = data.recommendation;
   const currency = r.CostCurrency || "USD";
@@ -58,6 +65,8 @@ export function ResourceDetail({ data }: { data: ResourceDetailData }) {
         <h2 className="mt-1 text-2xl font-semibold text-white">{r.ResourceName}</h2>
         <p className="mt-2 break-all text-xs text-slate-400">{r.ResourceId}</p>
       </div>
+
+      <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} />
 
       <div className="flex gap-2 overflow-x-auto">
         {TABS.map((t) => (

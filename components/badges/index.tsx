@@ -67,3 +67,12 @@ export function MetricStatusBadge({ value }: { value: string }) {
   if (v === "NOT_APPLICABLE") return <Badge value={value} tone="gray" />;
   return <StatusBadge value={value} />;
 }
+
+export function DecisionBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  if (v === "done") return <Badge value="Done" tone="green" />;
+  if (v === "in_progress") return <Badge value="In progress" tone="cyan" />;
+  if (v === "accepted") return <Badge value="Accepted" tone="blue" />;
+  if (v === "dismissed") return <Badge value="Dismissed" tone="gray" />;
+  return <Badge value="Open" tone="amber" />;
+}

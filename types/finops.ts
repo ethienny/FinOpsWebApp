@@ -424,6 +424,58 @@ export interface ShowbackAllocation {
   resourceCount: number;
 }
 
+// ───────────────────────────────────────────────
+// Recommendation decisions
+// ───────────────────────────────────────────────
+
+export type DecisionStatus = "open" | "accepted" | "in_progress" | "done" | "dismissed";
+
+/** What the team decided about the recommendation of one resource. */
+export interface RecommendationDecision {
+  resourceId: string;
+  runId: string;
+  status: DecisionStatus;
+  owner: string;
+  note: string;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+/** Opportunity table row: the resource summary with its decision overlaid. */
+export interface OpportunityRow extends ResourceSummary {
+  decisionStatus: DecisionStatus;
+  decisionLabel: string;
+  decisionOwner: string;
+}
+
+/** Savings tracked through decisions. PRICED savings only. */
+export interface DecisionSavings {
+  inProgress: number;
+  realized: number;
+  decided: number;
+}
+
+/** One line of the decision activity log shown on Run History. */
+export interface DecisionLogRow {
+  resourceId: string;
+  resourceName: string;
+  serviceType: string;
+  runId: string;
+  status: DecisionStatus;
+  label: string;
+  owner: string;
+  updatedAt: string;
+  monthlySavings: number | null;
+  savingsReliability: string;
+  currency: string;
+}
+
+export interface DecisionRepository {
+  list(): Promise<RecommendationDecision[]>;
+  get(resourceId: string): Promise<RecommendationDecision | null>;
+  save(decision: RecommendationDecision): Promise<void>;
+}
+
 export interface FinOpsRepository {
   getFilterOptions(): Promise<FilterOptions>;
   getSidebarMeta(): Promise<SidebarMeta>;
