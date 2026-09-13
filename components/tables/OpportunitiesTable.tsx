@@ -8,6 +8,17 @@ import { DataTable, type Column } from "@/components/tables/DataTable";
 import { AgeBadge, ConfidenceBadge, DecisionBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge, RiskBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { OpportunityRow } from "@/types/finops";
+import type { Module } from "@/types/entitlements";
+
+/** Columns that only make sense when their module is in the plan. */
+const COLUMN_MODULE: Partial<Record<string, Module>> = {
+  decisionLabel: "tracking",
+  decisionOwner: "tracking",
+  ageLabel: "insights",
+  missedSavings: "insights",
+  quickWinScore: "insights",
+  riskLabel: "insights",
+};
 
 const SEARCH_KEYS: Array<keyof OpportunityRow> = [
   "ResourceName",
@@ -91,14 +102,29 @@ const COLUMNS: Column<OpportunityRow>[] = [
   },
 ];
 
-export function OpportunitiesTable({ rows }: { rows: OpportunityRow[] }) {
+const COLUMNS_BY_MODULES = new Map<string, Column<OpportunityRow>[]>();
+
+function columnsFor(modules: Module[]): Column<OpportunityRow>[] {
+  const key = [...modules].sort().join(",");
+  let columns = COLUMNS_BY_MODULES.get(key);
+  if (!columns) {
+    columns = COLUMNS.filter((c) => {
+      const required = COLUMN_MODULE[c.key];
+      return !required || modules.includes(required);
+    });
+    COLUMNS_BY_MODULES.set(key, columns);
+  }
+  return columns;
+}
+
+export function OpportunitiesTable({ rows, modules }: { rows: OpportunityRow[]; modules: Module[] }) {
   return (
     <DataTable<OpportunityRow>
       rows={rows}
       searchKeys={SEARCH_KEYS}
       pageSize={15}
       rowKey={(r) => r.ResourceId}
-      columns={COLUMNS}
+      columns={columnsFor(modules)}
     />
   );
 }

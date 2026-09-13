@@ -35,10 +35,14 @@ export function ResourceDetail({
   data,
   decision,
   insight,
+  showDecision = true,
+  showInsight = true,
 }: {
   data: ResourceDetailData;
   decision: RecommendationDecision | null;
   insight: InsightRow | null;
+  showDecision?: boolean;
+  showInsight?: boolean;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const r = data.recommendation;
@@ -69,9 +73,9 @@ export function ResourceDetail({
         <p className="mt-2 break-all text-xs text-slate-400">{r.ResourceId}</p>
       </div>
 
-      <InsightStrip insight={insight} currency={currency} />
+      {showInsight ? <InsightStrip insight={insight} currency={currency} /> : null}
 
-      <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} />
+      {showDecision ? <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} /> : null}
 
       <div className="flex gap-2 overflow-x-auto">
         {TABS.map((t) => (

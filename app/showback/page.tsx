@@ -1,3 +1,4 @@
+import { requireModule } from "@/lib/entitlements/gate";
 import { ShowbackTable } from "@/components/tables/ShowbackTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
@@ -10,6 +11,8 @@ export default async function ShowbackPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const gate = await requireModule("showback");
+  if (gate.locked) return gate.locked;
   const data = await getRepository().getShowback(filtersFromSearchParams(await searchParams));
 
   return (

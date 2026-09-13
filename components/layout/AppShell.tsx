@@ -10,6 +10,7 @@ import {
   History,
   LayoutDashboard,
   Lightbulb,
+  Lock,
   Menu,
   Scale,
   Sparkles,
@@ -18,7 +19,11 @@ import {
 } from "lucide-react";
 import { Suspense, useState } from "react";
 import type { FilterOptions, SidebarMeta } from "@/types/finops";
+import type { Entitlements } from "@/types/entitlements";
+import { hasModule, moduleForPath } from "@/lib/entitlements/catalog";
 import { FilterBar } from "@/components/filters/FilterBar";
+import { PlanBanner } from "@/components/layout/PlanBanner";
+import { PlanSwitcher } from "@/components/layout/PlanSwitcher";
 import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/badges";
 import { NetworkGlyph } from "@/components/layout/NetworkGlyph";
@@ -58,7 +63,15 @@ function isActive(pathname: string, href: string) {
   return pathname === href;
 }
 
-function SidebarBody({ meta, onNavigate }: { meta: SidebarMeta; onNavigate?: () => void }) {
+function SidebarBody({
+  meta,
+  entitlements,
+  onNavigate,
+}: {
+  meta: SidebarMeta;
+  entitlements: Entitlements;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   return (
     <>
@@ -79,6 +92,8 @@ function SidebarBody({ meta, onNavigate }: { meta: SidebarMeta; onNavigate?: () 
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(pathname, item.href);
+                const ownerModule = moduleForPath(item.href);
+                const locked = ownerModule !== null && !hasModule(entitlements, ownerModule);
                 return (
                   <Link
                     key={item.href}
@@ -93,7 +108,8 @@ function SidebarBody({ meta, onNavigate }: { meta: SidebarMeta; onNavigate?: () 
                     )}
                   >
                     <Icon className={cn("h-4 w-4", active && "text-accent-cyan")} />
-                    {item.label}
+                    <span className={cn("flex-1", locked && "text-slate-500")}>{item.label}</span>
+                    {locked ? <Lock className="h-3.5 w-3.5 text-slate-500" aria-label="Not in current plan" /> : null}
                   </Link>
                 );
               })}
@@ -102,6 +118,7 @@ function SidebarBody({ meta, onNavigate }: { meta: SidebarMeta; onNavigate?: () 
         ))}
       </nav>
       <div className="space-y-2 border-t border-white/10 px-4 py-4 text-xs text-slate-400">
+        <PlanSwitcher plan={entitlements.plan} />
         <div className="flex justify-between gap-2">
           <span>Engine Version</span>
           <span className="text-slate-200">{meta.engineVersion}</span>
@@ -166,10 +183,12 @@ export function AppShell({
   children,
   meta,
   filterOptions,
+  entitlements,
 }: {
   children: React.ReactNode;
   meta: SidebarMeta;
   filterOptions: FilterOptions;
+  entitlements: Entitlements;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -183,7 +202,7 @@ export function AppShell({
     <div className="finops-shell min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
       <a href="#main-content" className="skip-link">Skip to content</a>
       <aside className="desktop-sidebar hidden flex-col lg:flex">
-        <SidebarBody meta={meta} />
+        <SidebarBody meta={meta} entitlements={entitlements} />
       </aside>
 
       {open ? (
@@ -193,7 +212,7 @@ export function AppShell({
             <button className="absolute right-3 top-3 text-slate-300" onClick={() => setOpen(false)} aria-label="Close">
               <X className="h-5 w-5" />
             </button>
-            <SidebarBody meta={meta} onNavigate={() => setOpen(false)} />
+            <SidebarBody meta={meta} entitlements={entitlements} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       ) : null}
@@ -218,7 +237,10 @@ export function AppShell({
             </div>
           </div>
         </header>
-        <main id="main-content" className="workspace-content px-4 py-6 sm:px-6">{children}</main>
+        <main id="main-content" className="workspace-content space-y-6 px-4 py-6 sm:px-6">
+          <PlanBanner entitlements={entitlements} subscriptionCount={filterOptions.subscriptions.length} />
+          {children}
+        </main>
       </div>
     </div>
   );

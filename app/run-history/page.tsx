@@ -1,3 +1,4 @@
+import { requireModule } from "@/lib/entitlements/gate";
 import { RunHistoryTable } from "@/components/tables/RunHistoryTable";
 import { Suspense } from "react";
 import { getRepository } from "@/lib/repositories";
@@ -45,6 +46,8 @@ export default async function RunHistoryPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const gate = await requireModule("governance");
+  if (gate.locked) return gate.locked;
   const sp = await searchParams;
   const runA = one(sp.runA);
   const runB = one(sp.runB);
