@@ -76,3 +76,11 @@ export function DecisionBadge({ value }: { value: string }) {
   if (v === "dismissed") return <Badge value="Dismissed" tone="gray" />;
   return <Badge value="Open" tone="amber" />;
 }
+
+export function AgeBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  if (v === "persistent") return <Badge value="Persistent" tone="red" />;
+  if (v === "recurring") return <Badge value="Recurring" tone="amber" />;
+  if (v === "new") return <Badge value="New" tone="blue" />;
+  return <span className="text-slate-500">—</span>;
+}

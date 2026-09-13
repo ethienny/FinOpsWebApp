@@ -5,7 +5,7 @@
 
 import { formatMoney } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
-import { ConfidenceBadge, DecisionBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge } from "@/components/badges";
+import { AgeBadge, ConfidenceBadge, DecisionBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge, RiskBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { OpportunityRow } from "@/types/finops";
 
@@ -34,7 +34,38 @@ const COLUMNS: Column<OpportunityRow>[] = [
   { key: "SubscriptionName", header: "SubscriptionName" },
   { key: "ResourceGroup", header: "ResourceGroup" },
   { key: "ActionLabel", header: "ActionLabel" },
-  { key: "ActionSummary", header: "ActionSummary" },
+  {
+    key: "ageLabel",
+    header: "Age",
+    filterable: true,
+    sortValue: (r) => r.runsOpen,
+    render: (r) => (
+      <span className="inline-flex items-center gap-2">
+        <AgeBadge value={r.ageLabel} />
+        {r.runsOpen ? <span className="text-xs text-slate-400">{r.runsOpen} runs</span> : null}
+      </span>
+    ),
+  },
+  {
+    key: "missedSavings",
+    header: "Missed so far",
+    numeric: true,
+    sortValue: (r) => r.missedSavings,
+    render: (r) => (r.runsOpen > 1 ? formatMoney(r.missedSavings, r.CostCurrency) : "—"),
+  },
+  {
+    key: "quickWinScore",
+    header: "Quick win score",
+    numeric: true,
+    sortValue: (r) => r.quickWinScore,
+    render: (r) => (r.IsActionable ? String(r.quickWinScore) : "—"),
+  },
+  {
+    key: "riskLabel",
+    header: "Execution risk",
+    filterable: true,
+    render: (r) => (r.IsActionable ? <RiskBadge value={r.riskLabel} /> : <span className="text-slate-500">—</span>),
+  },
   {
     key: "EstimatedMonthlySavings",
     header: "EstimatedMonthlySavings",

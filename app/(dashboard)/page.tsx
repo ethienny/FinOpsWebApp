@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ExecutiveResourcesTable } from "@/components/tables/ExecutiveResourcesTable";
+import { QuickWinsTable } from "@/components/tables/QuickWinsTable";
+import { agingSummary, savingsByAge, topQuickWins } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
 import { formatMoney, formatNumber, formatPercent, formatDate } from "@/lib/formatters";
 import { KpiCard, QualityMetricCard } from "@/components/kpi/KpiCard";
-import { ChartCard, DonutChart, GroupedBars, HorizontalBars, VerticalBars } from "@/components/charts/Charts";
+import { ChartCard, DonutChart, GroupedBars, HorizontalBars, ScatterQuadrant, VerticalBars } from "@/components/charts/Charts";
 
 export default async function ExecutivePage({
   searchParams,
@@ -19,6 +21,17 @@ export default async function ExecutivePage({
     getDecisionTracking(filters),
   ]);
   const run = data.publishedRun;
+  const aging = agingSummary(tracking.rows);
+  const openRows = tracking.rows.filter((r) => r.decisionStatus !== "done" && r.decisionStatus !== "dismissed");
+  const quickWins = topQuickWins(openRows, 10);
+  const quadrant = openRows
+    .filter((r) => r.IsActionable && r.SavingsReliability === "PRICED")
+    .map((r) => ({
+      name: r.ResourceName,
+      risk: r.executionRiskScore,
+      savings: r.RiskAdjustedMonthlySavings ?? r.EstimatedMonthlySavings ?? 0,
+      quickWin: r.isQuickWin,
+    }));
 
   return (
     <div className="space-y-6">
@@ -97,6 +110,56 @@ export default async function ExecutivePage({
             hint="Any status other than open"
             accent="teal"
           />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Cost of Inaction</h3>
+          <p className="text-xs text-slate-400">
+            How long the current recommendations have been open across complete engine runs, and the PRICED savings already missed while they waited.
+          </p>
+        </div>
+        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            label="Missed Savings To Date"
+            value={formatMoney(aging.missedSavings, data.currency)}
+            hint="PRICED savings accrued since first detection"
+            accent="amber"
+          />
+          <KpiCard
+            label="Persistent Recommendations"
+            value={formatNumber(aging.persistentCount, false)}
+            hint="Same recommendation for 5 or more runs"
+            accent="amber"
+          />
+          <KpiCard
+            label="Average Age"
+            value={`${aging.averageRunsOpen.toFixed(1)} runs`}
+            hint={`Across ${formatNumber(aging.actionableCount, false)} actionable recommendations`}
+            accent="blue"
+          />
+          <ChartCard title="Validated Savings by Age" subtitle="PRICED savings of open recommendations">
+            <VerticalBars data={savingsByAge(tracking.rows)} currency={data.currency} />
+          </ChartCard>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold text-white">Quick Wins</h3>
+          <p className="text-xs text-slate-400">
+            PRICED actions ranked by value and execution safety: confidence, performance risk, metric coverage and whether the action is destructive. Done and dismissed recommendations are left out.
+          </p>
+        </div>
+        <div className="grid items-start gap-4 xl:grid-cols-[2fr_3fr]">
+          <ChartCard title="Value vs Execution Risk" subtitle="Quick wins sit top left">
+            <ScatterQuadrant data={quadrant} currency={data.currency} />
+          </ChartCard>
+          <section className="card-surface p-5">
+            <h3 className="mb-4 text-sm font-semibold text-white">Top 10 Quick Wins</h3>
+            <QuickWinsTable rows={quickWins} />
+          </section>
         </div>
       </section>
 

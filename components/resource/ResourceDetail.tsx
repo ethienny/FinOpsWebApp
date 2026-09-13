@@ -2,7 +2,7 @@
 
 import { MetricEvidence, RecommendationEvidence } from "./ResourceEvidence";
 import { useState } from "react";
-import type { RecommendationDecision, ResourceDetailData } from "@/types/finops";
+import type { InsightRow, RecommendationDecision, ResourceDetailData } from "@/types/finops";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { Breadcrumbs } from "@/components/layout/PageHeader";
 import {
@@ -16,6 +16,7 @@ import { JsonViewer } from "@/components/resource/JsonViewer";
 import { ChartCard, DualLine, VerticalBars } from "@/components/charts/Charts";
 import { DataTable } from "@/components/tables/DataTable";
 import { DecisionPanel } from "@/components/resource/DecisionPanel";
+import { InsightStrip } from "@/components/resource/InsightStrip";
 import { cn } from "@/lib/cn";
 import type { TargetOptionHistory } from "@/types/finops";
 
@@ -33,9 +34,11 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 export function ResourceDetail({
   data,
   decision,
+  insight,
 }: {
   data: ResourceDetailData;
   decision: RecommendationDecision | null;
+  insight: InsightRow | null;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const r = data.recommendation;
@@ -65,6 +68,8 @@ export function ResourceDetail({
         <h2 className="mt-1 text-2xl font-semibold text-white">{r.ResourceName}</h2>
         <p className="mt-2 break-all text-xs text-slate-400">{r.ResourceId}</p>
       </div>
+
+      <InsightStrip insight={insight} currency={currency} />
 
       <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} />
 
