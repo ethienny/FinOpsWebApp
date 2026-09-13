@@ -22,6 +22,14 @@ import { formatMoney, formatNumber } from "@/lib/formatters";
 
 const COLORS = ["#22d3ee", "#4895ff", "#818cf8", "#fbbf24", "#34d399", "#f472b6", "#94a3b8", "#22d3ee"];
 
+// Bar colors and their hover tones. The default Recharts tooltip cursor paints a
+// gray block over the whole category, so it is turned off and the hovered bar is
+// brightened through activeBar instead.
+const CYAN = "#22d3ee";
+const CYAN_ACTIVE = "#7ce9fb";
+const BLUE = "#4895ff";
+const BLUE_ACTIVE = "#8fbcff";
+
 export function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <section className="card-surface chart-panel p-4 sm:p-5">
@@ -73,8 +81,8 @@ export function VerticalBars<T extends { name: string; value: number }>({
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip content={<Tip currency={currency} />} />
-        <Bar dataKey={dataKey} fill="#22d3ee" radius={[6, 6, 0, 0]} />
+        <Tooltip cursor={false} content={<Tip currency={currency} />} />
+        <Bar dataKey={dataKey} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -93,8 +101,8 @@ export function HorizontalBars({
         <CartesianGrid stroke="rgba(255,255,255,0.06)" horizontal={false} />
         <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <YAxis type="category" dataKey="name" width={110} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip content={<Tip currency={currency} />} />
-        <Bar dataKey="value" fill="#4895ff" radius={[0, 6, 6, 0]} />
+        <Tooltip cursor={false} content={<Tip currency={currency} />} />
+        <Bar dataKey="value" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[0, 6, 6, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -133,10 +141,10 @@ export function GroupedBars({
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip content={<Tip currency={currency} />} />
+        <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Legend />
-        <Bar dataKey="cost" name="Cost" fill="#4895ff" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="savings" name="Validated savings" fill="#22d3ee" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="cost" name="Cost" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="savings" name="Validated savings" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -198,10 +206,10 @@ export function CompareBars({
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip />
+        <Tooltip cursor={false} />
         <Legend />
-        <Bar dataKey="current" fill="#4895ff" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="target" fill="#22d3ee" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="current" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="target" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
