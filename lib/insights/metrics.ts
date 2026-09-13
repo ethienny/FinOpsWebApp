@@ -36,3 +36,31 @@ export function topQuickWins<T extends InsightRow>(rows: T[], limit = 10): T[] {
     .sort((a, b) => b.quickWinScore - a.quickWinScore || (b.EstimatedMonthlySavings ?? 0) - (a.EstimatedMonthlySavings ?? 0))
     .slice(0, limit);
 }
+
+export interface CoverageSummary {
+  complete: number;
+  partial: number;
+  notApplicable: number;
+  /** Share of PRICED savings that rests on partial metrics, 0 to 1. */
+  pricedOnPartialShare: number;
+}
+
+/** How much of the analysis rests on complete versus partial metric collection. */
+export function metricCoverageSummary(rows: InsightRow[]): CoverageSummary {
+  let complete = 0;
+  let partial = 0;
+  let notApplicable = 0;
+  let priced = 0;
+  let pricedPartial = 0;
+  for (const r of rows) {
+    if (r.MetricCollectionStatus === "COMPLETE") complete += 1;
+    else if (r.MetricCollectionStatus === "PARTIAL") partial += 1;
+    else notApplicable += 1;
+    if (r.SavingsReliability === "PRICED") {
+      const s = r.EstimatedMonthlySavings ?? 0;
+      priced += s;
+      if (r.MetricCollectionStatus === "PARTIAL") pricedPartial += s;
+    }
+  }
+  return { complete, partial, notApplicable, pricedOnPartialShare: priced ? pricedPartial / priced : 0 };
+}
