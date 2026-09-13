@@ -122,6 +122,10 @@ Two analyses derive from the multi run history and the recommendation evidence.
 
 Both live on the Insights page (Cost of Inaction and Quick Wins sections), with headline figures on Executive, columns on Opportunities (Age, Missed so far, Quick win score and Execution risk) and a strip on the resource detail page. The rules live in `lib/insights` and are unit tested.
 
+## Connect your Azure
+
+`/connect` walks a customer through onboarding: the three read only roles the engine needs (Reader, Cost Management Reader, Monitoring Reader, with their built in definition ids), the Azure Lighthouse ARM template generated with the provider identity from `FINOPS_PROVIDER_TENANT_ID` and `FINOPS_PROVIDER_PRINCIPAL_ID`, the CLI commands to deploy and to revoke, and a form that records the connection in `data/state/connection.json`. The emulation makes no call to Azure; the material is the real one. Rules live in `lib/onboarding/lighthouse.ts` and are unit tested.
+
 ## Executive report
 
 `/report` renders a printable document for the current scope: headline figures, savings by service and action, cost of inaction and quick wins (insights module), decisions and realized savings (tracking module), the top 10 resources and data quality. The page has a paper look on screen; the browser print dialog saves it as PDF, so no server side PDF engine is needed. Reached from the Executive page.

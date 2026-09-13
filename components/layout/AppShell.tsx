@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Lightbulb,
   Lock,
+  Plug,
   Menu,
   Scale,
   Sparkles,
@@ -53,6 +54,7 @@ const NAV_GROUPS = [
       { href: "/resources", label: "Resources", icon: Boxes },
       { href: "/engine-health", label: "Engine Health", icon: Gauge },
       { href: "/run-history", label: "Run History", icon: History },
+      { href: "/connect", label: "Connect Azure", icon: Plug },
     ],
   },
 ];
@@ -156,6 +158,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   "/tracking": {
     title: "Recommendation Tracking",
     subtitle: "What the teams decided on each recommendation, who owns it and the savings under way or delivered.",
+  },
+  "/connect": {
+    title: "Connect your Azure",
+    subtitle: "Three read only roles, one template, and you can revoke it from your own portal at any time.",
   },
   "/report": {
     title: "Executive Report",
