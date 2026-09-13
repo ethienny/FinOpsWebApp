@@ -81,7 +81,7 @@ function riskLabel(score: number): string {
 
 export class CsvFinOpsRepository implements FinOpsRepository {
   async getFilterOptions(): Promise<FilterOptions> {
-    const { latest } = getDataStore();
+    const { latest } = await getDataStore();
     return {
       tenants: uniqueSorted(latest.map((r) => r.TenantName)),
       subscriptions: uniqueSorted(latest.map((r) => r.SubscriptionName)),
@@ -94,7 +94,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getSidebarMeta(): Promise<SidebarMeta> {
-    const { runs } = getDataStore();
+    const { runs } = await getDataStore();
     const pub = latestPublished(runs);
     const latest = [...runs].sort((a, b) => b.RunStartedAt.localeCompare(a.RunStartedAt))[0];
     return {
@@ -106,7 +106,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getExecutiveData(filters: FinOpsFilters): Promise<ExecutiveData> {
-    const { latest, runs } = getDataStore();
+    const { latest, runs } = await getDataStore();
     const rows = latest.filter((r) => matchesFilters(r, filters));
     const priced = rows.filter((r) => r.SavingsReliability === "PRICED");
     const heuristic = rows.filter((r) => r.SavingsReliability === "HEURISTIC");
@@ -144,7 +144,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getShowback(filters: FinOpsFilters): Promise<ShowbackData> {
-    const { latest } = getDataStore();
+    const { latest } = await getDataStore();
     const rows = latest.filter((r) => matchesFilters(r, filters));
     const allocated = rows.filter((r) => hasAllocationTag(r.TagOwner, r.TagCostCenter));
     const unallocated = rows.filter((r) => !hasAllocationTag(r.TagOwner, r.TagCostCenter));
@@ -187,7 +187,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getOpportunities(filters: FinOpsFilters): Promise<OpportunitiesData> {
-    const { latest } = getDataStore();
+    const { latest } = await getDataStore();
     const rows = latest.filter((r) => matchesFilters(r, filters));
     const priced = rows.filter((r) => r.SavingsReliability === "PRICED");
     const heuristic = rows.filter((r) => r.SavingsReliability === "HEURISTIC");
@@ -204,7 +204,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getSizing(filters: FinOpsFilters, profile: SizingProfile = "Conservative"): Promise<SizingData> {
-    const { targetOptions, latest } = getDataStore();
+    const { targetOptions, latest } = await getDataStore();
     const serviceById = new Map(latest.map((r) => [r.ResourceId, r.ServiceType]));
     const scoped = targetOptions.filter((r) =>
       matchesFilters({ ...r, ServiceType: serviceById.get(r.ResourceId) }, filters),
@@ -251,7 +251,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getResources(filters: FinOpsFilters): Promise<ResourcesData> {
-    const { latest } = getDataStore();
+    const { latest } = await getDataStore();
     const rows = latest.filter((r) => matchesFilters(r, filters));
     return {
       currency: currency(rows.length ? rows : latest),
@@ -264,7 +264,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getResourceById(resourceId: string): Promise<ResourceDetailData | null> {
-    const { latest, targetOptions, targetOptionsAllRuns } = getDataStore();
+    const { latest, targetOptions, targetOptionsAllRuns } = await getDataStore();
     const recommendation = latest.find((r) => r.ResourceId === resourceId);
     if (!recommendation) return null;
     return {
@@ -275,7 +275,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getEngineHealth(): Promise<EngineHealthData> {
-    const { runs } = getDataStore();
+    const { runs } = await getDataStore();
     const sorted = [...runs].sort((a, b) => b.RunStartedAt.localeCompare(a.RunStartedAt));
     return {
       latestRun: sorted[0] ?? null,
@@ -285,7 +285,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getRunHistory(runA?: string, runB?: string): Promise<RunHistoryData> {
-    const { runs, allRecommendations } = getDataStore();
+    const { runs, allRecommendations } = await getDataStore();
     const sorted = [...runs].sort((a, b) => a.RunStartedAt.localeCompare(b.RunStartedAt));
     const byRun = new Map<string, FinOpsRecommendation[]>();
     for (const row of allRecommendations) {

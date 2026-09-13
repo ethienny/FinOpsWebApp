@@ -1,4 +1,5 @@
-export function parseNumber(value: string | number | null | undefined): number | null {
+export function parseNumber(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (value === null || value === undefined) return null;
   const raw = String(value).trim();
   if (!raw) return null;
@@ -6,13 +7,14 @@ export function parseNumber(value: string | number | null | undefined): number |
   return Number.isFinite(n) ? n : null;
 }
 
-export function parseBoolean(value: string | boolean | null | undefined): boolean {
+export function parseBoolean(value: unknown): boolean {
   if (typeof value === "boolean") return value;
   const raw = String(value ?? "").trim().toLowerCase();
   return raw === "true" || raw === "1" || raw === "yes";
 }
 
-export function parseJson(value: string | null | undefined): unknown {
+export function parseJson(value: unknown): unknown {
+  if (value !== null && typeof value === "object") return value;
   const raw = String(value ?? "").trim();
   if (!raw) return null;
   try {

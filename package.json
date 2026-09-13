@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint app components lib types",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:schema": "node --env-file=.env.local scripts/apply-schema.mjs",
+    "db:migrate": "node --env-file=.env.local scripts/migrate-to-sql.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.503.0",
+    "mssql": "^11.0.2",
     "next": "^15.3.2",
     "papaparse": "^5.5.2",
     "react": "^19.1.0",
@@ -21,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@types/mssql": "^12.3.0",
     "@types/node": "^22.15.17",
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.3",

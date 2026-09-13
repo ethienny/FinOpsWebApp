@@ -11,3 +11,7 @@ out/
 !.env.example
 # Product emulation state written at runtime
 data/state/
+
+deploy.zip
+webapp_logs.zip
+webapp_logs_extracted/

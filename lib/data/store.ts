@@ -4,6 +4,7 @@
 import Papa from "papaparse";
 import { readFileSync } from "fs";
 import { join } from "path";
+import sql from "mssql";
 import type { FinOpsRecommendation, FinOpsRun, TargetOption, TargetOptionHistory } from "@/types/finops";
 import { asString, parseBoolean, parseJson, parseNumber } from "./parse";
 
@@ -25,7 +26,7 @@ function loadCsv(fileName: string): Record<string, string>[] {
   return parsed.data;
 }
 
-function recommendation(row: Record<string, string>): FinOpsRecommendation {
+function recommendation(row: Record<string, unknown>): FinOpsRecommendation {
   return {
     TenantId: asString(row.TenantId),
     TenantName: asString(row.TenantName),
@@ -144,7 +145,7 @@ function recommendation(row: Record<string, string>): FinOpsRecommendation {
   };
 }
 
-function run(row: Record<string, string>): FinOpsRun {
+function run(row: Record<string, unknown>): FinOpsRun {
   return {
     RunId: asString(row.RunId),
     RunStatus: asString(row.RunStatus),
@@ -186,7 +187,7 @@ function run(row: Record<string, string>): FinOpsRun {
   };
 }
 
-function targetOption(row: Record<string, string>): TargetOption {
+function targetOption(row: Record<string, unknown>): TargetOption {
   return {
     rundate: asString(row.rundate),
     RunId: asString(row.RunId),
@@ -231,7 +232,7 @@ function targetOption(row: Record<string, string>): TargetOption {
   };
 }
 
-function targetHistory(row: Record<string, string>): TargetOptionHistory {
+function targetHistory(row: Record<string, unknown>): TargetOptionHistory {
   return {
     ...targetOption(row),
     RunStatus: asString(row.RunStatus),
@@ -250,17 +251,20 @@ export interface DataStore {
 }
 
 declare global {
-  var __finopsCache: Map<keyof DataStore, unknown> | undefined;
+  var __finopsStore: DataStore | undefined;
+  var __finopsStoreLoading: Promise<DataStore> | undefined;
+  var __finopsSqlPool: Promise<sql.ConnectionPool> | undefined;
+  var __finopsCsvCache: Map<keyof DataStore, unknown> | undefined;
 }
 
-function cache(): Map<keyof DataStore, unknown> {
-  if (!globalThis.__finopsCache) globalThis.__finopsCache = new Map();
-  return globalThis.__finopsCache;
+function csvCache(): Map<keyof DataStore, unknown> {
+  if (!globalThis.__finopsCsvCache) globalThis.__finopsCsvCache = new Map();
+  return globalThis.__finopsCsvCache;
 }
 
-/** Parses a dataset on first access and reuses it afterwards. */
+/** Parses a CSV dataset on first access and reuses it afterwards. */
 function memoized<K extends keyof DataStore>(key: K, load: () => DataStore[K]): DataStore[K] {
-  const store = cache();
+  const store = csvCache();
   if (!store.has(key)) store.set(key, load());
   return store.get(key) as DataStore[K];
 }
@@ -269,7 +273,7 @@ function memoized<K extends keyof DataStore>(key: K, load: () => DataStore[K]): 
  * Datasets are exposed as getters, so destructuring only the properties a
  * caller needs avoids parsing the remaining CSV files.
  */
-export function getDataStore(): DataStore {
+function loadFromCsv(): DataStore {
   return {
     get latest() {
       return memoized("latest", () => loadCsv("vw_finops_latest_complete_run.csv").map(recommendation));
@@ -291,4 +295,91 @@ export function getDataStore(): DataStore {
       );
     },
   };
+}
+
+function getSqlPool(): Promise<sql.ConnectionPool> {
+  let pool = globalThis.__finopsSqlPool;
+  if (!pool) {
+    pool = sql.connect({
+      server: requireEnv("AZURE_SQL_SERVER"),
+      database: requireEnv("AZURE_SQL_DATABASE"),
+      user: requireEnv("AZURE_SQL_USER"),
+      password: requireEnv("AZURE_SQL_PASSWORD"),
+      port: Number(process.env.AZURE_SQL_PORT ?? 1433),
+      options: { encrypt: true, trustServerCertificate: false },
+      requestTimeout: 60000,
+      connectionTimeout: 20000,
+    });
+    globalThis.__finopsSqlPool = pool;
+  }
+  return pool;
+}
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Variável de ambiente ${name} não definida.`);
+  return value;
+}
+
+// O SQL Serverless pode estar "acordando" de um auto-pause, e um container do
+// App Service recém-iniciado às vezes tem a rede ainda se estabilizando —
+// ambos se manifestam como ECONNRESET/"socket hang up" transitórios. Tenta de
+// novo com backoff, descartando o pool a cada falha para forçar reconexão limpa.
+async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[sql] tentativa ${attempt + 1}/${attempts} falhou: ${message}`);
+      globalThis.__finopsSqlPool = undefined;
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, baseDelayMs * 2 ** attempt));
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function loadFromSql(): Promise<DataStore> {
+  const pool = await getSqlPool();
+  // Consultas sequenciais (não Promise.all): rodar as 5 juntas mantinha vários
+  // recordsets grandes (colunas NVARCHAR(MAX)) na memória ao mesmo tempo e
+  // estourava o heap do Node. Sequencial permite o GC liberar cada recordset
+  // bruto assim que ele é convertido para o tipo final.
+  const latest = (await pool.request().query("SELECT * FROM dbo.FinOpsLatestRun")).recordset.map(recommendation);
+  const allRecommendations = (await pool.request().query("SELECT * FROM dbo.FinOpsRecommendations")).recordset.map(
+    recommendation,
+  );
+  const runs = (await pool.request().query("SELECT * FROM dbo.FinOpsEngineRuns")).recordset.map(run);
+  const targetOptions = (await pool.request().query("SELECT * FROM dbo.FinOpsTargetOptions")).recordset.map(
+    targetOption,
+  );
+  const targetOptionsAllRuns = (
+    await pool.request().query("SELECT * FROM dbo.FinOpsTargetOptionsAllRuns")
+  ).recordset.map(targetHistory);
+  return { latest, allRecommendations, runs, targetOptions, targetOptionsAllRuns };
+}
+
+export async function getDataStore(): Promise<DataStore> {
+  if (globalThis.__finopsStore) return globalThis.__finopsStore;
+  // "Single-flight": se várias requisições chegam antes da primeira carga
+  // terminar (comum no cold start, com o probe de warmup batendo em "/"
+  // repetidamente), todas aguardam a MESMA promise em vez de cada uma abrir
+  // sua própria rodada de conexões ao SQL — evitar isso é essencial porque as
+  // tentativas concorrentes competindo por conexão pareciam causar os
+  // próprios resets (efeito manada).
+  if (!globalThis.__finopsStoreLoading) {
+    globalThis.__finopsStoreLoading = (
+      process.env.DATA_SOURCE === "sql" ? withRetry(loadFromSql) : Promise.resolve(loadFromCsv())
+    ).catch((err) => {
+      globalThis.__finopsStoreLoading = undefined;
+      throw err;
+    });
+  }
+  const store = await globalThis.__finopsStoreLoading;
+  globalThis.__finopsStore = store;
+  return store;
 }

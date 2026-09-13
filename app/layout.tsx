@@ -11,6 +11,11 @@ export const metadata: Metadata = {
   description: "Cloud Cost Intelligence & Optimization",
 };
 
+// O layout busca dados (SQL/CSV) em toda página; força renderização por
+// requisição para não depender de conectividade com o banco em build time
+// (o Azure SQL Serverless pode estar pausado durante o build).
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const repo = getRepository();
   const [meta, filterOptions] = await Promise.all([repo.getSidebarMeta(), repo.getFilterOptions()]);

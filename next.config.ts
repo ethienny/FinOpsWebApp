@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["papaparse"],
+  output: "standalone",
+  serverExternalPackages: ["papaparse", "mssql"],
 };
 
 export default nextConfig;
