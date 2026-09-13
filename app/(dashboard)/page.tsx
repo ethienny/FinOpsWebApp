@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ExecutiveResourcesTable } from "@/components/tables/ExecutiveResourcesTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
@@ -68,9 +69,14 @@ export default async function ExecutivePage({
       </div>
 
       <section className="space-y-3">
-        <div>
-          <h3 className="text-sm font-semibold text-white">Recommendation Tracking</h3>
-          <p className="text-xs text-slate-400">What the teams decided and delivered on the current scope. PRICED savings only.</p>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Recommendation Tracking</h3>
+            <p className="text-xs text-slate-400">What the teams decided and delivered on the current scope. PRICED savings only.</p>
+          </div>
+          <Link href="/tracking" className="text-xs text-cyan-200 hover:text-white">
+            Open tracking
+          </Link>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <KpiCard

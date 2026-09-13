@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { RecommendationDecision, ResourceSummary } from "@/types/finops";
-import { applyDecisions, decisionsByResource, decisionSavings } from "./metrics";
+import { applyDecisions, decidedRows, decisionsByResource, decisionsByStatus, decisionSavings, trackedSavingsByOwner } from "./metrics";
 
 function row(id: string, reliability: string, savings: number | null): ResourceSummary {
   return {
@@ -90,5 +90,34 @@ describe("applyDecisions", () => {
     expect(result.decisionStatus).toBe("in_progress");
     expect(result.decisionLabel).toBe("In progress");
     expect(result.decisionOwner).toBe("platform-team");
+  });
+});
+
+describe("tracking breakdowns", () => {
+  const rows = applyDecisions(
+    [row("a", "PRICED", 100), row("b", "PRICED", 50), row("h", "HEURISTIC", 900), row("o", "PRICED", 10), row("d", "PRICED", 70)],
+    decisionsByResource([
+      decision("a", "done", "platform"),
+      decision("b", "accepted", "platform"),
+      decision("h", "done", "data"),
+      decision("d", "dismissed", "data"),
+    ]),
+  );
+
+  it("decidedRows drops open rows and sorts newest first", () => {
+    const decided = decidedRows(rows.map((r, i) => ({ ...r, decisionUpdatedAt: r.decisionStatus === "open" ? "" : `2026-09-1${i}` })));
+    expect(decided.map((r) => r.ResourceId)).toEqual(["d", "h", "b", "a"]);
+  });
+
+  it("decisionsByStatus counts decided rows per label and omits empty statuses", () => {
+    expect(decisionsByStatus(decidedRows(rows))).toEqual([
+      { name: "Accepted", value: 1 },
+      { name: "Done", value: 2 },
+      { name: "Dismissed", value: 1 },
+    ]);
+  });
+
+  it("trackedSavingsByOwner sums PRICED savings under way or done per owner", () => {
+    expect(trackedSavingsByOwner(decidedRows(rows))).toEqual([{ name: "platform", value: 150 }]);
   });
 });

@@ -1,18 +1,29 @@
 // Joins FinOps rows with stored decisions for the pages. Reads both sources on
 // the server and hands pages ready to render values.
 
-import type { DecisionLogRow, FinOpsFilters, OpportunityRow, DecisionSavings } from "@/types/finops";
+import type { DecisionSavings, FinOpsFilters, NamedValue, OpportunityRow } from "@/types/finops";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionRepository } from "./store";
-import { applyDecisions, DECISION_LABELS, decisionsByResource, decisionSavings } from "./metrics";
+import {
+  applyDecisions,
+  decidedRows,
+  decisionsByResource,
+  decisionsByStatus,
+  decisionSavings,
+  trackedSavingsByOwner,
+} from "./metrics";
 
 export interface DecisionTracking {
+  currency: string;
   rows: OpportunityRow[];
+  decided: OpportunityRow[];
   savings: DecisionSavings;
   dismissedCount: number;
+  byStatus: NamedValue[];
+  byOwner: NamedValue[];
 }
 
-/** Opportunity rows in the current scope with their decisions and the tracking KPIs. */
+/** Opportunity rows in the current scope with their decisions and the tracking figures. */
 export async function getDecisionTracking(filters: FinOpsFilters): Promise<DecisionTracking> {
   const [opportunities, decisions] = await Promise.all([
     getRepository().getOpportunities(filters),
@@ -20,36 +31,14 @@ export async function getDecisionTracking(filters: FinOpsFilters): Promise<Decis
   ]);
   const byResource = decisionsByResource(decisions);
   const rows = applyDecisions(opportunities.rows, byResource);
+  const decided = decidedRows(rows);
   return {
+    currency: opportunities.currency,
     rows,
+    decided,
     savings: decisionSavings(opportunities.rows, byResource),
-    dismissedCount: rows.filter((r) => r.decisionStatus === "dismissed").length,
+    dismissedCount: decided.filter((r) => r.decisionStatus === "dismissed").length,
+    byStatus: decisionsByStatus(decided),
+    byOwner: trackedSavingsByOwner(decided),
   };
-}
-
-/** Every recorded decision joined with its resource, newest first. */
-export async function getDecisionLog(): Promise<DecisionLogRow[]> {
-  const [opportunities, decisions] = await Promise.all([
-    getRepository().getOpportunities({}),
-    getDecisionRepository().list(),
-  ]);
-  const byId = new Map(opportunities.rows.map((r) => [r.ResourceId, r]));
-  return decisions
-    .map((d) => {
-      const row = byId.get(d.resourceId);
-      return {
-        resourceId: d.resourceId,
-        resourceName: row?.ResourceName ?? d.resourceId,
-        serviceType: row?.ServiceType ?? "",
-        runId: d.runId,
-        status: d.status,
-        label: DECISION_LABELS[d.status],
-        owner: d.owner,
-        updatedAt: d.updatedAt,
-        monthlySavings: row?.EstimatedMonthlySavings ?? null,
-        savingsReliability: row?.SavingsReliability ?? "",
-        currency: row?.CostCurrency ?? opportunities.currency,
-      };
-    })
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }

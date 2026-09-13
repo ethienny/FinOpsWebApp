@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity,
   Boxes,
+  ClipboardCheck,
   Gauge,
   History,
   LayoutDashboard,
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/", label: "Executive", icon: LayoutDashboard },
   { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
   { href: "/opportunities", label: "Opportunities", icon: Sparkles },
+  { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
   { href: "/sizing", label: "Sizing", icon: Scale },
   { href: "/resources", label: "Resources", icon: Boxes },
   { href: "/engine-health", label: "Engine Health", icon: Gauge },
@@ -108,6 +110,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   "/opportunities": {
     title: "Opportunities",
     subtitle: "Actionable optimization recommendations with priced and heuristic savings kept separate.",
+  },
+  "/tracking": {
+    title: "Recommendation Tracking",
+    subtitle: "What the teams decided on each recommendation, who owns it and the savings under way or delivered.",
   },
   "/sizing": {
     title: "Sizing",
