@@ -46,9 +46,14 @@ export default async function ExecutivePage({
             <span className="text-slate-400">Published {formatDate(run.PublishedAt)}</span>
             <StatusBadge value={run.DataQualityStatus} />
           </div>
-          <Link href="/engine-health" className="text-xs text-cyan-200 hover:text-white">
-            Engine health
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/report" className="text-xs text-cyan-200 hover:text-white">
+              Executive report
+            </Link>
+            <Link href="/engine-health" className="text-xs text-cyan-200 hover:text-white">
+              Engine health
+            </Link>
+          </div>
         </section>
       ) : (
         <section className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-5 text-amber-100">

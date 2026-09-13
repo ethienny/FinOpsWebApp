@@ -157,6 +157,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
     title: "Recommendation Tracking",
     subtitle: "What the teams decided on each recommendation, who owns it and the savings under way or delivered.",
   },
+  "/report": {
+    title: "Executive Report",
+    subtitle: "Printable summary of cost, validated savings, priorities and data quality for the current scope.",
+  },
   "/insights": {
     title: "Insights",
     subtitle: "What it costs to wait and which actions are worth taking first.",
