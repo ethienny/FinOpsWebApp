@@ -7,6 +7,7 @@ import type {
   FinOpsRepository,
   FinOpsRun,
   OpportunitiesData,
+  RecommendationAging,
   ResourceDetailData,
   ResourcesData,
   ResourceSummary,
@@ -14,6 +15,7 @@ import type {
   ShowbackData,
   ShowbackRow,
   SidebarMeta,
+  TargetOption,
   SizingData,
   SizingProfile,
   SizingRow,
@@ -22,6 +24,7 @@ import { getDataStore } from "@/lib/data/store";
 import { groupSum, hasAllocationTag, sum, uniqueSorted } from "@/lib/data/parse";
 import { matchesFilters } from "@/lib/aggregations/filters";
 import { friendlyService } from "@/lib/formatters";
+import { buildAgingIndex } from "@/lib/insights/aging";
 
 function latestPublished(runs: FinOpsRun[]): FinOpsRun | null {
   const published = runs.filter((r) => r.PublishApproved && r.IsPublishable && asOk(r));
@@ -41,7 +44,7 @@ function serviceName(row: { ServiceType?: string; ResourceType?: string }): stri
   return row.ServiceType || friendlyService(row.ResourceType || "Unknown");
 }
 
-function toSummary(row: FinOpsRecommendation): ResourceSummary {
+function toSummary(row: FinOpsRecommendation, performanceRisk = ""): ResourceSummary {
   return {
     ResourceId: row.ResourceId,
     ResourceName: row.ResourceName,
@@ -58,10 +61,25 @@ function toSummary(row: FinOpsRecommendation): ResourceSummary {
     Confidence: row.Confidence,
     SavingsReliability: row.SavingsReliability,
     EstimatedMonthlySavings: row.EstimatedMonthlySavings,
+    RiskAdjustedMonthlySavings: row.RiskAdjustedMonthlySavings,
     MetricCollectionStatus: row.MetricCollectionStatus,
+    MetricCoverageRatio: row.MetricCoverageRatio,
+    RecommendationAction: row.RecommendationAction,
+    IsActionable: row.IsActionable,
+    IsDestructive: row.IsDestructive,
+    PerformanceRisk: performanceRisk,
     TagOwner: row.TagOwner,
     TagEnvironment: row.TagEnvironment,
   };
+}
+
+/** Performance risk of the conservative sizing option per resource. */
+function performanceRiskByResource(targetOptions: TargetOption[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const option of targetOptions) {
+    if (option.Profile === "Conservative" && option.PerformanceRisk) map.set(option.ResourceId, option.PerformanceRisk);
+  }
+  return map;
 }
 
 function riskScore(risk: string): number {
@@ -113,7 +131,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
     const topResources = [...priced]
       .sort((a, b) => (b.EstimatedMonthlySavings ?? 0) - (a.EstimatedMonthlySavings ?? 0))
       .slice(0, 10)
-      .map(toSummary);
+      .map((r) => toSummary(r));
 
     const costByService = groupSum(rows, (r) => serviceName(r), (r) => r.MonthlyCost, 8);
     const savingsByService = groupSum(priced, (r) => serviceName(r), (r) => r.EstimatedMonthlySavings, 8);
@@ -187,7 +205,8 @@ export class CsvFinOpsRepository implements FinOpsRepository {
   }
 
   async getOpportunities(filters: FinOpsFilters): Promise<OpportunitiesData> {
-    const { latest } = await getDataStore();
+    const { latest, targetOptions } = await getDataStore();
+    const risk = performanceRiskByResource(targetOptions);
     const rows = latest.filter((r) => matchesFilters(r, filters));
     const priced = rows.filter((r) => r.SavingsReliability === "PRICED");
     const heuristic = rows.filter((r) => r.SavingsReliability === "HEURISTIC");
@@ -199,7 +218,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       validatedSavings: sum(priced.map((r) => r.EstimatedMonthlySavings)),
       estimatedOpportunity: sum(heuristic.map((r) => r.EstimatedMonthlySavings)),
       averageSavingsPerActionable: actionable.length ? actionableSavings / actionable.length : 0,
-      rows: rows.map(toSummary),
+      rows: rows.map((r) => toSummary(r, risk.get(r.ResourceId) ?? "")),
     };
   }
 
@@ -259,7 +278,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       resourcesWithRecommendations: rows.filter((r) => Boolean(r.ActionLabel) && r.IsActionable).length,
       monthlyCost: sum(rows.map((r) => r.MonthlyCost)),
       serviceTypesAnalyzed: uniqueSorted(rows.map((r) => r.ServiceType)).length,
-      rows: rows.map(toSummary),
+      rows: rows.map((r) => toSummary(r)),
     };
   }
 
@@ -313,7 +332,17 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       comparison: a || b ? { a, b } : null,
     };
   }
+
+  /** Aging of the current recommendation of every resource, computed once per process. */
+  async getRecommendationAging(): Promise<RecommendationAging[]> {
+    if (agingCache) return agingCache;
+    const { latest, allRecommendations, runs } = await getDataStore();
+    agingCache = buildAgingIndex(allRecommendations, runs, latest[0]?.RunId ?? "");
+    return agingCache;
+  }
 }
+
+let agingCache: RecommendationAging[] | null = null;
 
 /**
  * Future Databricks provider.
@@ -357,6 +386,9 @@ export class DatabricksFinOpsRepository implements FinOpsRepository {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
   async getRunHistory(): Promise<RunHistoryData> {
+    throw new Error("DatabricksFinOpsRepository is not implemented.");
+  }
+  async getRecommendationAging(): Promise<RecommendationAging[]> {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
 }

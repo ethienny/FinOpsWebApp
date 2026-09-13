@@ -297,7 +297,13 @@ export interface ResourceSummary {
   Confidence: string;
   SavingsReliability: string;
   EstimatedMonthlySavings: number | null;
+  RiskAdjustedMonthlySavings: number | null;
   MetricCollectionStatus: string;
+  MetricCoverageRatio: number | null;
+  RecommendationAction: string;
+  IsActionable: boolean;
+  IsDestructive: boolean;
+  PerformanceRisk: string;
   TagOwner: string;
   TagEnvironment: string;
 }
@@ -425,6 +431,52 @@ export interface ShowbackAllocation {
 }
 
 // ───────────────────────────────────────────────
+// Insights: recommendation aging and quick wins
+// ───────────────────────────────────────────────
+
+export type AgeBucket = "new" | "recurring" | "persistent";
+
+/** How long the current recommendation of a resource has been open across engine runs. */
+export interface RecommendationAging {
+  resourceId: string;
+  recommendationAction: string;
+  firstDetectedRunId: string;
+  firstDetectedAt: string;
+  runsOpen: number;
+  daysOpen: number;
+  missedSavings: number;
+  ageBucket: AgeBucket;
+}
+
+export type ExecutionRisk = "low" | "medium" | "high";
+
+/** Aging and quick win fields overlaid on a resource summary. */
+export interface InsightFields {
+  runsOpen: number;
+  daysOpen: number;
+  missedSavings: number;
+  ageBucket: AgeBucket;
+  ageLabel: string;
+  firstDetectedRunId: string;
+  firstDetectedAt: string;
+  valueRank: number;
+  quickWinScore: number;
+  executionRisk: ExecutionRisk;
+  executionRiskScore: number;
+  riskLabel: string;
+  isQuickWin: boolean;
+}
+
+export type InsightRow = ResourceSummary & InsightFields;
+
+export interface AgingSummary {
+  missedSavings: number;
+  persistentCount: number;
+  averageRunsOpen: number;
+  actionableCount: number;
+}
+
+// ───────────────────────────────────────────────
 // Recommendation decisions
 // ───────────────────────────────────────────────
 
@@ -441,14 +493,17 @@ export interface RecommendationDecision {
   updatedBy: string;
 }
 
-/** Opportunity table row: the resource summary with its decision overlaid. */
-export interface OpportunityRow extends ResourceSummary {
+/** Decision fields overlaid on a row. */
+export interface DecisionFields {
   decisionStatus: DecisionStatus;
   decisionLabel: string;
   decisionOwner: string;
   decisionRunId: string;
   decisionUpdatedAt: string;
 }
+
+/** Opportunity table row: the resource summary with insights and its decision overlaid. */
+export type OpportunityRow = InsightRow & DecisionFields;
 
 /** Savings tracked through decisions. PRICED savings only. */
 export interface DecisionSavings {
@@ -474,4 +529,5 @@ export interface FinOpsRepository {
   getResourceById(resourceId: string): Promise<ResourceDetailData | null>;
   getEngineHealth(): Promise<EngineHealthData>;
   getRunHistory(runA?: string, runB?: string): Promise<RunHistoryData>;
+  getRecommendationAging(): Promise<RecommendationAging[]>;
 }

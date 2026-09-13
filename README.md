@@ -34,6 +34,7 @@ Loading skeletons live in each route folder instead of the app root. A root `loa
 /lib/formatters       money, percent, compact numbers
 /lib/aggregations     shared filter matching
 /lib/decisions        recommendation decisions: rules, JSON store, page service
+/lib/insights         recommendation aging and quick win scoring, page service
 /types                TypeScript models generated from CSV schemas
 /data                 simulated Databricks tables/views
 ```
@@ -103,6 +104,16 @@ Resource names link to `/resources/[encoded-resource-id]` (base64url of `Resourc
 Detail tabs: Overview, Cost & Usage, Recommendation, Sizing, Metrics, History, JSON.
 
 Raw JSON appears only in the JSON tab.
+
+## Cost of inaction and quick wins
+
+Two analyses derive from the multi run history and the recommendation evidence.
+
+**Recommendation age.** For each resource actionable in the latest official run, the engine history is walked backwards over complete full scope runs while the same actionable recommendation was present. The streak gives runs open, days open and the first detection run. Missed savings accrue per interval between runs from the estimate of each run, only while it was PRICED. Buckets: New (1 run), Recurring (2 to 4), Persistent (5 or more). Filtered scope and failed runs do not count.
+
+**Quick win score.** Value rank is the percentile of `RiskAdjustedMonthlySavings` among PRICED actionable rows in the current scope. Execution safety is the mean of four factors: confidence (HIGH 1, MEDIUM 0.6, LOW 0.3), conservative sizing performance risk (Low 1, Medium 0.6, High 0.2), metric coverage ratio, and destructiveness (destructive 0.4). Score = 100 × (0.5 × value rank + 0.5 × safety). Execution risk is low at safety 0.75 or more, medium at 0.5, high below. A quick win is a PRICED actionable row with low execution risk in the upper half of value.
+
+Both surface on Executive (Cost of Inaction and Quick Wins sections), Opportunities (Age, Missed so far, Quick win score and Execution risk columns) and the resource detail page. The rules live in `lib/insights` and are unit tested.
 
 ## Recommendation decisions
 
