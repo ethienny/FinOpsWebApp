@@ -35,6 +35,7 @@ Loading skeletons live in each route folder instead of the app root. A root `loa
 /lib/aggregations     shared filter matching
 /lib/decisions        recommendation decisions: rules, JSON store, page service
 /lib/insights         recommendation aging and quick win scoring, page service
+/lib/entitlements     plan catalog, current plan, server side module gate
 /types                TypeScript models generated from CSV schemas
 /data                 simulated Databricks tables/views
 ```
@@ -120,6 +121,21 @@ Two analyses derive from the multi run history and the recommendation evidence.
 **Quick win score.** Value rank is the percentile of `RiskAdjustedMonthlySavings` among PRICED actionable rows in the current scope. Execution safety is the mean of four factors: confidence (HIGH 1, MEDIUM 0.6, LOW 0.3), conservative sizing performance risk (Low 1, Medium 0.6, High 0.2), metric coverage ratio, and destructiveness (destructive 0.4). Score = 100 × (0.5 × value rank + 0.5 × safety). Execution risk is low at safety 0.75 or more, medium at 0.5, high below. A quick win is a PRICED actionable row with low execution risk in the upper half of value.
 
 Both live on the Insights page (Cost of Inaction and Quick Wins sections), with headline figures on Executive, columns on Opportunities (Age, Missed so far, Quick win score and Execution risk) and a strip on the resource detail page. The rules live in `lib/insights` and are unit tested.
+
+## Plans and modules
+
+The product emulation packages pages as modules and unlocks them by plan. No plan hides savings: plans differ in depth, governance and scale.
+
+| Module | Pages | Lowest plan |
+| --- | --- | --- |
+| core | Executive, Opportunities, Resources | Assessment |
+| tracking | Tracking, decision panel, tracking KPIs | Starter |
+| insights | Insights, aging and quick win columns | Starter |
+| showback | Showback & Chargeback | Pro |
+| sizing | Sizing | Pro |
+| governance | Engine Health, Run History | Enterprise |
+
+Assessment covers 1 subscription and Starter 5; larger scopes show a banner instead of cutting data. The catalog lives in `lib/entitlements/catalog.ts` and is unit tested. The active plan comes from `data/state/plan.json` (the sidebar switcher writes it), then `FINOPS_PLAN`, then `enterprise`. Gates run on the server through `requireModule`, so a URL typed by hand still lands on the locked page. A licensing service replaces `lib/entitlements/store.ts` without touching pages.
 
 ## Recommendation decisions
 

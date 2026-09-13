@@ -1,6 +1,7 @@
 // Tracking page. Shows what the teams decided on the recommendations in the
 // current scope: tracking KPIs, breakdowns and the list of decided rows.
 
+import { requireModule } from "@/lib/entitlements/gate";
 import { TrackingTable } from "@/components/tables/TrackingTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getDecisionTracking } from "@/lib/decisions/service";
@@ -14,6 +15,8 @@ export default async function TrackingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const gate = await requireModule("tracking");
+  if (gate.locked) return gate.locked;
   const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams));
   const openCount = tracking.rows.length - tracking.decided.length;
 

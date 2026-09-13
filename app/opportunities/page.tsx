@@ -6,6 +6,8 @@ import { OpportunitiesTable } from "@/components/tables/OpportunitiesTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
+import { getEntitlements } from "@/lib/entitlements/store";
+import { hasModule } from "@/lib/entitlements/catalog";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart } from "@/components/charts/Charts";
@@ -29,11 +31,13 @@ export default async function OpportunitiesPage({
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
   const showDismissed = sp.showDismissed === "1";
-  const [data, tracking] = await Promise.all([
+  const [data, tracking, entitlements] = await Promise.all([
     getRepository().getOpportunities(filters),
     getDecisionTracking(filters),
+    getEntitlements(),
   ]);
-  const rows = showDismissed ? tracking.rows : tracking.rows.filter((r) => r.decisionStatus !== "dismissed");
+  const showTracking = hasModule(entitlements, "tracking");
+  const rows = showDismissed || !showTracking ? tracking.rows : tracking.rows.filter((r) => r.decisionStatus !== "dismissed");
 
   return (
     <div className="space-y-6">
@@ -49,6 +53,7 @@ export default async function OpportunitiesPage({
         />
       </div>
 
+      {showTracking ? (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <KpiCard
           label="Savings In Progress"
@@ -69,6 +74,7 @@ export default async function OpportunitiesPage({
           accent="teal"
         />
       </div>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Savings Reliability Distribution" subtitle="Recommendations in scope by reliability">
@@ -84,13 +90,13 @@ export default async function OpportunitiesPage({
           <p className="text-xs text-slate-400">
             SecondaryAction is shown as an alternative only and is never added to primary savings totals.
           </p>
-          {tracking.dismissedCount ? (
+          {showTracking && tracking.dismissedCount ? (
             <Link href={toggleDismissedHref(sp, !showDismissed)} className="text-xs text-cyan-200 hover:text-white">
               {showDismissed ? "Hide dismissed" : `Show dismissed (${tracking.dismissedCount})`}
             </Link>
           ) : null}
         </div>
-        <OpportunitiesTable rows={rows} />
+        <OpportunitiesTable rows={rows} modules={entitlements.modules} />
       </section>
     </div>
   );

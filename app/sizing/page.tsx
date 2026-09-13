@@ -1,3 +1,4 @@
+import { requireModule } from "@/lib/entitlements/gate";
 import { SizingTable } from "@/components/tables/SizingTable";
 import { Suspense } from "react";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
@@ -19,6 +20,8 @@ export default async function SizingPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const gate = await requireModule("sizing");
+  if (gate.locked) return gate.locked;
   const sp = await searchParams;
   const profile = asProfile(sp.profile);
   const data = await getRepository().getSizing(filtersFromSearchParams(sp), profile);

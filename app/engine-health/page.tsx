@@ -1,3 +1,4 @@
+import { requireModule } from "@/lib/entitlements/gate";
 import { EngineHealthRunsTable } from "@/components/tables/EngineHealthRunsTable";
 import { getRepository } from "@/lib/repositories";
 import { formatDate, formatDuration, formatNumber, formatPercent } from "@/lib/formatters";
@@ -13,6 +14,8 @@ function splitServices(value: string) {
 }
 
 export default async function EngineHealthPage() {
+  const gate = await requireModule("governance");
+  if (gate.locked) return gate.locked;
   const data = await getRepository().getEngineHealth();
   const run = data.latestRun;
 

@@ -8,6 +8,8 @@ import { agingSummary } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
+import { getEntitlements } from "@/lib/entitlements/store";
+import { hasModule } from "@/lib/entitlements/catalog";
 import { formatMoney, formatNumber, formatDate } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { StatusBadge } from "@/components/badges";
@@ -20,10 +22,13 @@ export default async function ExecutivePage({
 }) {
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
-  const [data, tracking] = await Promise.all([
+  const [data, tracking, entitlements] = await Promise.all([
     getRepository().getExecutiveData(filters),
     getDecisionTracking(filters),
+    getEntitlements(),
   ]);
+  const showTracking = hasModule(entitlements, "tracking");
+  const showInsights = hasModule(entitlements, "insights");
   const run = data.publishedRun;
   const aging = agingSummary(tracking.rows);
   const quickWinCount = tracking.rows.filter(
@@ -73,7 +78,9 @@ export default async function ExecutivePage({
         />
       </div>
 
+      {showTracking || showInsights ? (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {showTracking ? (
         <KpiCard
           label="Realized Savings"
           value={formatMoney(tracking.savings.realized, data.currency)}
@@ -82,6 +89,8 @@ export default async function ExecutivePage({
           href="/tracking"
           linkLabel="Open tracking"
         />
+        ) : null}
+        {showTracking ? (
         <KpiCard
           label="Savings In Progress"
           value={formatMoney(tracking.savings.inProgress, data.currency)}
@@ -90,6 +99,8 @@ export default async function ExecutivePage({
           href="/tracking"
           linkLabel="Open tracking"
         />
+        ) : null}
+        {showInsights ? (
         <KpiCard
           label="Missed Savings To Date"
           value={formatMoney(aging.missedSavings, data.currency)}
@@ -98,6 +109,8 @@ export default async function ExecutivePage({
           href="/insights"
           linkLabel="Open insights"
         />
+        ) : null}
+        {showInsights ? (
         <KpiCard
           label="Quick Wins Available"
           value={formatNumber(quickWinCount, false)}
@@ -106,7 +119,9 @@ export default async function ExecutivePage({
           href="/insights"
           linkLabel="Open insights"
         />
+        ) : null}
       </div>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title="Cost vs Savings by Service Type" subtitle="Cost from latest run vs PRICED savings">

@@ -2,6 +2,7 @@
 // ranking for the current scope. Done and dismissed recommendations are left
 // out of the quick wins.
 
+import { requireModule } from "@/lib/entitlements/gate";
 import { QuickWinsTable } from "@/components/tables/QuickWinsTable";
 import { agingSummary, savingsByAge, topQuickWins } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
@@ -15,6 +16,8 @@ export default async function InsightsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const gate = await requireModule("insights");
+  if (gate.locked) return gate.locked;
   const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams));
   const currency = tracking.currency;
   const aging = agingSummary(tracking.rows);
