@@ -8,6 +8,7 @@ import { agingSummary } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
+import { getRunChanges } from "@/lib/insights/service";
 import { getEntitlements } from "@/lib/entitlements/store";
 import { hasModule } from "@/lib/entitlements/catalog";
 import { formatMoney, formatNumber, formatDate } from "@/lib/formatters";
@@ -29,6 +30,7 @@ export default async function ExecutivePage({
   ]);
   const showTracking = hasModule(entitlements, "tracking");
   const showInsights = hasModule(entitlements, "insights");
+  const changes = showInsights ? await getRunChanges(filters) : null;
   const run = data.publishedRun;
   const aging = agingSummary(tracking.rows);
   const quickWinCount = tracking.rows.filter(
@@ -47,6 +49,11 @@ export default async function ExecutivePage({
             <StatusBadge value={run.DataQualityStatus} />
           </div>
           <div className="flex items-center gap-4">
+            {changes?.previousRun ? (
+              <Link href="/changes" className="text-xs text-cyan-200 hover:text-white">
+                Since previous run: {changes.summary.newCount} new, {changes.summary.resolvedCount} resolved
+              </Link>
+            ) : null}
             <Link href="/report" className="text-xs text-cyan-200 hover:text-white">
               Executive report
             </Link>
