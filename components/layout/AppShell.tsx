@@ -23,16 +23,33 @@ import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/badges";
 import { NetworkGlyph } from "@/components/layout/NetworkGlyph";
 
-const NAV = [
-  { href: "/", label: "Executive", icon: LayoutDashboard },
-  { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
-  { href: "/opportunities", label: "Opportunities", icon: Sparkles },
-  { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
-  { href: "/insights", label: "Insights", icon: Lightbulb },
-  { href: "/sizing", label: "Sizing", icon: Scale },
-  { href: "/resources", label: "Resources", icon: Boxes },
-  { href: "/engine-health", label: "Engine Health", icon: Gauge },
-  { href: "/run-history", label: "Run History", icon: History },
+// Menu groups follow the question the user brings: how are we doing, what
+// should we act on, and what exists behind the numbers.
+const NAV_GROUPS = [
+  {
+    caption: "OVERVIEW",
+    items: [
+      { href: "/", label: "Executive", icon: LayoutDashboard },
+      { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
+    ],
+  },
+  {
+    caption: "OPTIMIZE",
+    items: [
+      { href: "/opportunities", label: "Opportunities", icon: Sparkles },
+      { href: "/insights", label: "Insights", icon: Lightbulb },
+      { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
+      { href: "/sizing", label: "Sizing", icon: Scale },
+    ],
+  },
+  {
+    caption: "OPERATIONS",
+    items: [
+      { href: "/resources", label: "Resources", icon: Boxes },
+      { href: "/engine-health", label: "Engine Health", icon: Gauge },
+      { href: "/run-history", label: "Run History", icon: History },
+    ],
+  },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -54,29 +71,35 @@ function SidebarBody({ meta, onNavigate }: { meta: SidebarMeta; onNavigate?: () 
           Cloud Cost Intelligence & Optimization
         </p>
       </div>
-      <div className="nav-caption">WORKSPACE / INTELLIGENCE</div>
-      <nav aria-label="Main navigation" className="flex-1 space-y-1 px-3 py-4">
-        {NAV.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
-                active
-                  ? "bg-cyan-400/10 text-cyan-100 shadow-glow"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white",
-              )}
-            >
-              <Icon className={cn("h-4 w-4", active && "text-accent-cyan")} />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav aria-label="Main navigation" className="flex-1 px-3 pb-4">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.caption}>
+            <div className="nav-caption">{group.caption}</div>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(pathname, item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
+                      active
+                        ? "bg-cyan-400/10 text-cyan-100 shadow-glow"
+                        : "text-slate-300 hover:bg-white/5 hover:text-white",
+                    )}
+                  >
+                    <Icon className={cn("h-4 w-4", active && "text-accent-cyan")} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
       <div className="space-y-2 border-t border-white/10 px-4 py-4 text-xs text-slate-400">
         <div className="flex justify-between gap-2">
