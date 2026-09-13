@@ -68,7 +68,7 @@ body { background-color:#030919; background-image: radial-gradient(ellipse at 85
 body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(61,129,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,129,216,.025) 1px,transparent 1px); background-size:48px 48px; z-index:-1; }
 .desktop-sidebar { height:100dvh; position:sticky; top:0; overflow-y:auto; background:linear-gradient(180deg,#07152d,#040c1e); border-right:1px solid var(--line); box-shadow:8px 0 36px #0002; }
 .desktop-sidebar > div:first-child,.mobile-sidebar > div:first-of-type { padding-top:32px; padding-bottom:28px; }
-.nav-caption { padding:26px 24px 4px; font-size:10px; letter-spacing:.2em; color:#7292be; }
+.nav-caption { padding:22px 12px 6px; font-size:10px; letter-spacing:.2em; color:#7292be; }
 .finops-shell nav a { transition:background .18s,border-color .18s; }
 .finops-shell aside nav a { border:1px solid transparent; min-height:46px; margin-bottom:7px; }
 .finops-shell aside nav a[aria-current="page"] { border-color:#22d3ee66; background:linear-gradient(100deg,#0b4264,#10223f); box-shadow:inset 3px 0 #22d3ee,0 0 24px #009dff12; color:#e4fbff; }

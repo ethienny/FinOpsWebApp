@@ -80,9 +80,9 @@ export function VerticalBars<T extends { name: string; value: number }>({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 24 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Bar dataKey={dataKey} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
@@ -140,12 +140,12 @@ export function GroupedBars({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 24 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
-        <Legend />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
         <Bar dataKey="cost" name="Cost" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
         <Bar dataKey="savings" name="Validated savings" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
@@ -205,12 +205,12 @@ export function CompareBars({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} />
-        <Legend />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
         <Bar dataKey="current" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
         <Bar dataKey="target" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
