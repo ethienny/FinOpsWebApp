@@ -3,6 +3,10 @@ import { getRepository } from "@/lib/repositories";
 import { formatDate, formatDuration, formatNumber, formatPercent } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 
+// The page takes no search params, so Next would prerender it at build time and
+// freeze the engine run data. Rendering on demand keeps it in sync with the CSVs.
+export const dynamic = "force-dynamic";
+
 function splitServices(value: string) {
   if (!value) return [];
   return value.split(/[;,]/).map((s) => s.trim()).filter(Boolean);

@@ -1,3 +1,6 @@
+// Server side CSV access. Each file is parsed on first use and kept in a
+// process wide cache, so a page only pays for the datasets it reads.
+
 import Papa from "papaparse";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -247,18 +250,45 @@ export interface DataStore {
 }
 
 declare global {
-  var __finopsStore: DataStore | undefined;
+  var __finopsCache: Map<keyof DataStore, unknown> | undefined;
 }
 
+function cache(): Map<keyof DataStore, unknown> {
+  if (!globalThis.__finopsCache) globalThis.__finopsCache = new Map();
+  return globalThis.__finopsCache;
+}
+
+/** Parses a dataset on first access and reuses it afterwards. */
+function memoized<K extends keyof DataStore>(key: K, load: () => DataStore[K]): DataStore[K] {
+  const store = cache();
+  if (!store.has(key)) store.set(key, load());
+  return store.get(key) as DataStore[K];
+}
+
+/**
+ * Datasets are exposed as getters, so destructuring only the properties a
+ * caller needs avoids parsing the remaining CSV files.
+ */
 export function getDataStore(): DataStore {
-  if (globalThis.__finopsStore) return globalThis.__finopsStore;
-  const store: DataStore = {
-    latest: loadCsv("vw_finops_latest_complete_run.csv").map(recommendation),
-    allRecommendations: loadCsv("azure_finops_multiservice_recommendation.csv").map(recommendation),
-    runs: loadCsv("finops_engine_runs.csv").map(run),
-    targetOptions: loadCsv("vw_finops_target_options.csv").map(targetOption),
-    targetOptionsAllRuns: loadCsv("vw_finops_target_options_all_runs.csv").map(targetHistory),
+  return {
+    get latest() {
+      return memoized("latest", () => loadCsv("vw_finops_latest_complete_run.csv").map(recommendation));
+    },
+    get allRecommendations() {
+      return memoized("allRecommendations", () =>
+        loadCsv("azure_finops_multiservice_recommendation.csv").map(recommendation),
+      );
+    },
+    get runs() {
+      return memoized("runs", () => loadCsv("finops_engine_runs.csv").map(run));
+    },
+    get targetOptions() {
+      return memoized("targetOptions", () => loadCsv("vw_finops_target_options.csv").map(targetOption));
+    },
+    get targetOptionsAllRuns() {
+      return memoized("targetOptionsAllRuns", () =>
+        loadCsv("vw_finops_target_options_all_runs.csv").map(targetHistory),
+      );
+    },
   };
-  globalThis.__finopsStore = store;
-  return store;
 }
