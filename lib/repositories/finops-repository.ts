@@ -10,6 +10,7 @@ import type {
   RecommendationAging,
   ResourceDetailData,
   ResourcesData,
+  RunDeltaData,
   ResourceSummary,
   RunHistoryData,
   ShowbackData,
@@ -25,6 +26,7 @@ import { groupSum, hasAllocationTag, sum, uniqueSorted } from "@/lib/data/parse"
 import { matchesFilters } from "@/lib/aggregations/filters";
 import { friendlyService } from "@/lib/formatters";
 import { buildAgingIndex } from "@/lib/insights/aging";
+import { CHANGE_LABELS, diffRuns, previousEligibleRun, runTotals } from "@/lib/insights/changes";
 
 function latestPublished(runs: FinOpsRun[]): FinOpsRun | null {
   const published = runs.filter((r) => r.PublishApproved && r.IsPublishable && asOk(r));
@@ -348,9 +350,57 @@ export class CsvFinOpsRepository implements FinOpsRepository {
     agingCache = buildAgingIndex(allRecommendations, runs, latest[0]?.RunId ?? "");
     return agingCache;
   }
+
+  /** Resource level changes between the latest run and the previous complete one, scoped by filters. */
+  async getRunDelta(filters: FinOpsFilters): Promise<RunDeltaData> {
+    const { latest, allRecommendations, runs } = await getDataStore();
+    const latestRunId = latest[0]?.RunId ?? "";
+    const currentRun = runs.find((r) => r.RunId === latestRunId) ?? null;
+    const previousRun = previousEligibleRun(runs, latestRunId);
+    const previousRows = previousRun ? allRecommendations.filter((r) => r.RunId === previousRun.RunId) : [];
+    if (!deltaCache || deltaCache.runId !== latestRunId) {
+      deltaCache = { runId: latestRunId, changes: previousRun ? diffRuns(latest, previousRows) : [] };
+    }
+
+    const currentById = new Map(latest.map((r) => [r.ResourceId, r]));
+    const previousById = new Map(previousRows.map((r) => [r.ResourceId, r]));
+    const scopedCurrent = latest.filter((r) => matchesFilters(r, filters));
+    const scopedPrevious = previousRows.filter((r) => matchesFilters(r, filters));
+
+    const rows = deltaCache.changes.flatMap((change) => {
+      const now = currentById.get(change.resourceId);
+      const before = previousById.get(change.resourceId);
+      const source = now ?? before;
+      if (!source || !matchesFilters(source, filters)) return [];
+      const summary = toSummary(source);
+      if (!now) summary.ActionLabel = "Not analyzed on this run";
+      return [
+        {
+          ...summary,
+          changeKind: change.kind,
+          changeLabel: CHANGE_LABELS[change.kind],
+          previousAction: change.previousAction,
+          previousActionLabel: before?.ActionLabel ?? "Not analyzed",
+          previousReliability: change.previousReliability,
+          previousSavings: change.previousSavings,
+          savingsDelta: change.savingsDelta,
+        },
+      ];
+    });
+
+    return {
+      currency: currency(scopedCurrent.length ? scopedCurrent : latest),
+      currentRun,
+      previousRun,
+      current: runTotals(scopedCurrent),
+      previous: runTotals(scopedPrevious),
+      rows,
+    };
+  }
 }
 
 let agingCache: RecommendationAging[] | null = null;
+let deltaCache: { runId: string; changes: ReturnType<typeof diffRuns> } | null = null;
 
 /**
  * Future Databricks provider.
@@ -397,6 +447,9 @@ export class DatabricksFinOpsRepository implements FinOpsRepository {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
   async getRecommendationAging(): Promise<RecommendationAging[]> {
+    throw new Error("DatabricksFinOpsRepository is not implemented.");
+  }
+  async getRunDelta(): Promise<RunDeltaData> {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
 }

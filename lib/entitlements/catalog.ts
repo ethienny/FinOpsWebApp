@@ -27,8 +27,8 @@ export const MODULE_INFO: Record<Module, { label: string; summary: string; pages
   },
   insights: {
     label: "Insights",
-    summary: "Cost of inaction across engine runs and quick wins ranked by value and execution risk.",
-    pages: ["/insights"],
+    summary: "What changed since the previous run, cost of inaction across runs and quick wins ranked by value and execution risk.",
+    pages: ["/insights", "/changes"],
   },
   showback: {
     label: "Showback",

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  ArrowLeftRight,
   Boxes,
   ClipboardCheck,
   Gauge,
@@ -36,6 +37,7 @@ const NAV_GROUPS = [
     caption: "OVERVIEW",
     items: [
       { href: "/", label: "Executive", icon: LayoutDashboard },
+      { href: "/changes", label: "What Changed", icon: ArrowLeftRight },
       { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
     ],
   },
@@ -166,6 +168,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   "/report": {
     title: "Executive Report",
     subtitle: "Printable summary of cost, validated savings, priorities and data quality for the current scope.",
+  },
+  "/changes": {
+    title: "What Changed",
+    subtitle: "Recommendations that appeared, were resolved or moved since the previous complete run.",
   },
   "/insights": {
     title: "Insights",

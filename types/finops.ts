@@ -481,6 +481,66 @@ export interface AgingSummary {
 }
 
 // ───────────────────────────────────────────────
+// Insights: what changed since the previous run
+// ───────────────────────────────────────────────
+
+export type ChangeKind = "new" | "resolved" | "action_changed" | "reliability_changed" | "savings_changed";
+
+/** How the recommendation of one resource differs between two complete runs. */
+export interface ResourceChange {
+  resourceId: string;
+  kind: ChangeKind;
+  previousAction: string;
+  currentAction: string;
+  previousReliability: string;
+  currentReliability: string;
+  /** PRICED estimate on each run, zero when the estimate was not PRICED. */
+  previousSavings: number;
+  currentSavings: number;
+  savingsDelta: number;
+}
+
+/** Change fields overlaid on a resource summary. */
+export interface ChangeFields {
+  changeKind: ChangeKind;
+  changeLabel: string;
+  previousAction: string;
+  previousActionLabel: string;
+  previousReliability: string;
+  previousSavings: number;
+  savingsDelta: number;
+}
+
+export type ChangeRow = ResourceSummary & ChangeFields;
+
+/** Scope totals of one run, used to compare two runs side by side. */
+export interface RunTotals {
+  validatedSavings: number;
+  actionableCount: number;
+  monthlyCost: number;
+}
+
+export interface RunDeltaData {
+  currency: string;
+  currentRun: FinOpsRun | null;
+  previousRun: FinOpsRun | null;
+  current: RunTotals;
+  previous: RunTotals;
+  rows: ChangeRow[];
+}
+
+export interface ChangeSummary {
+  newCount: number;
+  newSavings: number;
+  resolvedCount: number;
+  resolvedSavings: number;
+  actionChangedCount: number;
+  reliabilityChangedCount: number;
+  savingsChangedCount: number;
+  savingsChangedDelta: number;
+}
+
+// ───────────────────────────────────────────────
 // Recommendation decisions
 // ───────────────────────────────────────────────
 
@@ -534,4 +594,5 @@ export interface FinOpsRepository {
   getEngineHealth(): Promise<EngineHealthData>;
   getRunHistory(runA?: string, runB?: string): Promise<RunHistoryData>;
   getRecommendationAging(): Promise<RecommendationAging[]>;
+  getRunDelta(filters: FinOpsFilters): Promise<RunDeltaData>;
 }

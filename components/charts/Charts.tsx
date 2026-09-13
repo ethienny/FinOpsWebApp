@@ -200,8 +200,12 @@ export function AreaTrend({
 
 export function CompareBars({
   data,
+  labels = { current: "current", target: "target" },
+  currency,
 }: {
   data: Array<{ name: string; current: number; target: number }>;
+  labels?: { current: string; target: string };
+  currency?: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -209,10 +213,10 @@ export function CompareBars({
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip cursor={false} />
+        <Tooltip cursor={false} content={currency ? <Tip currency={currency} /> : undefined} />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
-        <Bar dataKey="current" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="target" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="current" name={labels.current} fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="target" name={labels.target} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

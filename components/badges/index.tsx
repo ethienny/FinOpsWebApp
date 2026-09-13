@@ -84,3 +84,13 @@ export function AgeBadge({ value }: { value: string }) {
   if (v === "new") return <Badge value="New" tone="blue" />;
   return <span className="text-slate-500">—</span>;
 }
+
+export function ChangeBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  if (v === "new") return <Badge value="New" tone="cyan" />;
+  if (v === "resolved") return <Badge value="Resolved" tone="green" />;
+  if (v === "action changed") return <Badge value="Action changed" tone="purple" />;
+  if (v === "reliability changed") return <Badge value="Reliability changed" tone="amber" />;
+  if (v === "savings changed") return <Badge value="Savings changed" tone="blue" />;
+  return <Badge value={value} tone="gray" />;
+}
