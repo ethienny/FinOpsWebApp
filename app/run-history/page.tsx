@@ -1,8 +1,6 @@
 import { RunHistoryTable } from "@/components/tables/RunHistoryTable";
-import { DecisionLogTable } from "@/components/tables/DecisionLogTable";
 import { Suspense } from "react";
 import { getRepository } from "@/lib/repositories";
-import { getDecisionLog } from "@/lib/decisions/service";
 import { formatNumber, formatPercent } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, AreaTrend, DonutChart, DualLine } from "@/components/charts/Charts";
@@ -50,7 +48,7 @@ export default async function RunHistoryPage({
   const sp = await searchParams;
   const runA = one(sp.runA);
   const runB = one(sp.runB);
-  const [data, decisionLog] = await Promise.all([getRepository().getRunHistory(runA, runB), getDecisionLog()]);
+  const data = await getRepository().getRunHistory(runA, runB);
   const published = data.runs.filter((r) => r.PublishApproved).length;
   const avgMetric =
     data.runs.reduce((a, r) => a + (r.MetricAvailabilityRate ?? 0), 0) / Math.max(data.runs.length, 1);
@@ -131,14 +129,6 @@ export default async function RunHistoryPage({
       <section className="card-surface p-5">
         <h3 className="mb-4 text-sm font-semibold text-white">Run comparison table</h3>
         <RunHistoryTable rows={data.runs} />
-      </section>
-
-      <section className="card-surface p-5">
-        <h3 className="text-sm font-semibold text-white">Decision activity</h3>
-        <p className="mb-4 mt-1 text-xs text-slate-400">
-          Decisions recorded on recommendations, newest first, with the engine run they were taken on.
-        </p>
-        <DecisionLogTable rows={decisionLog} />
       </section>
     </div>
   );

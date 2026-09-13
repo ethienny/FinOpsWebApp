@@ -4,6 +4,7 @@
 import type {
   DecisionSavings,
   DecisionStatus,
+  NamedValue,
   OpportunityRow,
   RecommendationDecision,
   ResourceSummary,
@@ -38,6 +39,8 @@ export function applyDecisions(
       decisionStatus: status,
       decisionLabel: DECISION_LABELS[status],
       decisionOwner: decision?.owner ?? "",
+      decisionRunId: decision?.runId ?? "",
+      decisionUpdatedAt: decision?.updatedAt ?? "",
     };
   });
 }
@@ -64,4 +67,36 @@ export function decisionSavings(
     else if (decision.status === "done") realized += savings;
   }
   return { inProgress, realized, decided };
+}
+
+/** Rows with a decision other than open, newest decision first. */
+export function decidedRows(rows: OpportunityRow[]): OpportunityRow[] {
+  return rows
+    .filter((r) => r.decisionStatus !== "open")
+    .sort((a, b) => b.decisionUpdatedAt.localeCompare(a.decisionUpdatedAt));
+}
+
+/** Count of decided rows per status label, in status order, omitting empty ones. */
+export function decisionsByStatus(rows: OpportunityRow[]): NamedValue[] {
+  return DECISION_STATUSES.filter((s) => s !== "open")
+    .map((s) => ({ name: DECISION_LABELS[s], value: rows.filter((r) => r.decisionStatus === s).length }))
+    .filter((x) => x.value > 0);
+}
+
+/**
+ * PRICED savings under way or delivered, grouped by the decision owner.
+ * Dismissed and open rows are excluded, as in the KPIs.
+ */
+export function trackedSavingsByOwner(rows: OpportunityRow[], limit = 10): NamedValue[] {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    if (r.SavingsReliability !== "PRICED") continue;
+    if (!IN_PROGRESS.includes(r.decisionStatus) && r.decisionStatus !== "done") continue;
+    const key = r.decisionOwner || "Unassigned";
+    map.set(key, (map.get(key) ?? 0) + (r.EstimatedMonthlySavings ?? 0));
+  }
+  return [...map.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit);
 }

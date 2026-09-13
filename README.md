@@ -106,7 +106,7 @@ Raw JSON appears only in the JSON tab.
 
 ## Recommendation decisions
 
-The product emulation tracks what teams decide about each recommendation. A resource carries one decision with a status (`open`, `accepted`, `in_progress`, `done`, `dismissed`), an owner and a note. Decisions are recorded on the resource detail page and surface on Opportunities (status column, dismissed rows hidden by default), Executive (tracking KPIs) and Run History (decision activity log).
+The product emulation tracks what teams decide about each recommendation. A resource carries one decision with a status (`open`, `accepted`, `in_progress`, `done`, `dismissed`), an owner and a note. Decisions are recorded on the resource detail page and surface on Opportunities (status column, dismissed rows hidden by default), Executive (tracking KPIs) and the Tracking page (KPIs, decisions by status, tracked savings by owner and the list of everything decided).
 
 Tracking rules:
 

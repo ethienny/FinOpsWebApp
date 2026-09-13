@@ -446,6 +446,8 @@ export interface OpportunityRow extends ResourceSummary {
   decisionStatus: DecisionStatus;
   decisionLabel: string;
   decisionOwner: string;
+  decisionRunId: string;
+  decisionUpdatedAt: string;
 }
 
 /** Savings tracked through decisions. PRICED savings only. */
@@ -453,21 +455,6 @@ export interface DecisionSavings {
   inProgress: number;
   realized: number;
   decided: number;
-}
-
-/** One line of the decision activity log shown on Run History. */
-export interface DecisionLogRow {
-  resourceId: string;
-  resourceName: string;
-  serviceType: string;
-  runId: string;
-  status: DecisionStatus;
-  label: string;
-  owner: string;
-  updatedAt: string;
-  monthlySavings: number | null;
-  savingsReliability: string;
-  currency: string;
 }
 
 export interface DecisionRepository {
