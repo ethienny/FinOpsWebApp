@@ -200,6 +200,12 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       costByApplication: groupSum(rows, (r) => r.TagApplication || "Unassigned", (r) => r.MonthlyCost, 10),
       costBySubscription: groupSum(rows, (r) => r.SubscriptionName || "Unassigned", (r) => r.MonthlyCost, 10),
       costByTenant: groupSum(rows, (r) => r.TenantName || "Unassigned", (r) => r.MonthlyCost),
+      savingsByOwner: groupSum(
+        rows.filter((r) => r.SavingsReliability === "PRICED"),
+        (r) => r.TagOwner || "Unassigned",
+        (r) => r.EstimatedMonthlySavings,
+        10,
+      ),
       rows: table,
     };
   }
@@ -218,6 +224,8 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       validatedSavings: sum(priced.map((r) => r.EstimatedMonthlySavings)),
       estimatedOpportunity: sum(heuristic.map((r) => r.EstimatedMonthlySavings)),
       averageSavingsPerActionable: actionable.length ? actionableSavings / actionable.length : 0,
+      reliabilityDistribution: groupSum(rows, (r) => r.SavingsReliability || "UNKNOWN", () => 1),
+      priorityDistribution: groupSum(rows, (r) => r.Priority || "UNKNOWN", () => 1),
       rows: rows.map((r) => toSummary(r, risk.get(r.ResourceId) ?? "")),
     };
   }
