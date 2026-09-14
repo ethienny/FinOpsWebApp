@@ -1,3 +1,5 @@
+// Empty, error and loading placeholders shared by the pages.
+
 import { Inbox, AlertTriangle } from "lucide-react";
 
 export function EmptyState({ title, detail }: { title: string; detail?: string }) {

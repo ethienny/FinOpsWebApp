@@ -1,3 +1,7 @@
+// Resource detail page. Loads the recommendation of one resource with its
+// sizing options, run history, insight fields and the team decision, gated by
+// the modules of the active plan.
+
 import { notFound } from "next/navigation";
 import { getRepository } from "@/lib/repositories";
 import { decodeResourceId } from "@/lib/data/parse";

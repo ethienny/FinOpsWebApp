@@ -1,3 +1,6 @@
+// Global analysis scope: reads the filter values from the query string and
+// matches a row against them. Shared by every server page.
+
 import type { FinOpsFilters } from "@/types/finops";
 
 export function filtersFromSearchParams(sp: Record<string, string | string[] | undefined>): FinOpsFilters {

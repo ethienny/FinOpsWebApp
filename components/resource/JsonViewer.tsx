@@ -1,5 +1,7 @@
 "use client";
 
+// Collapsible JSON block for the raw evidence of a resource.
+
 import { useMemo, useState } from "react";
 
 export function JsonViewer({ title, value }: { title: string; value: unknown }) {

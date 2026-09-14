@@ -18,7 +18,7 @@ const MOCK_DIR = join(DATA_DIR, "mock");
 const force = process.argv.includes("--force");
 
 if (!existsSync(MOCK_DIR)) {
-  console.error(`Pasta ${MOCK_DIR} nao encontrada.`);
+  console.error(`Folder ${MOCK_DIR} not found.`);
   process.exit(1);
 }
 
@@ -37,7 +37,7 @@ for (const archive of archives) {
   if (!force && !isStale(archivePath, target)) continue;
   await pipeline(createReadStream(archivePath), createGunzip(), createWriteStream(target));
   restored += 1;
-  console.log(`restaurado data/${archive.replace(/\.gz$/, "")}`);
+  console.log(`restored data/${archive.replace(/\.gz$/, "")}`);
 }
 
-if (restored === 0) console.log(`Dados mock ja atualizados em data/ (${archives.length} arquivos). Use --force para regravar.`);
+if (restored === 0) console.log(`Mock data already up to date in data/ (${archives.length} files). Use --force to rewrite.`);

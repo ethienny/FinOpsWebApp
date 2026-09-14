@@ -1,3 +1,9 @@
+// Data repositories. CsvFinOpsRepository builds every page payload from the
+// data store (CSV or SQL) and applies the business rules: PRICED and
+// HEURISTIC savings are never combined, official sizing savings count unique
+// resources, aging and run deltas are computed once per process.
+// DatabricksFinOpsRepository is the placeholder of the future provider.
+
 import type {
   EngineHealthData,
   ExecutiveData,

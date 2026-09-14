@@ -1,5 +1,9 @@
 "use client";
 
+// Application shell: sidebar navigation grouped by the question the user
+// brings, page title and subtitle from the route, the scope panel (FinOps
+// filters, or the alert scope on the anomalies page) and the plan banner.
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {

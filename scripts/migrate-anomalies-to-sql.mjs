@@ -1,15 +1,12 @@
-// ============================================================================
-// Aplica infra/sql/anomaly-schema.sql e migra as 4 CSVs do Cost Anomalies
-// (data/anomaly_history.csv, weekly_report_coverage.csv, weekly_report_stats.csv,
-// subscription_contacts.csv — restauradas de data/mock/*.csv.gz via
-// scripts/restore-mock-data.mjs, ou regeneradas do seed com
-// scripts/anomaly-seed-to-csv.mjs) para o Azure SQL Database. Espelha o
-// padrão de scripts/migrate-to-sql.mjs. Pode ser rodado de novo (faz
-// TRUNCATE antes de cada tabela).
+// Applies infra/sql/anomaly-schema.sql and loads the four Cost Anomalies CSVs
+// (anomaly_history, weekly_report_coverage, weekly_report_stats and
+// subscription_contacts in data/, restored from data/mock by
+// scripts/restore-mock-data.mjs or regenerated from the seed) into the Azure
+// SQL Database. Mirrors scripts/migrate-to-sql.mjs. It can run again, since
+// every table is truncated before the insert.
 //
-// Uso:
+// Usage:
 //   node --env-file=.env.local scripts/migrate-anomalies-to-sql.mjs
-// ============================================================================
 
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -21,7 +18,7 @@ const SCHEMA_PATH = join(process.cwd(), "infra", "sql", "anomaly-schema.sql");
 
 function requireEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`Variável de ambiente ${name} não definida.`);
+  if (!value) throw new Error(`Environment variable ${name} is not set.`);
   return value;
 }
 
@@ -132,33 +129,33 @@ async function main() {
     connectionTimeout: 60000,
   };
 
-  console.log(`Conectando em ${config.server}/${config.database}...`);
+  console.log(`Connecting to ${config.server}/${config.database}...`);
   const pool = await sql.connect(config);
 
   try {
-    console.log("\nAplicando infra/sql/anomaly-schema.sql...");
+    console.log("\nApplying infra/sql/anomaly-schema.sql...");
     await pool.request().batch(readFileSync(SCHEMA_PATH, "utf8"));
-    console.log("Schema do Cost Anomalies pronto.");
+    console.log("Cost Anomalies schema ready.");
 
     for (const dataset of DATASETS) {
       console.log(`\n${dataset.table} <- data/${dataset.csv}`);
       const rows = loadCsv(dataset.csv);
-      console.log(`  ${rows.length} linhas lidas`);
+      console.log(`  ${rows.length} rows read`);
 
       await pool.request().query(`TRUNCATE TABLE ${dataset.table}`);
 
       const table = buildTable(dataset.table, dataset.columns);
       for (const row of rows) addRow(table, dataset.columns, row);
       await pool.request().bulk(table);
-      console.log(`  ${rows.length}/${rows.length} linhas inseridas em ${dataset.table}`);
+      console.log(`  ${rows.length}/${rows.length} rows inserted into ${dataset.table}`);
     }
-    console.log("\nMigração concluída com sucesso.");
+    console.log("\nMigration completed.");
   } finally {
     await pool.close();
   }
 }
 
 main().catch((err) => {
-  console.error("Falha na migração:", err);
+  console.error("Migration failed:", err);
   process.exit(1);
 });

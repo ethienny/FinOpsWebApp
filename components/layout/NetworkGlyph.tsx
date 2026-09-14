@@ -1,3 +1,5 @@
+// Decorative network graphic drawn in the page hero.
+
 export function NetworkGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 250 220" className={className} aria-hidden="true">

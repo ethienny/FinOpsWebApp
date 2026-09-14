@@ -1,5 +1,7 @@
 "use client";
 
+// Client table of the target options of the selected sizing profile.
+
 import { formatMoney } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { RiskBadge } from "@/components/badges";

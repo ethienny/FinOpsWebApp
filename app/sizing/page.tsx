@@ -1,3 +1,7 @@
+// Sizing page. Rightsizing analysis for the profile chosen in the query string
+// (conservative, moderate or aggressive) with savings, performance risk and the
+// target options table.
+
 import { requireModule } from "@/lib/entitlements/gate";
 import { SizingTable } from "@/components/tables/SizingTable";
 import { Suspense } from "react";

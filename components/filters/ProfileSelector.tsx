@@ -1,5 +1,8 @@
 "use client";
 
+// Sizing profile switch. Writes the chosen profile to the query string so the
+// sizing page renders that profile on the server.
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { SizingProfile } from "@/types/finops";
 import { cn } from "@/lib/cn";
