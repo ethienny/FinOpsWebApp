@@ -56,7 +56,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Local data
 
-The mock CSVs are not tracked by git. Compressed copies live in `data/mock/*.csv.gz` (the same dataset migrated to Azure SQL). `npm run dev` restores them into `data/` automatically on first run; `npm run data:restore` does the same by hand, and `--force` rewrites existing files. The plain CSVs stay ignored by git.
+The mock CSVs are not tracked by git. Compressed copies live in `data/mock/*.csv.gz` (the same dataset migrated to Azure SQL). `npm run dev` restores them into `data/` automatically: a file is extracted when it is missing or when its archive is newer than the local copy, so a `git pull` that brings new mock data is picked up on the next start. `npm run data:restore` does the same by hand, and `npm run data:restore -- --force` rewrites every file. The plain CSVs stay ignored by git.
 
 `DATA_SOURCE=csv` is the default. To read from Azure SQL instead, copy `.env.example` to `.env.local`, set `DATA_SOURCE=sql` and fill in the `AZURE_SQL_*` variables.
 
