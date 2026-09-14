@@ -1,3 +1,6 @@
+// Tailwind configuration: content globs and the navy and accent palette of the
+// application theme.
+
 import type { Config } from "tailwindcss";
 
 const config: Config = {

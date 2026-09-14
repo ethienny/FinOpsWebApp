@@ -1,3 +1,7 @@
+// Display formatters for money, numbers, percentages, dates and durations.
+// Money is compact by default (1.2K, 3.4M) unless the caller asks for the
+// full value.
+
 const COMPACT_CURRENCY = new Map<string, Intl.NumberFormat>();
 
 function currencyFormatter(currency: string, compact: boolean): Intl.NumberFormat {

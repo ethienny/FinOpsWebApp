@@ -1,3 +1,6 @@
+// Link to the detail page of a resource. The id is base64url encoded because
+// Azure resource ids contain slashes.
+
 import Link from "next/link";
 import { encodeResourceId } from "@/lib/data/parse";
 

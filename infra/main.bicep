@@ -1,31 +1,31 @@
 // ============================================================================
-// FinOps WebApp - Infraestrutura mínima (custo baixo)
-// Escopo: Resource Group (crie o RG antes com `az group create`)
-// Recursos: Azure SQL Database (Serverless) + App Service (Linux, Node)
+// FinOps WebApp: minimal, low cost infrastructure
+// Scope: resource group (create it first with `az group create`)
+// Resources: Azure SQL Database (serverless) and App Service (Linux, Node)
 // ============================================================================
 
-@description('Região do Azure para os recursos')
+@description('Azure region for the resources')
 param location string = resourceGroup().location
 
-@description('Prefixo curto usado nos nomes dos recursos (só letras minúsculas e números)')
+@description('Short prefix used in resource names (lowercase letters and digits only)')
 @minLength(3)
 @maxLength(15)
 param namePrefix string
 
-@description('Usuário administrador do SQL Server lógico')
+@description('Administrator login of the logical SQL Server')
 param sqlAdminUsername string = 'finopsadmin'
 
-@description('Senha do administrador do SQL Server (defina em tempo de deploy, nunca commitar)')
+@description('SQL Server administrator password (set at deploy time, never commit it)')
 @secure()
 param sqlAdminPassword string
 
-@description('Seu IP público atual, para liberar acesso administrativo ao SQL (opcional). Deixe vazio para pular.')
+@description('Your current public IP, to allow administrative access to SQL (optional). Leave empty to skip.')
 param clientIpAddress string = ''
 
-@description('SKU do App Service Plan. B3 (7GB RAM) é o mínimo confortável para este app: o carregamento inicial dos dados do SQL pica ~3.7GB.')
+@description('App Service Plan SKU. B3 (7GB RAM) is the comfortable minimum for this app: the initial data load from SQL peaks around 3.7GB.')
 param appServicePlanSku string = 'B3'
 
-@description('Se falso, provisiona só o SQL Database (útil quando a cota de App Service Plan ainda não foi liberada)')
+@description('When false, provisions only the SQL Database (useful while the App Service Plan quota is not yet granted)')
 param deployWebApp bool = true
 
 var isFreeTier = appServicePlanSku == 'F1'
@@ -37,7 +37,7 @@ var appServicePlanName = 'plan-${namePrefix}-${uniqueSuffix}'
 var webAppName = 'app-${namePrefix}-${uniqueSuffix}'
 
 // ----------------------------------------------------------------------------
-// SQL Server (lógico) + Database Serverless
+// Logical SQL Server and serverless database
 // ----------------------------------------------------------------------------
 
 resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
@@ -82,19 +82,19 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-05-01-preview' = {
   }
   properties: {
     collation: 'SQL_Latin1_General_CP1_CI_AS'
-    maxSizeBytes: 34359738368 // 32GB (serverless permite crescer sem custo extra fixo)
-    autoPauseDelay: 60 // minutos ociosos até pausar (custo zero de compute enquanto pausado)
-    minCapacity: json('0.5') // vCores mínimos ao "acordar"
+    maxSizeBytes: 34359738368 // 32GB (serverless grows without a fixed extra cost)
+    autoPauseDelay: 60 // idle minutes before pausing (no compute cost while paused)
+    minCapacity: json('0.5') // minimum vCores when waking up
     zoneRedundant: false
     readScale: 'Disabled'
     requestedBackupStorageRedundancy: 'Local'
   }
 }
 
-// Política "Proxy": sem isso, o Azure SQL redireciona o cliente para uma porta
-// alta (11000-11999) após o handshake em 1433, e a rede do App Service
-// (compute compartilhado, sem VNet) bloqueia esse redirecionamento — o que
-// aparece como ECONNRESET/"socket hang up" no app.
+// Proxy connection policy: without it Azure SQL redirects the client to a
+// high port (11000 to 11999) after the handshake on 1433, and the App Service
+// network (shared compute, no VNet) blocks that redirect, which shows up in
+// the app as ECONNRESET or "socket hang up".
 resource sqlConnectionPolicy 'Microsoft.Sql/servers/connectionPolicies@2023-05-01-preview' = {
   parent: sqlServer
   name: 'default'
@@ -104,7 +104,7 @@ resource sqlConnectionPolicy 'Microsoft.Sql/servers/connectionPolicies@2023-05-0
 }
 
 // ----------------------------------------------------------------------------
-// App Service (Linux, Node) para o Next.js
+// App Service (Linux, Node) for Next.js
 // ----------------------------------------------------------------------------
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = if (deployWebApp) {
@@ -132,7 +132,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = if (deployWebApp) {
       healthCheckPath: '/api/health'
       appSettings: [
         { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
-        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' } // deploy já vem pré-buildado (output standalone)
+        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' } // the deploy is already built (standalone output)
         { name: 'WEBSITES_CONTAINER_START_TIME_LIMIT', value: '400' }
         { name: 'DATA_SOURCE', value: 'sql' }
         { name: 'AZURE_SQL_SERVER', value: sqlServer.properties.fullyQualifiedDomainName }

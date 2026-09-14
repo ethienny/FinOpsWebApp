@@ -1,3 +1,6 @@
+// Showback page. Cost allocation of the current scope by owner, cost center,
+// application, environment, subscription and tenant, with the allocation table.
+
 import { requireModule } from "@/lib/entitlements/gate";
 import { ShowbackTable } from "@/components/tables/ShowbackTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";

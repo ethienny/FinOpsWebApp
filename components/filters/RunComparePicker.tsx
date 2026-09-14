@@ -1,5 +1,8 @@
 "use client";
 
+// Run comparison picker of the run history page. Writes runA and runB to the
+// query string.
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { FinOpsRun } from "@/types/finops";
 

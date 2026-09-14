@@ -1,3 +1,7 @@
+// Domain types of the FinOps data: the engine rows as they come from the CSV
+// or SQL sources, the projections the pages render, the insight, change and
+// decision overlays, and the repository contract.
+
 export type SavingsReliability = "PRICED" | "HEURISTIC" | "UNPRICED" | string;
 export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW" | string;
 export type SizingProfile = "Conservative" | "Moderate" | "Aggressive";

@@ -1,3 +1,6 @@
+// Headline figure cards. KpiCard is the large card of the KPI rows, with an
+// optional link; QualityMetricCard is the compact tile used inside sections.
+
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 

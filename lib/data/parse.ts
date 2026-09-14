@@ -1,3 +1,7 @@
+// Parsing and aggregation helpers for the CSV and SQL rows: typed value
+// parsers, sums, distinct values, grouped sums and the resource id encoding
+// used in URLs.
+
 export function parseNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (value === null || value === undefined) return null;

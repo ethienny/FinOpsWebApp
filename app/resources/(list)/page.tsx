@@ -1,3 +1,6 @@
+// Resources page. Complete analyzed inventory of the current scope with
+// headline figures and the searchable table.
+
 import { ResourcesTable } from "@/components/tables/ResourcesTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";

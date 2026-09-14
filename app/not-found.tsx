@@ -1,3 +1,6 @@
+// Not found view, rendered when a route or a resource id is outside the
+// published dataset.
+
 export default function NotFound() {
   return (
     <div className="card-surface p-10 text-center">

@@ -1,3 +1,6 @@
+// Evidence blocks of the resource detail: the facts behind the recommendation
+// and the metric analysis, rendered as label and value lists.
+
 import type { FinOpsRecommendation } from "@/types/finops";
 import { formatMoney, formatPercent } from "@/lib/formatters";
 

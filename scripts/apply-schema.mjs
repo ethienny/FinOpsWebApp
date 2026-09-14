@@ -1,10 +1,8 @@
-// ============================================================================
-// Aplica infra/sql/schema.sql no Azure SQL Database. Rode uma única vez,
-// logo após o provisionamento do banco (antes de scripts/migrate-to-sql.mjs).
+// Applies infra/sql/schema.sql to the Azure SQL Database. Run it once, right
+// after the database is provisioned and before scripts/migrate-to-sql.mjs.
 //
-// Uso:
+// Usage:
 //   node --env-file=.env.local scripts/apply-schema.mjs
-// ============================================================================
 
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -12,7 +10,7 @@ import sql from "mssql";
 
 function requireEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`Variável de ambiente ${name} não definida.`);
+  if (!value) throw new Error(`Environment variable ${name} is not set.`);
   return value;
 }
 
@@ -29,15 +27,15 @@ async function main() {
   });
 
   try {
-    console.log("Aplicando infra/sql/schema.sql...");
+    console.log("Applying infra/sql/schema.sql...");
     await pool.request().batch(schema);
-    console.log("Schema criado com sucesso.");
+    console.log("Schema created.");
   } finally {
     await pool.close();
   }
 }
 
 main().catch((err) => {
-  console.error("Falha ao aplicar o schema:", err);
+  console.error("Failed to apply the schema:", err);
   process.exit(1);
 });

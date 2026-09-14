@@ -1,3 +1,6 @@
+// Engine Health page. Latest run of the FinOps engine with its quality
+// metrics, processing figures and the list of every run.
+
 import { requireModule } from "@/lib/entitlements/gate";
 import { EngineHealthRunsTable } from "@/components/tables/EngineHealthRunsTable";
 import { getRepository } from "@/lib/repositories";

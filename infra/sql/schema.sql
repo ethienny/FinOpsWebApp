@@ -1,7 +1,7 @@
 -- ============================================================================
--- FinOps WebApp - Schema Azure SQL Database
--- Espelha as 5 fontes de dados hoje lidas de data/*.csv
--- Execute uma vez, logo após o provisionamento do banco.
+-- FinOps WebApp: Azure SQL Database schema
+-- Mirrors the five data sources currently read from data/*.csv
+-- Run once, right after the database is provisioned.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -128,9 +128,9 @@ CREATE INDEX IX_FinOpsRecommendations_ResourceId ON dbo.FinOpsRecommendations (R
 
 -- ----------------------------------------------------------------------------
 -- dbo.FinOpsLatestRun  (vw_finops_latest_complete_run.csv)
--- Mesma estrutura de FinOpsRecommendations: é o snapshot já filtrado pelo
--- engine para a última execução publicada. Materializado como tabela porque
--- a lógica de seleção ("última run completa/publicada") roda fora deste app.
+-- Same structure as FinOpsRecommendations: the snapshot already filtered by
+-- the engine for the latest published run. Materialized as a table because
+-- the selection logic (latest complete published run) runs outside this app.
 -- ----------------------------------------------------------------------------
 SELECT TOP 0 * INTO dbo.FinOpsLatestRun FROM dbo.FinOpsRecommendations;
 CREATE INDEX IX_FinOpsLatestRun_ResourceId ON dbo.FinOpsLatestRun (ResourceId);

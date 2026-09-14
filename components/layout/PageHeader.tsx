@@ -1,3 +1,6 @@
+// Page header and breadcrumb primitives used by pages that render their own
+// title instead of the shell copy.
+
 export function PageHeader({
   title,
   subtitle,

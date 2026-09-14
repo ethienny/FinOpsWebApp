@@ -1,3 +1,5 @@
+// ESLint flat config built from the Next.js presets through FlatCompat.
+
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
