@@ -3,7 +3,7 @@
 
 export type Plan = "assessment" | "starter" | "pro" | "enterprise" | "partner";
 
-export type Module = "core" | "tracking" | "insights" | "showback" | "sizing" | "governance";
+export type Module = "core" | "tracking" | "insights" | "anomalies" | "showback" | "sizing" | "governance";
 
 export interface PlanLimits {
   /** Maximum subscriptions covered, or null when unlimited. */

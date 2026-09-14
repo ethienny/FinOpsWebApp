@@ -10,7 +10,7 @@ import { asString, parseBoolean, parseJson, parseNumber } from "./parse";
 
 const DATA_DIR = join(process.cwd(), "data");
 
-function loadCsv(fileName: string): Record<string, string>[] {
+export function loadCsv(fileName: string): Record<string, string>[] {
   const path = join(DATA_DIR, fileName);
   if (!existsSync(path)) {
     throw new Error(
@@ -304,7 +304,7 @@ function loadFromCsv(): DataStore {
   };
 }
 
-function getSqlPool(): Promise<sql.ConnectionPool> {
+export function getSqlPool(): Promise<sql.ConnectionPool> {
   let pool = globalThis.__finopsSqlPool;
   if (!pool) {
     pool = sql.connect({
@@ -332,7 +332,7 @@ function requireEnv(name: string): string {
 // App Service recém-iniciado às vezes tem a rede ainda se estabilizando —
 // ambos se manifestam como ECONNRESET/"socket hang up" transitórios. Tenta de
 // novo com backoff, descartando o pool a cada falha para forçar reconexão limpa.
-async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {

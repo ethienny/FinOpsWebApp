@@ -126,6 +126,10 @@ Both live on the Insights page (Cost of Inaction and Quick Wins sections), with 
 
 `/changes` compares the latest complete run with the complete full scope run right before it, resource by resource. A resource is New when it became actionable, Resolved when it stopped being actionable or left the run, Action changed when the recommended action differs, Reliability changed when the estimate moved between PRICED and HEURISTIC, and Savings changed when both estimates are PRICED and the move is at least 5% and 1 currency unit. Everything else is unchanged. Scope totals (validated savings, actionable resources, monthly cost) are shown for both runs with the delta, and the table carries the team decision on each row. The Executive page links to it with the new and resolved counts. Rules live in `lib/insights/changes.ts` and are unit tested.
 
+## Cost anomalies
+
+`/anomalies` renders the weekly report of the cost anomaly alerting from four tables: `anomaly_history` (one row per alert notification), `weekly_report_coverage` and `weekly_report_stats` (one row per week, written by the runbooks) and `subscription_contacts` (pushed by the data team). The reported week is the seven days before the runbook date in the stats row key; only alerts with `send_status = Sent` inside it count. The page shows notified and suppressed alerts against the prior week, the top subscriptions from the `top_subs` JSON, the coverage runbook result with the `missing_subs` list, the routing source of every alert and the subscriptions without an owner (tag not found and no valid primary contact in the contact row). A fictitious seed lives in `data/seeds/anomaly_weekly_report_sample.sql`; `node scripts/anomaly-seed-to-csv.mjs` converts it into the CSVs and their compressed copies in `data/mock`. In sql mode the tables are read from `ANOMALY_SQL_SCHEMA`. Rules live in `lib/anomalies/metrics.ts` and are unit tested.
+
 ## Connect your Azure
 
 `/connect` walks a customer through onboarding: the three read only roles the engine needs (Reader, Cost Management Reader, Monitoring Reader, with their built in definition ids), the Azure Lighthouse ARM template generated with the provider identity from `FINOPS_PROVIDER_TENANT_ID` and `FINOPS_PROVIDER_PRINCIPAL_ID`, the CLI commands to deploy and to revoke, and a form that records the connection in `data/state/connection.json`. The emulation makes no call to Azure; the material is the real one. Rules live in `lib/onboarding/lighthouse.ts` and are unit tested.
@@ -143,6 +147,7 @@ The product emulation packages pages as modules and unlocks them by plan. No pla
 | core | Executive, Opportunities, Resources | Assessment |
 | tracking | Tracking, decision panel, tracking KPIs | Starter |
 | insights | Insights, What Changed, aging and quick win columns | Starter |
+| anomalies | Cost Anomalies | Pro |
 | showback | Showback & Chargeback | Pro |
 | sizing | Sizing | Pro |
 | governance | Engine Health, Run History | Enterprise |

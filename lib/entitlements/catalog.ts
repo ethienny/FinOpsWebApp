@@ -30,6 +30,11 @@ export const MODULE_INFO: Record<Module, { label: string; summary: string; pages
     summary: "What changed since the previous run, cost of inaction across runs and quick wins ranked by value and execution risk.",
     pages: ["/insights", "/changes"],
   },
+  anomalies: {
+    label: "Cost anomalies",
+    summary: "Weekly report of the anomaly alerting: notified and suppressed alerts, coverage and routing governance.",
+    pages: ["/anomalies"],
+  },
   showback: {
     label: "Showback",
     summary: "Cost allocation by owner, cost center, application and environment.",
@@ -50,9 +55,9 @@ export const MODULE_INFO: Record<Module, { label: string; summary: string; pages
 const PLAN_MODULES: Record<Plan, Module[]> = {
   assessment: ["core"],
   starter: ["core", "tracking", "insights"],
-  pro: ["core", "tracking", "insights", "showback", "sizing"],
-  enterprise: ["core", "tracking", "insights", "showback", "sizing", "governance"],
-  partner: ["core", "tracking", "insights", "showback", "sizing", "governance"],
+  pro: ["core", "tracking", "insights", "anomalies", "showback", "sizing"],
+  enterprise: ["core", "tracking", "insights", "anomalies", "showback", "sizing", "governance"],
+  partner: ["core", "tracking", "insights", "anomalies", "showback", "sizing", "governance"],
 };
 
 const PLAN_LIMITS: Record<Plan, PlanLimits> = {
