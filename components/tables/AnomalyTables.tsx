@@ -6,6 +6,7 @@
 import { formatDate, formatMoney, formatNumber } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { OutcomeBadge } from "@/components/badges";
+import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { AnomalyAlert, SubscriptionOwnership, TopSubscription } from "@/types/anomalies";
 
 function pct(value: number): string {
@@ -23,12 +24,23 @@ function routingLabel(source: string): string {
   return labels[source] ?? (source || "Unknown");
 }
 
-const ALERT_SEARCH: Array<keyof AnomalyAlert> = ["subscriptionName", "attributionStatus", "routingSource"];
+const ALERT_SEARCH: Array<keyof AnomalyAlert> = ["subscriptionName", "resourceName", "serviceType", "attributionStatus", "routingSource"];
+
+function resourceCell(r: AnomalyAlert) {
+  if (!r.resourceName) return <span className="text-slate-500">—</span>;
+  return (
+    <div className="space-y-0.5">
+      {r.resourceId ? <ResourceLink resourceId={r.resourceId} name={r.resourceName} /> : <span className="text-slate-200">{r.resourceName}</span>}
+      {r.resourceGroup ? <p className="text-[11px] text-slate-500">{r.resourceGroup}</p> : null}
+    </div>
+  );
+}
 
 const ALERT_COLUMNS: Column<AnomalyAlert>[] = [
   { key: "subscriptionName", header: "Subscription", filterable: true },
+  { key: "resourceName", header: "Resource", render: resourceCell },
+  { key: "serviceType", header: "Service", filterable: true, render: (r) => r.serviceType || "—" },
   { key: "detectionDate", header: "Detected", render: (r) => r.detectionDate },
-  { key: "notifiedAt", header: "Notified", render: (r) => formatDate(r.notifiedAt) },
   { key: "deltaPercent", header: "Delta", numeric: true, sortValue: (r) => r.deltaPercent, render: (r) => pct(r.deltaPercent) },
   { key: "totalCost", header: "Total cost", numeric: true, sortValue: (r) => r.totalCost, render: (r) => formatMoney(r.totalCost, "USD", false) },
   {
@@ -39,7 +51,6 @@ const ALERT_COLUMNS: Column<AnomalyAlert>[] = [
     render: (r) => (r.attributionStatus === "not_reconciled" ? "—" : formatMoney(r.observedChangeUsd, "USD", false)),
   },
   { key: "attributionStatus", header: "Attribution", filterable: true, render: (r) => <OutcomeBadge value={r.attributionStatus} /> },
-  { key: "windowSource", header: "Window", render: (r) => `${r.windowFrom} to ${r.windowTo} (${r.windowSource})` },
 ];
 
 export function AnomalyAlertsTable({ rows }: { rows: AnomalyAlert[] }) {
@@ -48,6 +59,7 @@ export function AnomalyAlertsTable({ rows }: { rows: AnomalyAlert[] }) {
 
 const ROUTING_COLUMNS: Column<AnomalyAlert>[] = [
   { key: "subscriptionName", header: "Subscription", filterable: true },
+  { key: "resourceName", header: "Resource", render: (r) => r.resourceName || "—" },
   { key: "notifiedAt", header: "Notified", render: (r) => formatDate(r.notifiedAt) },
   { key: "routingSource", header: "Routing source", filterable: true, render: (r) => routingLabel(r.routingSource) },
   { key: "tagStatus", header: "Tag", render: (r) => <OutcomeBadge value={r.tagStatus} /> },

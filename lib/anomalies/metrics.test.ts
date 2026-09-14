@@ -6,6 +6,8 @@ import type { AnomalyAlert, SubscriptionContact, WeeklyStats } from "@/types/ano
 import {
   alertsInWindow,
   matchesAnomalyFilters,
+  observedIncreaseByService,
+  timeline,
   topSubscriptionsFromAlerts,
   contactRowStatus,
   routingDistribution,
@@ -128,6 +130,8 @@ describe("page scope", () => {
     expect(matchesAnomalyFilters(a, {})).toBe(true);
     expect(matchesAnomalyFilters(a, { subscription: "sub-payments", routing: "tag_databricks" })).toBe(true);
     expect(matchesAnomalyFilters(a, { subscription: "other" })).toBe(false);
+    expect(matchesAnomalyFilters({ ...a, serviceType: "Virtual Machines" }, { service: "Virtual Machines" })).toBe(true);
+    expect(matchesAnomalyFilters(a, { service: "Virtual Machines" })).toBe(false);
     expect(matchesAnomalyFilters(a, { attribution: "partial" })).toBe(false);
   });
 
@@ -142,6 +146,36 @@ describe("page scope", () => {
     expect(topSubscriptionsFromAlerts(alerts)).toEqual([
       { name: "sub-payments", alertCount: 3, observedIncreaseUsd: 3940.55, notReconciled: 0 },
       { name: "sub-data", alertCount: 2, observedIncreaseUsd: 3940.6, notReconciled: 1 },
+    ]);
+  });
+});
+
+describe("timeline", () => {
+  it("builds one point per stats row with the alerts of that week", () => {
+    const rows = [stats({ rowKey: "stats_2026-09-14", generatedAt: "2026-09-14T09:33:47Z", totalSuppressed: 5 }), stats({ rowKey: "stats_2026-09-07", generatedAt: "2026-09-07T09:33:47Z", totalSuppressed: 7 })];
+    const alerts = [
+      alert("1", "a", "2026-09-01T08:00:00Z", { attributionStatus: "reconciled", observedChangeUsd: 100 }),
+      alert("1", "a", "2026-09-08T08:00:00Z", { attributionStatus: "partial", observedChangeUsd: 40 }),
+      alert("1", "a", "2026-09-09T08:00:00Z", { attributionStatus: "not_reconciled", observedChangeUsd: 0 }),
+      alert("1", "a", "2026-09-10T08:00:00Z", { sendStatus: "PendingSend", attributionStatus: "reconciled", observedChangeUsd: 999 }),
+    ];
+    expect(timeline(rows, alerts)).toEqual([
+      { name: "31 Aug", weekStart: "2026-08-31", notified: 1, suppressed: 7, observedIncreaseUsd: 100 },
+      { name: "07 Sep", weekStart: "2026-09-07", notified: 2, suppressed: 5, observedIncreaseUsd: 40 },
+    ]);
+    expect(timeline(rows, alerts, false)[0].suppressed).toBeNull();
+  });
+
+  it("adds observed increase per service for attributed alerts", () => {
+    const alerts = [
+      alert("1", "a", "2026-09-08T08:00:00Z", { serviceType: "Virtual Machines", attributionStatus: "reconciled", observedChangeUsd: 100 }),
+      alert("1", "a", "2026-09-09T08:00:00Z", { serviceType: "Virtual Machines", attributionStatus: "partial", observedChangeUsd: 20.5 }),
+      alert("1", "a", "2026-09-09T08:00:00Z", { serviceType: "Storage", attributionStatus: "not_reconciled", observedChangeUsd: 50 }),
+      alert("1", "a", "2026-09-09T08:00:00Z", { serviceType: "", attributionStatus: "reconciled", observedChangeUsd: 5 }),
+    ];
+    expect(observedIncreaseByService(alerts)).toEqual([
+      { name: "Virtual Machines", value: 120.5 },
+      { name: "Unknown", value: 5 },
     ]);
   });
 });

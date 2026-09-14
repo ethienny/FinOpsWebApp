@@ -61,6 +61,10 @@ function alert(row: Row): AnomalyAlert {
     windowSource: asString(row.window_source),
     observedChangeUsd: num(row.observed_change_usd),
     attributionStatus: asString(row.attribution_status),
+    resourceId: asString(row.resource_id),
+    resourceName: asString(row.resource_name),
+    serviceType: asString(row.service_type),
+    resourceGroup: asString(row.resource_group),
   };
 }
 

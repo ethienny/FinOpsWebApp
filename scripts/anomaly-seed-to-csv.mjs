@@ -1,22 +1,19 @@
-// Converts the Databricks SQL seed of the cost anomaly weekly report into the
-// CSV files the app reads in csv mode, then stores compressed copies in
-// data/mock so a fresh clone restores them with the other datasets. Only the
-// INSERT statements are read; CREATE TABLE gives the column names.
+// Reads the Databricks SQL seed of the cost anomaly weekly report. Only the
+// INSERT statements are read; CREATE TABLE gives the column names. Run as a
+// script it writes the seed tables as CSV into data/ and compressed copies
+// into data/mock; generate-anomaly-mock.mjs imports parseSeed to build the
+// richer year long mock on top of the same rows.
 //
 // Usage:
 //   node scripts/anomaly-seed-to-csv.mjs [path/to/seed.sql]
 
-import { createReadStream, createWriteStream, readFileSync, writeFileSync } from "fs";
+import { readFileSync } from "fs";
 import { join } from "path";
-import { pipeline } from "stream/promises";
-import { createGzip } from "zlib";
-import Papa from "papaparse";
+import { fileURLToPath } from "url";
+import { writeTableCsv } from "./csv-mock.mjs";
 
-const DATA_DIR = join(process.cwd(), "data");
-const MOCK_DIR = join(DATA_DIR, "mock");
-const seedPath = process.argv[2] ?? join(DATA_DIR, "seeds", "anomaly_weekly_report_sample.sql");
-
-const TABLES = ["anomaly_history", "weekly_report_coverage", "weekly_report_stats", "subscription_contacts"];
+export const SEED_PATH = join(process.cwd(), "data", "seeds", "anomaly_weekly_report_sample.sql");
+export const TABLES = ["anomaly_history", "weekly_report_coverage", "weekly_report_stats", "subscription_contacts"];
 
 /** Strips line comments outside string literals. */
 function stripComments(sql) {
@@ -45,7 +42,7 @@ function columnsOf(sql, table) {
 }
 
 /** Reads the value tuples of every INSERT INTO the table. */
-function rowsOf(sql, table) {
+function tuplesOf(sql, table) {
   const rows = [];
   const pattern = new RegExp(`INSERT INTO ${table} VALUES`, "gi");
   let match;
@@ -64,6 +61,7 @@ function rowsOf(sql, table) {
   return rows;
 }
 
+/** One tuple: quoted strings keep their text, TIMESTAMP and DATE prefixes are dropped. */
 function readTuple(sql, start) {
   const values = [];
   let i = start;
@@ -76,13 +74,11 @@ function readTuple(sql, start) {
     const ch = sql[i];
     if (ch === "'") {
       let j = i + 1;
-      let text = "";
-      while (j < sql.length && sql[j] !== "'") text += sql[j++];
-      current += text;
+      while (j < sql.length && sql[j] !== "'") current += sql[j++];
       i = j + 1;
       continue;
     }
-    if (ch === "," ) {
+    if (ch === ",") {
       push();
       i++;
       continue;
@@ -91,23 +87,36 @@ function readTuple(sql, start) {
       push();
       return [values, i + 1];
     }
-    if (!/^(TIMESTAMP|DATE)$/i.test(sql.slice(i, i + 9).split(/\s/)[0])) current += ch;
-    else i += sql.slice(i).match(/^(TIMESTAMP|DATE)/i)[0].length - 1;
+    const keyword = sql.slice(i).match(/^(TIMESTAMP|DATE)\b/i);
+    if (keyword) {
+      i += keyword[0].length;
+      continue;
+    }
+    current += ch;
     i++;
   }
   throw new Error("Tupla sem fechamento no seed.");
 }
 
-const sql = stripComments(readFileSync(seedPath, "utf8"));
-for (const table of TABLES) {
-  const columns = columnsOf(sql, table);
-  const rows = rowsOf(sql, table);
-  for (const row of rows) {
-    if (row.length !== columns.length) throw new Error(`${table}: linha com ${row.length} valores, esperava ${columns.length}.`);
+/** Tables of the seed as { columns, rows } with rows keyed by column name. */
+export function parseSeed(seedPath = SEED_PATH) {
+  const sql = stripComments(readFileSync(seedPath, "utf8"));
+  const result = {};
+  for (const table of TABLES) {
+    const columns = columnsOf(sql, table);
+    const rows = tuplesOf(sql, table).map((tuple) => {
+      if (tuple.length !== columns.length) throw new Error(`${table}: linha com ${tuple.length} valores, esperava ${columns.length}.`);
+      return Object.fromEntries(columns.map((c, i) => [c, tuple[i]]));
+    });
+    result[table] = { columns, rows };
   }
-  const csv = Papa.unparse({ fields: columns, data: rows }, { newline: "\n" });
-  const target = join(DATA_DIR, `${table}.csv`);
-  writeFileSync(target, csv + "\n");
-  await pipeline(createReadStream(target), createGzip(), createWriteStream(join(MOCK_DIR, `${table}.csv.gz`)));
-  console.log(`${table}: ${rows.length} linhas -> data/${table}.csv e data/mock/${table}.csv.gz`);
+  return result;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const seed = parseSeed(process.argv[2] ?? SEED_PATH);
+  for (const table of TABLES) {
+    const { columns, rows } = seed[table];
+    await writeTableCsv(table, columns, rows);
+  }
 }

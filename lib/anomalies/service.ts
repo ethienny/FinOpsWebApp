@@ -9,6 +9,7 @@ import type {
   AnomalyFilters,
   NamedValueLike,
   SubscriptionOwnership,
+  TimelinePoint,
   TopSubscription,
   WeeklyCoverage,
   WeeklyStats,
@@ -24,8 +25,10 @@ import {
   isSent,
   latestRow,
   matchesAnomalyFilters,
+  observedIncreaseByService,
   routingDistribution,
   subscriptionOwnership,
+  timeline,
   topSubscriptionsFromAlerts,
   weekOverWeek,
   weekWindow,
@@ -48,6 +51,9 @@ export interface AnomalyDashboard {
   notReconciled: number;
   ownership: SubscriptionOwnership[];
   unowned: SubscriptionOwnership[];
+  /** Every reported week, oldest first, alerts in scope. */
+  timeline: TimelinePoint[];
+  byService: NamedValueLike[];
 }
 
 const EMPTY: AnomalyDashboard = {
@@ -64,6 +70,8 @@ const EMPTY: AnomalyDashboard = {
   notReconciled: 0,
   ownership: [],
   unowned: [],
+  timeline: [],
+  byService: [],
 };
 
 export function anomalyFiltersFromSearchParams(sp: Record<string, string | string[] | undefined>): AnomalyFilters {
@@ -71,7 +79,7 @@ export function anomalyFiltersFromSearchParams(sp: Record<string, string | strin
     const v = sp[k];
     return (Array.isArray(v) ? v[0] : v) || undefined;
   };
-  return { subscription: one("subscription"), routing: one("routing"), attribution: one("attribution") };
+  return { subscription: one("subscription"), service: one("service"), routing: one("routing"), attribution: one("attribution") };
 }
 
 /** Values offered by the page scope, from every alert in the history. */
@@ -80,11 +88,12 @@ export async function getAnomalyFilterOptions(): Promise<AnomalyFilterOptions> {
     const { alerts } = await getAnomalyStore();
     return {
       subscriptions: uniqueSorted(alerts.map((a) => a.subscriptionName)),
+      services: uniqueSorted(alerts.map((a) => a.serviceType)),
       routingSources: uniqueSorted(alerts.map((a) => a.routingSource)),
       attributionStatuses: uniqueSorted(alerts.map((a) => a.attributionStatus)),
     };
   } catch {
-    return { subscriptions: [], routingSources: [], attributionStatuses: [] };
+    return { subscriptions: [], services: [], routingSources: [], attributionStatuses: [] };
   }
 }
 
@@ -95,7 +104,8 @@ export async function getAnomalyDashboard(filters: AnomalyFilters = {}): Promise
 
   const filtered = hasAnomalyFilters(filters);
   const window = weekWindow(stats);
-  const week = alertsInWindow(store.alerts, window).filter((a) => matchesAnomalyFilters(a, filters));
+  const scoped = store.alerts.filter((a) => matchesAnomalyFilters(a, filters));
+  const week = alertsInWindow(scoped, window);
   const alerts = week.filter(isSent);
   const ownership = subscriptionOwnership(alerts, store.contacts);
   const topSubs = filtered ? topSubscriptionsFromAlerts(alerts) : stats.topSubs;
@@ -119,5 +129,7 @@ export async function getAnomalyDashboard(filters: AnomalyFilters = {}): Promise
     notReconciled: filtered ? topSubs.reduce((a, s) => a + s.notReconciled, 0) : stats.topSubsNotReconciled,
     ownership,
     unowned: ownership.filter((o) => !o.owned),
+    timeline: timeline(store.stats, scoped, !filtered),
+    byService: observedIncreaseByService(alerts),
   };
 }
