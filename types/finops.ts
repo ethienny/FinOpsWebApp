@@ -297,7 +297,13 @@ export interface ResourceSummary {
   Confidence: string;
   SavingsReliability: string;
   EstimatedMonthlySavings: number | null;
+  RiskAdjustedMonthlySavings: number | null;
   MetricCollectionStatus: string;
+  MetricCoverageRatio: number | null;
+  RecommendationAction: string;
+  IsActionable: boolean;
+  IsDestructive: boolean;
+  PerformanceRisk: string;
   TagOwner: string;
   TagEnvironment: string;
 }
@@ -341,6 +347,7 @@ export interface ShowbackData {
   costByApplication: NamedValue[];
   costBySubscription: NamedValue[];
   costByTenant: NamedValue[];
+  savingsByOwner: NamedValue[];
   rows: ShowbackRow[];
 }
 
@@ -350,6 +357,8 @@ export interface OpportunitiesData {
   validatedSavings: number;
   estimatedOpportunity: number;
   averageSavingsPerActionable: number;
+  reliabilityDistribution: NamedValue[];
+  priorityDistribution: NamedValue[];
   rows: ResourceSummary[];
 }
 
@@ -425,6 +434,113 @@ export interface ShowbackAllocation {
 }
 
 // ───────────────────────────────────────────────
+// Insights: recommendation aging and quick wins
+// ───────────────────────────────────────────────
+
+export type AgeBucket = "new" | "recurring" | "persistent";
+
+/** How long the current recommendation of a resource has been open across engine runs. */
+export interface RecommendationAging {
+  resourceId: string;
+  recommendationAction: string;
+  firstDetectedRunId: string;
+  firstDetectedAt: string;
+  runsOpen: number;
+  daysOpen: number;
+  missedSavings: number;
+  ageBucket: AgeBucket;
+}
+
+export type ExecutionRisk = "low" | "medium" | "high";
+
+/** Aging and quick win fields overlaid on a resource summary. */
+export interface InsightFields {
+  runsOpen: number;
+  daysOpen: number;
+  missedSavings: number;
+  ageBucket: AgeBucket;
+  ageLabel: string;
+  firstDetectedRunId: string;
+  firstDetectedAt: string;
+  valueRank: number;
+  quickWinScore: number;
+  executionRisk: ExecutionRisk;
+  executionRiskScore: number;
+  riskLabel: string;
+  isQuickWin: boolean;
+}
+
+export type InsightRow = ResourceSummary & InsightFields;
+
+export interface AgingSummary {
+  missedSavings: number;
+  persistentCount: number;
+  newCount: number;
+  averageRunsOpen: number;
+  actionableCount: number;
+}
+
+// ───────────────────────────────────────────────
+// Insights: what changed since the previous run
+// ───────────────────────────────────────────────
+
+export type ChangeKind = "new" | "resolved" | "action_changed" | "reliability_changed" | "savings_changed";
+
+/** How the recommendation of one resource differs between two complete runs. */
+export interface ResourceChange {
+  resourceId: string;
+  kind: ChangeKind;
+  previousAction: string;
+  currentAction: string;
+  previousReliability: string;
+  currentReliability: string;
+  /** PRICED estimate on each run, zero when the estimate was not PRICED. */
+  previousSavings: number;
+  currentSavings: number;
+  savingsDelta: number;
+}
+
+/** Change fields overlaid on a resource summary. */
+export interface ChangeFields {
+  changeKind: ChangeKind;
+  changeLabel: string;
+  previousAction: string;
+  previousActionLabel: string;
+  previousReliability: string;
+  previousSavings: number;
+  savingsDelta: number;
+}
+
+export type ChangeRow = ResourceSummary & ChangeFields;
+
+/** Scope totals of one run, used to compare two runs side by side. */
+export interface RunTotals {
+  validatedSavings: number;
+  actionableCount: number;
+  monthlyCost: number;
+}
+
+export interface RunDeltaData {
+  currency: string;
+  currentRun: FinOpsRun | null;
+  previousRun: FinOpsRun | null;
+  current: RunTotals;
+  previous: RunTotals;
+  rows: ChangeRow[];
+}
+
+export interface ChangeSummary {
+  newCount: number;
+  newSavings: number;
+  resolvedCount: number;
+  resolvedSavings: number;
+  actionChangedCount: number;
+  reliabilityChangedCount: number;
+  savingsChangedCount: number;
+  savingsChangedDelta: number;
+}
+
+// ───────────────────────────────────────────────
 // Recommendation decisions
 // ───────────────────────────────────────────────
 
@@ -441,14 +557,17 @@ export interface RecommendationDecision {
   updatedBy: string;
 }
 
-/** Opportunity table row: the resource summary with its decision overlaid. */
-export interface OpportunityRow extends ResourceSummary {
+/** Decision fields overlaid on a row. */
+export interface DecisionFields {
   decisionStatus: DecisionStatus;
   decisionLabel: string;
   decisionOwner: string;
   decisionRunId: string;
   decisionUpdatedAt: string;
 }
+
+/** Opportunity table row: the resource summary with insights and its decision overlaid. */
+export type OpportunityRow = InsightRow & DecisionFields;
 
 /** Savings tracked through decisions. PRICED savings only. */
 export interface DecisionSavings {
@@ -474,4 +593,6 @@ export interface FinOpsRepository {
   getResourceById(resourceId: string): Promise<ResourceDetailData | null>;
   getEngineHealth(): Promise<EngineHealthData>;
   getRunHistory(runA?: string, runB?: string): Promise<RunHistoryData>;
+  getRecommendationAging(): Promise<RecommendationAging[]>;
+  getRunDelta(filters: FinOpsFilters): Promise<RunDeltaData>;
 }

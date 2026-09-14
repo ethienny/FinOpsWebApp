@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 
 export function KpiCard({
@@ -5,11 +6,15 @@ export function KpiCard({
   value,
   hint,
   accent = "cyan",
+  href,
+  linkLabel = "View details",
 }: {
   label: string;
   value: string;
   hint?: string;
   accent?: "cyan" | "teal" | "blue" | "amber" | "green";
+  href?: string;
+  linkLabel?: string;
 }) {
   const bar = {
     cyan: "from-cyan-400 to-teal-400",
@@ -25,6 +30,11 @@ export function KpiCard({
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{label}</p>
       <p className="mt-3 kpi-value text-3xl font-semibold tracking-tight text-white">{value}</p>
       {hint ? <p className="mt-2 text-xs text-slate-400">{hint}</p> : null}
+      {href ? (
+        <Link href={href} className="mt-3 inline-block text-xs text-cyan-200 hover:text-white">
+          {linkLabel}
+        </Link>
+      ) : null}
     </article>
   );
 }

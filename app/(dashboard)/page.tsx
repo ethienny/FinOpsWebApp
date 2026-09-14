@@ -1,11 +1,20 @@
+// Executive page. Headline figures for the current scope with links into the
+// pages that hold the detail: Tracking for decisions, Insights for aging and
+// quick wins, Engine Health for run quality.
+
 import Link from "next/link";
 import { ExecutiveResourcesTable } from "@/components/tables/ExecutiveResourcesTable";
+import { agingSummary } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
-import { formatMoney, formatNumber, formatPercent, formatDate } from "@/lib/formatters";
-import { KpiCard, QualityMetricCard } from "@/components/kpi/KpiCard";
-import { ChartCard, DonutChart, GroupedBars, HorizontalBars, VerticalBars } from "@/components/charts/Charts";
+import { getRunChanges } from "@/lib/insights/service";
+import { getEntitlements } from "@/lib/entitlements/store";
+import { hasModule } from "@/lib/entitlements/catalog";
+import { formatMoney, formatNumber, formatDate } from "@/lib/formatters";
+import { KpiCard } from "@/components/kpi/KpiCard";
+import { StatusBadge } from "@/components/badges";
+import { ChartCard, GroupedBars, HorizontalBars } from "@/components/charts/Charts";
 
 export default async function ExecutivePage({
   searchParams,
@@ -14,30 +23,43 @@ export default async function ExecutivePage({
 }) {
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
-  const [data, tracking] = await Promise.all([
+  const [data, tracking, entitlements] = await Promise.all([
     getRepository().getExecutiveData(filters),
     getDecisionTracking(filters),
+    getEntitlements(),
   ]);
+  const showTracking = hasModule(entitlements, "tracking");
+  const showInsights = hasModule(entitlements, "insights");
+  const changes = showInsights ? await getRunChanges(filters) : null;
   const run = data.publishedRun;
+  const aging = agingSummary(tracking.rows);
+  const quickWinCount = tracking.rows.filter(
+    (r) => r.isQuickWin && r.decisionStatus !== "done" && r.decisionStatus !== "dismissed",
+  ).length;
 
   return (
     <div className="space-y-6">
       {run ? (
-        <section className="card-surface overflow-hidden p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-cyan-300">Latest Published Run</p>
-              <h2 className="mt-1 text-lg font-semibold text-white">Run completed successfully and published</h2>
-              <p className="mt-2 text-sm text-slate-400">
-                {run.RunId} · Engine {run.EngineVersion} · Published {formatDate(run.PublishedAt)}
-              </p>
-            </div>
+        <section className="card-surface flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">Latest Published Run</span>
+            <span className="text-white">{run.RunId}</span>
+            <span className="text-slate-400">Engine {run.EngineVersion}</span>
+            <span className="text-slate-400">Published {formatDate(run.PublishedAt)}</span>
+            <StatusBadge value={run.DataQualityStatus} />
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <QualityMetricCard label="Metrics Availability" value={formatPercent(run.MetricAvailabilityRate)} />
-            <QualityMetricCard label="Metrics Completeness" value={formatPercent(run.MetricCompletenessRate)} />
-            <QualityMetricCard label="Cost Availability" value={formatPercent(run.CostAvailabilityRate)} />
-            <QualityMetricCard label="Full Cost Coverage" value={formatPercent(run.CostFullCoverageRate)} />
+          <div className="flex items-center gap-4">
+            {changes?.previousRun ? (
+              <Link href="/changes" className="text-xs text-cyan-200 hover:text-white">
+                Since previous run: {changes.summary.newCount} new, {changes.summary.resolvedCount} resolved
+              </Link>
+            ) : null}
+            <Link href="/report" className="text-xs text-cyan-200 hover:text-white">
+              Executive report
+            </Link>
+            <Link href="/engine-health" className="text-xs text-cyan-200 hover:text-white">
+              Engine health
+            </Link>
           </div>
         </section>
       ) : (
@@ -57,7 +79,7 @@ export default async function ExecutivePage({
         <KpiCard
           label="Estimated Opportunity (HEURISTIC)"
           value={formatMoney(data.estimatedOpportunity, data.currency)}
-          hint="Directional only — not official priced savings"
+          hint="Directional only, not official priced savings"
           accent="amber"
         />
         <KpiCard
@@ -68,65 +90,67 @@ export default async function ExecutivePage({
         />
       </div>
 
-      <section className="space-y-3">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-white">Recommendation Tracking</h3>
-            <p className="text-xs text-slate-400">What the teams decided and delivered on the current scope. PRICED savings only.</p>
-          </div>
-          <Link href="/tracking" className="text-xs text-cyan-200 hover:text-white">
-            Open tracking
-          </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <KpiCard
-            label="Savings In Progress"
-            value={formatMoney(tracking.savings.inProgress, data.currency)}
-            hint="Accepted or in progress"
-            accent="blue"
-          />
-          <KpiCard
-            label="Realized Savings"
-            value={formatMoney(tracking.savings.realized, data.currency)}
-            hint="Recommendations marked done"
-            accent="green"
-          />
-          <KpiCard
-            label="Recommendations Decided"
-            value={formatNumber(tracking.savings.decided, false)}
-            hint="Any status other than open"
-            accent="teal"
-          />
-        </div>
-      </section>
+      {showTracking || showInsights ? (
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {showTracking ? (
+        <KpiCard
+          label="Realized Savings"
+          value={formatMoney(tracking.savings.realized, data.currency)}
+          hint="PRICED recommendations marked done"
+          accent="green"
+          href="/tracking"
+          linkLabel="Open tracking"
+        />
+        ) : null}
+        {showTracking ? (
+        <KpiCard
+          label="Savings In Progress"
+          value={formatMoney(tracking.savings.inProgress, data.currency)}
+          hint="Accepted or in progress"
+          accent="teal"
+          href="/tracking"
+          linkLabel="Open tracking"
+        />
+        ) : null}
+        {showInsights ? (
+        <KpiCard
+          label="Missed Savings To Date"
+          value={formatMoney(aging.missedSavings, data.currency)}
+          hint={`${formatNumber(aging.persistentCount, false)} recommendations open for 5 or more runs`}
+          accent="amber"
+          href="/insights"
+          linkLabel="Open insights"
+        />
+        ) : null}
+        {showInsights ? (
+        <KpiCard
+          label="Quick Wins Available"
+          value={formatNumber(quickWinCount, false)}
+          hint="High value, low execution risk, not yet done"
+          accent="cyan"
+          href="/insights"
+          linkLabel="Open insights"
+        />
+        ) : null}
+      </div>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Cloud Cost by Service Type">
-          <VerticalBars data={data.costByService} currency={data.currency} />
-        </ChartCard>
-        <ChartCard title="Savings by Service Type" subtitle="PRICED savings only">
-          <VerticalBars data={data.savingsByService} currency={data.currency} />
-        </ChartCard>
-        <ChartCard title="Savings by Owner" subtitle="PRICED savings only">
-          <HorizontalBars data={data.savingsByOwner} currency={data.currency} />
+        <ChartCard title="Cost vs Savings by Service Type" subtitle="Cost from latest run vs PRICED savings">
+          <GroupedBars data={data.costVsSavingsByService} currency={data.currency} />
         </ChartCard>
         <ChartCard title="Savings by Action Category">
           <HorizontalBars data={data.savingsByAction} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Savings Reliability Distribution">
-          <DonutChart data={data.reliabilityDistribution} />
-        </ChartCard>
-        <ChartCard title="Priority Distribution">
-          <DonutChart data={data.priorityDistribution} />
-        </ChartCard>
       </div>
 
-      <ChartCard title="Cost vs Savings by Service Type" subtitle="Cost from latest run vs PRICED savings">
-        <GroupedBars data={data.costVsSavingsByService} currency={data.currency} />
-      </ChartCard>
-
       <section className="card-surface p-5">
-        <h3 className="mb-4 text-sm font-semibold text-white">Top 10 Resources by Validated Savings</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-white">Top 10 Resources by Validated Savings</h3>
+          <Link href="/opportunities" className="text-xs text-cyan-200 hover:text-white">
+            All opportunities
+          </Link>
+        </div>
         <ExecutiveResourcesTable rows={data.topResources} />
       </section>
     </div>

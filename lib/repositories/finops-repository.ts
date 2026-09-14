@@ -7,13 +7,16 @@ import type {
   FinOpsRepository,
   FinOpsRun,
   OpportunitiesData,
+  RecommendationAging,
   ResourceDetailData,
   ResourcesData,
+  RunDeltaData,
   ResourceSummary,
   RunHistoryData,
   ShowbackData,
   ShowbackRow,
   SidebarMeta,
+  TargetOption,
   SizingData,
   SizingProfile,
   SizingRow,
@@ -22,6 +25,8 @@ import { getDataStore } from "@/lib/data/store";
 import { groupSum, hasAllocationTag, sum, uniqueSorted } from "@/lib/data/parse";
 import { matchesFilters } from "@/lib/aggregations/filters";
 import { friendlyService } from "@/lib/formatters";
+import { buildAgingIndex } from "@/lib/insights/aging";
+import { CHANGE_LABELS, diffRuns, previousEligibleRun, runTotals } from "@/lib/insights/changes";
 
 function latestPublished(runs: FinOpsRun[]): FinOpsRun | null {
   const published = runs.filter((r) => r.PublishApproved && r.IsPublishable && asOk(r));
@@ -41,7 +46,7 @@ function serviceName(row: { ServiceType?: string; ResourceType?: string }): stri
   return row.ServiceType || friendlyService(row.ResourceType || "Unknown");
 }
 
-function toSummary(row: FinOpsRecommendation): ResourceSummary {
+function toSummary(row: FinOpsRecommendation, performanceRisk = ""): ResourceSummary {
   return {
     ResourceId: row.ResourceId,
     ResourceName: row.ResourceName,
@@ -58,10 +63,25 @@ function toSummary(row: FinOpsRecommendation): ResourceSummary {
     Confidence: row.Confidence,
     SavingsReliability: row.SavingsReliability,
     EstimatedMonthlySavings: row.EstimatedMonthlySavings,
+    RiskAdjustedMonthlySavings: row.RiskAdjustedMonthlySavings,
     MetricCollectionStatus: row.MetricCollectionStatus,
+    MetricCoverageRatio: row.MetricCoverageRatio,
+    RecommendationAction: row.RecommendationAction,
+    IsActionable: row.IsActionable,
+    IsDestructive: row.IsDestructive,
+    PerformanceRisk: performanceRisk,
     TagOwner: row.TagOwner,
     TagEnvironment: row.TagEnvironment,
   };
+}
+
+/** Performance risk of the conservative sizing option per resource. */
+function performanceRiskByResource(targetOptions: TargetOption[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const option of targetOptions) {
+    if (option.Profile === "Conservative" && option.PerformanceRisk) map.set(option.ResourceId, option.PerformanceRisk);
+  }
+  return map;
 }
 
 function riskScore(risk: string): number {
@@ -113,7 +133,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
     const topResources = [...priced]
       .sort((a, b) => (b.EstimatedMonthlySavings ?? 0) - (a.EstimatedMonthlySavings ?? 0))
       .slice(0, 10)
-      .map(toSummary);
+      .map((r) => toSummary(r));
 
     const costByService = groupSum(rows, (r) => serviceName(r), (r) => r.MonthlyCost, 8);
     const savingsByService = groupSum(priced, (r) => serviceName(r), (r) => r.EstimatedMonthlySavings, 8);
@@ -182,12 +202,19 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       costByApplication: groupSum(rows, (r) => r.TagApplication || "Unassigned", (r) => r.MonthlyCost, 10),
       costBySubscription: groupSum(rows, (r) => r.SubscriptionName || "Unassigned", (r) => r.MonthlyCost, 10),
       costByTenant: groupSum(rows, (r) => r.TenantName || "Unassigned", (r) => r.MonthlyCost),
+      savingsByOwner: groupSum(
+        rows.filter((r) => r.SavingsReliability === "PRICED"),
+        (r) => r.TagOwner || "Unassigned",
+        (r) => r.EstimatedMonthlySavings,
+        10,
+      ),
       rows: table,
     };
   }
 
   async getOpportunities(filters: FinOpsFilters): Promise<OpportunitiesData> {
-    const { latest } = await getDataStore();
+    const { latest, targetOptions } = await getDataStore();
+    const risk = performanceRiskByResource(targetOptions);
     const rows = latest.filter((r) => matchesFilters(r, filters));
     const priced = rows.filter((r) => r.SavingsReliability === "PRICED");
     const heuristic = rows.filter((r) => r.SavingsReliability === "HEURISTIC");
@@ -199,7 +226,9 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       validatedSavings: sum(priced.map((r) => r.EstimatedMonthlySavings)),
       estimatedOpportunity: sum(heuristic.map((r) => r.EstimatedMonthlySavings)),
       averageSavingsPerActionable: actionable.length ? actionableSavings / actionable.length : 0,
-      rows: rows.map(toSummary),
+      reliabilityDistribution: groupSum(rows, (r) => r.SavingsReliability || "UNKNOWN", () => 1),
+      priorityDistribution: groupSum(rows, (r) => r.Priority || "UNKNOWN", () => 1),
+      rows: rows.map((r) => toSummary(r, risk.get(r.ResourceId) ?? "")),
     };
   }
 
@@ -259,7 +288,7 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       resourcesWithRecommendations: rows.filter((r) => Boolean(r.ActionLabel) && r.IsActionable).length,
       monthlyCost: sum(rows.map((r) => r.MonthlyCost)),
       serviceTypesAnalyzed: uniqueSorted(rows.map((r) => r.ServiceType)).length,
-      rows: rows.map(toSummary),
+      rows: rows.map((r) => toSummary(r)),
     };
   }
 
@@ -313,7 +342,65 @@ export class CsvFinOpsRepository implements FinOpsRepository {
       comparison: a || b ? { a, b } : null,
     };
   }
+
+  /** Aging of the current recommendation of every resource, computed once per process. */
+  async getRecommendationAging(): Promise<RecommendationAging[]> {
+    if (agingCache) return agingCache;
+    const { latest, allRecommendations, runs } = await getDataStore();
+    agingCache = buildAgingIndex(allRecommendations, runs, latest[0]?.RunId ?? "");
+    return agingCache;
+  }
+
+  /** Resource level changes between the latest run and the previous complete one, scoped by filters. */
+  async getRunDelta(filters: FinOpsFilters): Promise<RunDeltaData> {
+    const { latest, allRecommendations, runs } = await getDataStore();
+    const latestRunId = latest[0]?.RunId ?? "";
+    const currentRun = runs.find((r) => r.RunId === latestRunId) ?? null;
+    const previousRun = previousEligibleRun(runs, latestRunId);
+    const previousRows = previousRun ? allRecommendations.filter((r) => r.RunId === previousRun.RunId) : [];
+    if (!deltaCache || deltaCache.runId !== latestRunId) {
+      deltaCache = { runId: latestRunId, changes: previousRun ? diffRuns(latest, previousRows) : [] };
+    }
+
+    const currentById = new Map(latest.map((r) => [r.ResourceId, r]));
+    const previousById = new Map(previousRows.map((r) => [r.ResourceId, r]));
+    const scopedCurrent = latest.filter((r) => matchesFilters(r, filters));
+    const scopedPrevious = previousRows.filter((r) => matchesFilters(r, filters));
+
+    const rows = deltaCache.changes.flatMap((change) => {
+      const now = currentById.get(change.resourceId);
+      const before = previousById.get(change.resourceId);
+      const source = now ?? before;
+      if (!source || !matchesFilters(source, filters)) return [];
+      const summary = toSummary(source);
+      if (!now) summary.ActionLabel = "Not analyzed on this run";
+      return [
+        {
+          ...summary,
+          changeKind: change.kind,
+          changeLabel: CHANGE_LABELS[change.kind],
+          previousAction: change.previousAction,
+          previousActionLabel: before?.ActionLabel ?? "Not analyzed",
+          previousReliability: change.previousReliability,
+          previousSavings: change.previousSavings,
+          savingsDelta: change.savingsDelta,
+        },
+      ];
+    });
+
+    return {
+      currency: currency(scopedCurrent.length ? scopedCurrent : latest),
+      currentRun,
+      previousRun,
+      current: runTotals(scopedCurrent),
+      previous: runTotals(scopedPrevious),
+      rows,
+    };
+  }
 }
+
+let agingCache: RecommendationAging[] | null = null;
+let deltaCache: { runId: string; changes: ReturnType<typeof diffRuns> } | null = null;
 
 /**
  * Future Databricks provider.
@@ -357,6 +444,12 @@ export class DatabricksFinOpsRepository implements FinOpsRepository {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
   async getRunHistory(): Promise<RunHistoryData> {
+    throw new Error("DatabricksFinOpsRepository is not implemented.");
+  }
+  async getRecommendationAging(): Promise<RecommendationAging[]> {
+    throw new Error("DatabricksFinOpsRepository is not implemented.");
+  }
+  async getRunDelta(): Promise<RunDeltaData> {
     throw new Error("DatabricksFinOpsRepository is not implemented.");
   }
 }

@@ -2,7 +2,7 @@
 // process wide cache, so a page only pays for the datasets it reads.
 
 import Papa from "papaparse";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import sql from "mssql";
 import type { FinOpsRecommendation, FinOpsRun, TargetOption, TargetOptionHistory } from "@/types/finops";
@@ -10,8 +10,15 @@ import { asString, parseBoolean, parseJson, parseNumber } from "./parse";
 
 const DATA_DIR = join(process.cwd(), "data");
 
-function loadCsv(fileName: string): Record<string, string>[] {
-  const text = readFileSync(join(DATA_DIR, fileName), "utf8");
+export function loadCsv(fileName: string): Record<string, string>[] {
+  const path = join(DATA_DIR, fileName);
+  if (!existsSync(path)) {
+    throw new Error(
+      `Arquivo de dados ${fileName} nao encontrado em data/. Os CSVs nao sao versionados: rode "npm run data:restore" ` +
+        `para extrair as copias de data/mock, ou defina DATA_SOURCE=sql com as credenciais do Azure SQL.`,
+    );
+  }
+  const text = readFileSync(path, "utf8");
   const parsed = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
@@ -297,7 +304,7 @@ function loadFromCsv(): DataStore {
   };
 }
 
-function getSqlPool(): Promise<sql.ConnectionPool> {
+export function getSqlPool(): Promise<sql.ConnectionPool> {
   let pool = globalThis.__finopsSqlPool;
   if (!pool) {
     pool = sql.connect({
@@ -325,7 +332,7 @@ function requireEnv(name: string): string {
 // App Service recém-iniciado às vezes tem a rede ainda se estabilizando —
 // ambos se manifestam como ECONNRESET/"socket hang up" transitórios. Tenta de
 // novo com backoff, descartando o pool a cada falha para forçar reconexão limpa.
-async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {

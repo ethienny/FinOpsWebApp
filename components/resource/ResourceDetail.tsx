@@ -2,7 +2,7 @@
 
 import { MetricEvidence, RecommendationEvidence } from "./ResourceEvidence";
 import { useState } from "react";
-import type { RecommendationDecision, ResourceDetailData } from "@/types/finops";
+import type { InsightRow, RecommendationDecision, ResourceDetailData } from "@/types/finops";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { Breadcrumbs } from "@/components/layout/PageHeader";
 import {
@@ -16,6 +16,7 @@ import { JsonViewer } from "@/components/resource/JsonViewer";
 import { ChartCard, DualLine, VerticalBars } from "@/components/charts/Charts";
 import { DataTable } from "@/components/tables/DataTable";
 import { DecisionPanel } from "@/components/resource/DecisionPanel";
+import { InsightStrip } from "@/components/resource/InsightStrip";
 import { cn } from "@/lib/cn";
 import type { TargetOptionHistory } from "@/types/finops";
 
@@ -33,9 +34,15 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 export function ResourceDetail({
   data,
   decision,
+  insight,
+  showDecision = true,
+  showInsight = true,
 }: {
   data: ResourceDetailData;
   decision: RecommendationDecision | null;
+  insight: InsightRow | null;
+  showDecision?: boolean;
+  showInsight?: boolean;
 }) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const r = data.recommendation;
@@ -66,7 +73,9 @@ export function ResourceDetail({
         <p className="mt-2 break-all text-xs text-slate-400">{r.ResourceId}</p>
       </div>
 
-      <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} />
+      {showInsight ? <InsightStrip insight={insight} currency={currency} /> : null}
+
+      {showDecision ? <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} /> : null}
 
       <div className="flex gap-2 overflow-x-auto">
         {TABS.map((t) => (

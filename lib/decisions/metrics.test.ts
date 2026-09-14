@@ -22,7 +22,13 @@ function row(id: string, reliability: string, savings: number | null): ResourceS
     Confidence: "HIGH",
     SavingsReliability: reliability,
     EstimatedMonthlySavings: savings,
+    RiskAdjustedMonthlySavings: savings,
     MetricCollectionStatus: "COMPLETE",
+    MetricCoverageRatio: 1,
+    RecommendationAction: "Rightsize",
+    IsActionable: true,
+    IsDestructive: false,
+    PerformanceRisk: "Low",
     TagOwner: "",
     TagEnvironment: "",
   };

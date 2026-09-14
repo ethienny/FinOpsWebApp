@@ -2,10 +2,10 @@
 // the tracking KPIs. No I/O here, so the rules can be unit tested directly.
 
 import type {
+  DecisionFields,
   DecisionSavings,
   DecisionStatus,
   NamedValue,
-  OpportunityRow,
   RecommendationDecision,
   ResourceSummary,
 } from "@/types/finops";
@@ -27,10 +27,10 @@ export function decisionsByResource(decisions: RecommendationDecision[]): Map<st
 }
 
 /** Adds the decision fields to each row. Rows without a decision are open. */
-export function applyDecisions(
-  rows: ResourceSummary[],
+export function applyDecisions<T extends ResourceSummary>(
+  rows: T[],
   decisions: Map<string, RecommendationDecision>,
-): OpportunityRow[] {
+): Array<T & DecisionFields> {
   return rows.map((row) => {
     const decision = decisions.get(row.ResourceId);
     const status = decision?.status ?? "open";
@@ -70,14 +70,14 @@ export function decisionSavings(
 }
 
 /** Rows with a decision other than open, newest decision first. */
-export function decidedRows(rows: OpportunityRow[]): OpportunityRow[] {
+export function decidedRows<T extends DecisionFields>(rows: T[]): T[] {
   return rows
     .filter((r) => r.decisionStatus !== "open")
     .sort((a, b) => b.decisionUpdatedAt.localeCompare(a.decisionUpdatedAt));
 }
 
 /** Count of decided rows per status label, in status order, omitting empty ones. */
-export function decisionsByStatus(rows: OpportunityRow[]): NamedValue[] {
+export function decisionsByStatus(rows: DecisionFields[]): NamedValue[] {
   return DECISION_STATUSES.filter((s) => s !== "open")
     .map((s) => ({ name: DECISION_LABELS[s], value: rows.filter((r) => r.decisionStatus === s).length }))
     .filter((x) => x.value > 0);
@@ -87,7 +87,7 @@ export function decisionsByStatus(rows: OpportunityRow[]): NamedValue[] {
  * PRICED savings under way or delivered, grouped by the decision owner.
  * Dismissed and open rows are excluded, as in the KPIs.
  */
-export function trackedSavingsByOwner(rows: OpportunityRow[], limit = 10): NamedValue[] {
+export function trackedSavingsByOwner(rows: Array<ResourceSummary & DecisionFields>, limit = 10): NamedValue[] {
   const map = new Map<string, number>();
   for (const r of rows) {
     if (r.SavingsReliability !== "PRICED") continue;

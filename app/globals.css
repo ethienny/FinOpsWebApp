@@ -68,7 +68,7 @@ body { background-color:#030919; background-image: radial-gradient(ellipse at 85
 body::before { content:""; position:fixed; inset:0; pointer-events:none; background-image:linear-gradient(rgba(61,129,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,129,216,.025) 1px,transparent 1px); background-size:48px 48px; z-index:-1; }
 .desktop-sidebar { height:100dvh; position:sticky; top:0; overflow-y:auto; background:linear-gradient(180deg,#07152d,#040c1e); border-right:1px solid var(--line); box-shadow:8px 0 36px #0002; }
 .desktop-sidebar > div:first-child,.mobile-sidebar > div:first-of-type { padding-top:32px; padding-bottom:28px; }
-.nav-caption { padding:26px 24px 4px; font-size:10px; letter-spacing:.2em; color:#7292be; }
+.nav-caption { padding:22px 12px 6px; font-size:10px; letter-spacing:.2em; color:#7292be; }
 .finops-shell nav a { transition:background .18s,border-color .18s; }
 .finops-shell aside nav a { border:1px solid transparent; min-height:46px; margin-bottom:7px; }
 .finops-shell aside nav a[aria-current="page"] { border-color:#22d3ee66; background:linear-gradient(100deg,#0b4264,#10223f); box-shadow:inset 3px 0 #22d3ee,0 0 24px #009dff12; color:#e4fbff; }
@@ -104,3 +104,39 @@ button:focus-visible,a:focus-visible { outline:2px solid #67e8f9; outline-offset
 @media (min-width:1600px) { .workspace-content,.workspace-header { padding-left:18px; padding-right:18px; } }
 @media (max-width:767px) { .page-hero { padding:24px 20px; min-height:180px; } .hero-network { right:-95px; opacity:.3; } .page-hero > p,.hero-title { max-width:100%; } .scope-panel { padding:14px; } .chart-panel { padding:16px; } .chart-panel > div:last-child { height:260px; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
+
+/* ─────────────────────────────────────────────── */
+/* Executive report: paper look on screen and on print */
+/* ─────────────────────────────────────────────── */
+.report-paper { background:#ffffff; color:#10203a; border-radius:12px; padding:40px 44px; max-width:960px; margin:0 auto; box-shadow:0 12px 30px #0004; font-size:13px; line-height:1.5; }
+.report-paper h1 { font-size:26px; font-weight:700; margin:2px 0 6px; letter-spacing:-.01em; }
+.report-paper h2 { font-size:15px; font-weight:700; margin:0 0 12px; padding-bottom:6px; border-bottom:1px solid #d5dde8; }
+.report-paper h3 { font-size:12px; font-weight:600; margin:0 0 8px; color:#5b6b82; text-transform:uppercase; letter-spacing:.06em; }
+.report-header { display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap; padding-bottom:18px; border-bottom:2px solid #10203a; margin-bottom:26px; }
+.report-eyebrow { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#0e7c9b; margin:0; }
+.report-meta { font-size:11px; color:#5b6b82; text-align:right; }
+.report-meta p { margin:0; }
+.report-section { margin-bottom:28px; break-inside:avoid; }
+.report-figures { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:12px; }
+.report-figure { border:1px solid #d5dde8; border-radius:8px; padding:10px 12px; }
+.report-label { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#5b6b82; margin:0; }
+.report-value { font-size:20px; font-weight:700; margin:4px 0 0; font-variant-numeric:tabular-nums; }
+.report-note { font-size:11px; color:#5b6b82; margin:4px 0 0; }
+.report-text { color:#3b4a60; margin:0; max-width:78ch; }
+.report-columns { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; }
+.report-table { width:100%; border-collapse:collapse; font-size:12px; }
+.report-table th { text-align:left; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#5b6b82; padding:6px 8px; border-bottom:1px solid #d5dde8; }
+.report-table td { padding:6px 8px; border-bottom:1px solid #eef2f7; vertical-align:top; }
+.report-table .report-num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; color:inherit; }
+.report-footer { font-size:10px; color:#5b6b82; border-top:1px solid #d5dde8; padding-top:10px; margin-top:8px; }
+
+@media print {
+  @page { size:A4; margin:12mm; }
+  html,body { background:#fff !important; color:#10203a; }
+  .desktop-sidebar,.workspace-header,.skip-link,.no-print { display:none !important; }
+  .finops-shell { display:block !important; min-height:0 !important; }
+  .workspace-content { padding:0 !important; }
+  .report-paper { box-shadow:none; border-radius:0; padding:0; max-width:none; }
+  .report-section { page-break-inside:avoid; }
+  a { color:inherit; text-decoration:none; }
+}

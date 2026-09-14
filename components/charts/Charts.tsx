@@ -17,6 +17,9 @@ import {
   Line,
   AreaChart,
   Area,
+  ScatterChart,
+  Scatter,
+  ZAxis,
 } from "recharts";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 
@@ -77,9 +80,9 @@ export function VerticalBars<T extends { name: string; value: number }>({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 24 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Bar dataKey={dataKey} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
@@ -91,16 +94,18 @@ export function VerticalBars<T extends { name: string; value: number }>({
 export function HorizontalBars({
   data,
   currency,
+  labelWidth = 110,
 }: {
   data: Array<{ name: string; value: number }>;
   currency?: string;
+  labelWidth?: number;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" horizontal={false} />
         <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" width={110} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <YAxis type="category" dataKey="name" width={labelWidth} tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Bar dataKey="value" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[0, 6, 6, 0]} />
       </BarChart>
@@ -137,12 +142,12 @@ export function GroupedBars({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 24 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
-        <Legend />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
         <Bar dataKey="cost" name="Cost" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
         <Bar dataKey="savings" name="Validated savings" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
@@ -197,20 +202,79 @@ export function AreaTrend({
 
 export function CompareBars({
   data,
+  labels = { current: "current", target: "target" },
+  currency,
 }: {
   data: Array<{ name: string; current: number; target: number }>;
+  labels?: { current: string; target: string };
+  currency?: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={50} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={56} />
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <Tooltip cursor={false} />
-        <Legend />
-        <Bar dataKey="current" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="target" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Tooltip cursor={false} content={currency ? <Tip currency={currency} /> : undefined} />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
+        <Bar dataKey="current" name={labels.current} fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="target" name={labels.target} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+export interface QuadrantPoint {
+  name: string;
+  risk: number;
+  savings: number;
+  quickWin: boolean;
+}
+
+function QuadrantTip({
+  active,
+  payload,
+  currency,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: QuadrantPoint }>;
+  currency?: string;
+}) {
+  const point = payload?.[0]?.payload;
+  if (!active || !point) return null;
+  return (
+    <div className="rounded-lg border border-white/10 bg-navy-900 px-3 py-2 text-xs shadow-xl">
+      <p className="mb-1 font-medium text-slate-200">{point.name}</p>
+      <p className="text-slate-300">Risk adjusted savings: {formatMoney(point.savings, currency)}</p>
+      <p className="text-slate-300">Execution risk: {point.risk}/100</p>
+      {point.quickWin ? <p className="text-cyan-200">Quick win</p> : null}
+    </div>
+  );
+}
+
+/** Value against execution risk. Quick wins sit top left: high savings, low risk. */
+export function ScatterQuadrant({ data, currency }: { data: QuadrantPoint[]; currency?: string }) {
+  const quick = data.filter((d) => d.quickWin);
+  const rest = data.filter((d) => !d.quickWin);
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ScatterChart margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+        <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+        <XAxis
+          type="number"
+          dataKey="risk"
+          name="Execution risk"
+          domain={[0, 100]}
+          tick={{ fill: "#94a3b8", fontSize: 11 }}
+          label={{ value: "Execution risk", position: "insideBottom", offset: -2, fill: "#94a3b8", fontSize: 11 }}
+        />
+        <YAxis type="number" dataKey="savings" name="Savings" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <ZAxis range={[36, 36]} />
+        <Tooltip cursor={false} content={<QuadrantTip currency={currency} />} />
+        <Legend />
+        <Scatter name="Other PRICED" data={rest} fill="#4895ff" fillOpacity={0.55} />
+        <Scatter name="Quick wins" data={quick} fill={CYAN} />
+      </ScatterChart>
     </ResponsiveContainer>
   );
 }

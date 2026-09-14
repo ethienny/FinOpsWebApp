@@ -76,3 +76,31 @@ export function DecisionBadge({ value }: { value: string }) {
   if (v === "dismissed") return <Badge value="Dismissed" tone="gray" />;
   return <Badge value="Open" tone="amber" />;
 }
+
+export function AgeBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  if (v === "persistent") return <Badge value="Persistent" tone="red" />;
+  if (v === "recurring") return <Badge value="Recurring" tone="amber" />;
+  if (v === "new") return <Badge value="New" tone="blue" />;
+  return <span className="text-slate-500">—</span>;
+}
+
+export function ChangeBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  if (v === "new") return <Badge value="New" tone="cyan" />;
+  if (v === "resolved") return <Badge value="Resolved" tone="green" />;
+  if (v === "action changed") return <Badge value="Action changed" tone="purple" />;
+  if (v === "reliability changed") return <Badge value="Reliability changed" tone="amber" />;
+  if (v === "savings changed") return <Badge value="Savings changed" tone="blue" />;
+  return <Badge value={value} tone="gray" />;
+}
+
+/** Outcome of a lookup or reconciliation step: found, partial, missing, invalid or failed. */
+export function OutcomeBadge({ value }: { value: string }) {
+  const v = value.toLowerCase();
+  const label = value.replace(/_/g, " ");
+  if (["found", "reconciled", "sent", "valid", "owned"].includes(v)) return <Badge value={label} tone="green" />;
+  if (["partial", "missing", "pendingsend", "unowned"].includes(v)) return <Badge value={label} tone="amber" />;
+  if (["invalid", "lookup_failed", "not_reconciled", "failed"].includes(v)) return <Badge value={label} tone="red" />;
+  return <Badge value={label} tone="gray" />;
+}
