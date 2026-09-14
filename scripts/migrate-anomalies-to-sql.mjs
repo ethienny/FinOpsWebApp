@@ -58,6 +58,7 @@ const ANOMALY_HISTORY_COLUMNS = [
   ["send_status", "s", 50], ["routing_source", "s", 50], ["tag_status", "s", 50], ["contacts_status", "s", 50],
   ["contact_source", "s"], ["recipient_overlap", "i"], ["window_from", "d"], ["window_to", "d"],
   ["window_source", "s", 50], ["observed_change_usd", "n"], ["attribution_status", "s", 50],
+  ["resource_id", "s", 400], ["resource_name", "s"], ["service_type", "s"], ["resource_group", "s"],
 ];
 
 const WEEKLY_REPORT_COVERAGE_COLUMNS = [

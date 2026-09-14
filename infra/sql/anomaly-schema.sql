@@ -36,10 +36,25 @@ BEGIN
         window_to             DATE NULL,
         window_source         NVARCHAR(50) NULL,
         observed_change_usd   FLOAT NULL,
-        attribution_status    NVARCHAR(50) NULL
+        attribution_status    NVARCHAR(50) NULL,
+        resource_id           NVARCHAR(400) NULL,
+        resource_name         NVARCHAR(MAX) NULL,
+        service_type          NVARCHAR(MAX) NULL,
+        resource_group        NVARCHAR(MAX) NULL
     );
     CREATE INDEX IX_anomaly_history_subscription_id ON dbo.anomaly_history (subscription_id);
     CREATE INDEX IX_anomaly_history_notified_at ON dbo.anomaly_history (notified_at);
+END
+
+-- Detalhe do recurso por trás do alerta, adicionado depois da primeira versão
+-- desta tabela: reaplica em cima de um banco já provisionado sem recriar.
+IF OBJECT_ID('dbo.anomaly_history', 'U') IS NOT NULL AND COL_LENGTH('dbo.anomaly_history', 'resource_id') IS NULL
+BEGIN
+    ALTER TABLE dbo.anomaly_history ADD
+        resource_id     NVARCHAR(400) NULL,
+        resource_name   NVARCHAR(MAX) NULL,
+        service_type    NVARCHAR(MAX) NULL,
+        resource_group  NVARCHAR(MAX) NULL;
 END
 
 -- ----------------------------------------------------------------------------
