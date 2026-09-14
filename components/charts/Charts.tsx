@@ -94,16 +94,18 @@ export function VerticalBars<T extends { name: string; value: number }>({
 export function HorizontalBars({
   data,
   currency,
+  labelWidth = 110,
 }: {
   data: Array<{ name: string; value: number }>;
   currency?: string;
+  labelWidth?: number;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" horizontal={false} />
         <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" width={110} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <YAxis type="category" dataKey="name" width={labelWidth} tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Bar dataKey="value" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[0, 6, 6, 0]} />
       </BarChart>

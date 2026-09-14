@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  AlertTriangle,
   ArrowLeftRight,
   Boxes,
   ClipboardCheck,
@@ -38,6 +39,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/", label: "Executive", icon: LayoutDashboard },
       { href: "/changes", label: "What Changed", icon: ArrowLeftRight },
+      { href: "/anomalies", label: "Cost Anomalies", icon: AlertTriangle },
       { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
     ],
   },
@@ -172,6 +174,10 @@ const PAGE_COPY: Record<string, { title: string; subtitle: string }> = {
   "/changes": {
     title: "What Changed",
     subtitle: "Recommendations that appeared, were resolved or moved since the previous complete run.",
+  },
+  "/anomalies": {
+    title: "Cost Anomalies",
+    subtitle: "Weekly report of the anomaly alerting: who was notified, what was suppressed, and where coverage or ownership is missing.",
   },
   "/insights": {
     title: "Insights",

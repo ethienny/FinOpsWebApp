@@ -16,6 +16,8 @@ describe("plan catalog", () => {
     expect(hasModule(entitlementsFor("starter", "default"), "tracking")).toBe(true);
     expect(hasModule(entitlementsFor("starter", "default"), "showback")).toBe(false);
     expect(hasModule(entitlementsFor("pro", "default"), "showback")).toBe(true);
+    expect(hasModule(entitlementsFor("starter", "default"), "anomalies")).toBe(false);
+    expect(hasModule(entitlementsFor("pro", "default"), "anomalies")).toBe(true);
     expect(hasModule(entitlementsFor("pro", "default"), "governance")).toBe(false);
     expect(hasModule(entitlementsFor("enterprise", "default"), "governance")).toBe(true);
   });
@@ -31,6 +33,7 @@ describe("plan catalog", () => {
     expect(moduleForPath("/")).toBe("core");
     expect(moduleForPath("/resources/abc")).toBe("core");
     expect(moduleForPath("/tracking")).toBe("tracking");
+    expect(moduleForPath("/anomalies")).toBe("anomalies");
     expect(moduleForPath("/run-history")).toBe("governance");
     expect(moduleForPath("/unknown")).toBeNull();
   });
