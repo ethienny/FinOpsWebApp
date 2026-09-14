@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "db:schema": "node --env-file=.env.local scripts/apply-schema.mjs",
     "db:migrate": "node --env-file=.env.local scripts/migrate-to-sql.mjs",
-    "db:cost-alert-seed": "node --env-file=.env.local scripts/seed-cost-alert.mjs"
+    "db:migrate-anomalies": "node --env-file=.env.local scripts/migrate-anomalies-to-sql.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.503.0",
