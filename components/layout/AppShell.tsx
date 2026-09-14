@@ -32,14 +32,13 @@ import { StatusBadge } from "@/components/badges";
 import { NetworkGlyph } from "@/components/layout/NetworkGlyph";
 
 // Menu groups follow the question the user brings: how are we doing, what
-// should we act on, and what exists behind the numbers.
+// should we act on, what is happening now, and what exists behind the numbers.
 const NAV_GROUPS = [
   {
     caption: "OVERVIEW",
     items: [
       { href: "/", label: "Executive", icon: LayoutDashboard },
       { href: "/changes", label: "What Changed", icon: ArrowLeftRight },
-      { href: "/anomalies", label: "Cost Anomalies", icon: AlertTriangle },
       { href: "/showback", label: "Showback & Chargeback", icon: Wallet },
     ],
   },
@@ -48,8 +47,14 @@ const NAV_GROUPS = [
     items: [
       { href: "/opportunities", label: "Opportunities", icon: Sparkles },
       { href: "/insights", label: "Insights", icon: Lightbulb },
-      { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
       { href: "/sizing", label: "Sizing", icon: Scale },
+    ],
+  },
+  {
+    caption: "MONITOR",
+    items: [
+      { href: "/tracking", label: "Tracking", icon: ClipboardCheck },
+      { href: "/anomalies", label: "Cost Anomalies", icon: AlertTriangle },
     ],
   },
   {
