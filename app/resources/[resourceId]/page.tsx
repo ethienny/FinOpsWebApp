@@ -18,13 +18,13 @@ export default async function ResourceDetailPage({
 }) {
   const { resourceId } = await params;
   const id = decodeResourceId(resourceId);
-  const [data, decision, insight, entitlements] = await Promise.all([
-    getRepository().getResourceById(id),
+  const data = id ? await getRepository().getResourceById(id) : null;
+  if (!data) notFound();
+  const [decision, insight, entitlements] = await Promise.all([
     getDecisionRepository().get(id),
     getResourceInsight(id),
     getEntitlements(),
   ]);
-  if (!data) notFound();
   return (
     <ResourceDetail
       data={data}

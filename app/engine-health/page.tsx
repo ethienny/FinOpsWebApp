@@ -7,10 +7,6 @@ import { getRepository } from "@/lib/repositories";
 import { formatDate, formatDuration, formatNumber, formatPercent } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 
-// The page takes no search params, so Next would prerender it at build time and
-// freeze the engine run data. Rendering on demand keeps it in sync with the CSVs.
-export const dynamic = "force-dynamic";
-
 function splitServices(value: string) {
   if (!value) return [];
   return value.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
@@ -21,6 +17,7 @@ export default async function EngineHealthPage() {
   if (gate.locked) return gate.locked;
   const data = await getRepository().getEngineHealth();
   const run = data.latestRun;
+  const degraded = splitServices(run?.DegradedServices ?? "");
 
   return (
     <div className="space-y-6">
@@ -59,9 +56,9 @@ export default async function EngineHealthPage() {
 
       <section className="card-surface p-5">
         <h3 className="mb-4 text-sm font-semibold text-white">Degraded services</h3>
-        {splitServices(run?.DegradedServices ?? "").length ? (
+        {degraded.length ? (
           <ul className="space-y-2">
-            {splitServices(run!.DegradedServices).map((svc) => (
+            {degraded.map((svc) => (
               <li key={svc} className="flex items-center justify-between rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm">
                 <span className="text-amber-100">{svc}</span>
                 <span className="text-xs text-amber-200">Impact: quality degraded · Status: DEGRADED</span>

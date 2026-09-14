@@ -138,7 +138,7 @@ async function main() {
     console.log("Cost Anomalies schema ready.");
 
     for (const dataset of DATASETS) {
-      console.log(`\n${dataset.table} <- data/${dataset.csv}`);
+      console.log(`\n${dataset.table} from data/${dataset.csv}`);
       const rows = loadCsv(dataset.csv);
       console.log(`  ${rows.length} rows read`);
 

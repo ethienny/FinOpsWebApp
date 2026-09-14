@@ -341,7 +341,9 @@ export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelay
       lastError = err;
       const message = err instanceof Error ? err.message : String(err);
       console.error(`[sql] attempt ${attempt + 1}/${attempts} failed: ${message}`);
+      const failed = globalThis.__finopsSqlPool;
       globalThis.__finopsSqlPool = undefined;
+      failed?.then((pool) => pool.close()).catch(() => undefined);
       if (attempt < attempts - 1) {
         await new Promise((resolve) => setTimeout(resolve, baseDelayMs * 2 ** attempt));
       }

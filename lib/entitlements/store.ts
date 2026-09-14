@@ -17,7 +17,8 @@ function readStoredPlan(): Plan | null {
     const parsed: unknown = JSON.parse(readFileSync(PLAN_FILE, "utf8"));
     const plan = (parsed as { plan?: unknown })?.plan;
     return isPlan(plan) ? plan : null;
-  } catch {
+  } catch (err) {
+    console.error("[plan] stored plan could not be read:", err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -32,7 +33,7 @@ export async function getEntitlements(): Promise<Entitlements> {
 
 export async function savePlan(plan: Plan): Promise<void> {
   mkdirSync(STATE_DIR, { recursive: true });
-  const tmp = `${PLAN_FILE}.tmp`;
+  const tmp = `${PLAN_FILE}.${process.pid}.${Date.now()}.tmp`;
   writeFileSync(tmp, JSON.stringify({ plan }, null, 2));
   renameSync(tmp, PLAN_FILE);
 }

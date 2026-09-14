@@ -162,10 +162,13 @@ function loadFromCsv(): AnomalyStore {
   };
 }
 
+const SQL_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
+
 async function loadFromSql(): Promise<AnomalyStore> {
   const schema = process.env.ANOMALY_SQL_SCHEMA || "dbo";
+  if (!SQL_IDENTIFIER.test(schema)) throw new Error("ANOMALY_SQL_SCHEMA must be a plain SQL identifier.");
   const pool = await getSqlPool();
-  const read = async (table: string) => (await pool.request().query(`SELECT * FROM ${schema}.${table}`)).recordset as Row[];
+  const read = async (table: string) => (await pool.request().query(`SELECT * FROM [${schema}].[${table}]`)).recordset as Row[];
   return {
     alerts: (await read("anomaly_history")).map(alert),
     coverage: (await read("weekly_report_coverage")).map(coverage),

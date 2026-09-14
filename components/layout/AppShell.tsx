@@ -24,7 +24,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { FilterOptions, SidebarMeta } from "@/types/finops";
 import type { AnomalyFilterOptions } from "@/types/anomalies";
 import type { Entitlements } from "@/types/entitlements";
@@ -75,7 +75,7 @@ const NAV_GROUPS = [
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/" || pathname.startsWith("/executive");
+  if (href === "/") return pathname === "/";
   if (href === "/resources") return pathname === "/resources" || pathname.startsWith("/resources/");
   return pathname === href;
 }
@@ -227,6 +227,19 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const drawer = useRef<HTMLElement>(null);
+
+  // The drawer closes on Escape and takes focus when it opens.
+  useEffect(() => {
+    if (!open) return;
+    drawer.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
   const copy =
     PAGE_COPY[pathname] ||
     (pathname.startsWith("/resources/")
@@ -243,7 +256,15 @@ export function AppShell({
       {open ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <button className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-label="Close menu" />
-          <aside className="mobile-sidebar relative flex h-full w-72 flex-col bg-navy-900 overflow-y-auto">
+          <aside
+            ref={drawer}
+            id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation"
+            tabIndex={-1}
+            className="mobile-sidebar relative flex h-full w-72 flex-col bg-navy-900 overflow-y-auto outline-none"
+          >
             <button className="absolute right-3 top-3 text-slate-300" onClick={() => setOpen(false)} aria-label="Close">
               <X className="h-5 w-5" />
             </button>
@@ -255,7 +276,13 @@ export function AppShell({
       <div className="flex min-w-0 flex-col">
         <header className="workspace-header">
           <div className="flex items-start gap-3 px-4 py-4 sm:px-6">
-            <button className="mt-1 rounded-lg border border-white/10 p-2 lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation">
+            <button
+              className="mt-1 rounded-lg border border-white/10 p-2 lg:hidden"
+              onClick={() => setOpen(true)}
+              aria-label="Open navigation"
+              aria-expanded={open}
+              aria-controls="mobile-navigation"
+            >
               <Menu className="h-4 w-4" />
             </button>
             <div className="min-w-0 flex-1 space-y-4">
