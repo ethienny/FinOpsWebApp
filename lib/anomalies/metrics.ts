@@ -10,6 +10,7 @@ import type {
   NamedValueLike,
   SubscriptionContact,
   SubscriptionOwnership,
+  TimelinePoint,
   TopSubscription,
   WeeklyCoverage,
   WeeklyStats,
@@ -156,11 +157,12 @@ export function subscriptionOwnership(alerts: AnomalyAlert[], contacts: Subscrip
 }
 
 export function hasAnomalyFilters(filters: AnomalyFilters): boolean {
-  return Boolean(filters.subscription || filters.routing || filters.attribution);
+  return Boolean(filters.subscription || filters.service || filters.routing || filters.attribution);
 }
 
 export function matchesAnomalyFilters(alert: AnomalyAlert, filters: AnomalyFilters): boolean {
   if (filters.subscription && alert.subscriptionName !== filters.subscription) return false;
+  if (filters.service && alert.serviceType !== filters.service) return false;
   if (filters.routing && alert.routingSource !== filters.routing) return false;
   if (filters.attribution && alert.attributionStatus !== filters.attribution) return false;
   return true;
@@ -182,4 +184,41 @@ export function topSubscriptionsFromAlerts(alerts: AnomalyAlert[]): TopSubscript
   return [...map.values()]
     .map((r) => ({ ...r, observedIncreaseUsd: Math.round(r.observedIncreaseUsd * 100) / 100 }))
     .sort((a, b) => b.alertCount - a.alertCount || b.observedIncreaseUsd - a.observedIncreaseUsd || a.name.localeCompare(b.name));
+}
+
+function isAttributed(alert: AnomalyAlert): boolean {
+  return alert.attributionStatus === "reconciled" || alert.attributionStatus === "partial";
+}
+
+/**
+ * One point per stats row, oldest first: notified alerts and observed
+ * increase come from the alerts of that week, suppressed from the row.
+ */
+export function timeline(stats: WeeklyStats[], alerts: AnomalyAlert[], includeSuppressed = true): TimelinePoint[] {
+  const sent = alerts.filter(isSent);
+  return [...stats]
+    .sort((a, b) => a.generatedAt.localeCompare(b.generatedAt))
+    .map((row) => {
+      const window = weekWindow(row);
+      const week = alertsInWindow(sent, window);
+      const start = new Date(`${window.from}T00:00:00Z`);
+      return {
+        name: `${String(start.getUTCDate()).padStart(2, "0")} ${start.toLocaleString("en-US", { month: "short", timeZone: "UTC" })}`,
+        weekStart: window.from,
+        notified: week.length,
+        suppressed: includeSuppressed ? row.totalSuppressed : null,
+        observedIncreaseUsd: Math.round(week.filter(isAttributed).reduce((a, x) => a + x.observedChangeUsd, 0) * 100) / 100,
+      };
+    });
+}
+
+/** Observed increase per service, largest first. Alerts without a service go to Unknown. */
+export function observedIncreaseByService(alerts: AnomalyAlert[]): NamedValueLike[] {
+  const map = new Map<string, number>();
+  for (const a of alerts) {
+    if (!isSent(a) || !isAttributed(a)) continue;
+    const key = a.serviceType || "Unknown";
+    map.set(key, (map.get(key) ?? 0) + a.observedChangeUsd);
+  }
+  return [...map.entries()].map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 })).sort((a, b) => b.value - a.value);
 }

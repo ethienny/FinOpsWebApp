@@ -18,6 +18,7 @@ const ROUTING_LABELS: Record<string, string> = {
 
 const FIELDS: Array<{ key: string; label: string; optionKey: keyof AnomalyFilterOptions; render?: (v: string) => string }> = [
   { key: "subscription", label: "Subscription", optionKey: "subscriptions" },
+  { key: "service", label: "Service", optionKey: "services" },
   { key: "routing", label: "Routing Source", optionKey: "routingSources", render: (v) => ROUTING_LABELS[v] ?? v },
   { key: "attribution", label: "Attribution", optionKey: "attributionStatuses", render: (v) => v.replace(/_/g, " ") },
 ];
@@ -42,7 +43,7 @@ export function AnomalyFilterBar({ options }: { options: AnomalyFilterOptions })
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {FIELDS.map((field) => (
           <label key={field.key} className="block text-[11px] uppercase tracking-wide text-slate-400">
             {field.label}

@@ -15,6 +15,7 @@ import {
   Legend,
   LineChart,
   Line,
+  ComposedChart,
   AreaChart,
   Area,
   ScatterChart,
@@ -275,6 +276,47 @@ export function ScatterQuadrant({ data, currency }: { data: QuadrantPoint[]; cur
         <Scatter name="Other PRICED" data={rest} fill="#4895ff" fillOpacity={0.55} />
         <Scatter name="Quick wins" data={quick} fill={CYAN} />
       </ScatterChart>
+    </ResponsiveContainer>
+  );
+}
+
+export interface TimelinePointLike {
+  name: string;
+  notified: number;
+  suppressed: number | null;
+  observedIncreaseUsd: number;
+}
+
+/** Alerts per week as bars with the observed increase as a line on the right axis. */
+export function TimelineChart({ data, currency = "USD" }: { data: TimelinePointLike[]; currency?: string }) {
+  const hasSuppressed = data.some((p) => p.suppressed !== null);
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+        <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+        <XAxis dataKey="name" tick={{ fill: "#94a3b8", fontSize: 11 }} interval="preserveStartEnd" minTickGap={24} />
+        <YAxis yAxisId="count" allowDecimals={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <YAxis yAxisId="usd" orientation="right" tick={{ fill: "#94a3b8", fontSize: 11 }} tickFormatter={(v: number) => formatMoney(v, currency)} width={64} />
+        <Tooltip
+          cursor={false}
+          content={({ active, payload, label }) => {
+            const point = payload?.[0]?.payload as TimelinePointLike | undefined;
+            if (!active || !point) return null;
+            return (
+              <div className="rounded-lg border border-white/10 bg-navy-900 px-3 py-2 text-xs shadow-xl">
+                <p className="mb-1 font-medium text-slate-200">Week of {label}</p>
+                <p style={{ color: CYAN }}>Notified: {formatNumber(point.notified, false)}</p>
+                {point.suppressed !== null ? <p style={{ color: BLUE }}>Suppressed: {formatNumber(point.suppressed, false)}</p> : null}
+                <p style={{ color: "#fbbf24" }}>Observed increase: {formatMoney(point.observedIncreaseUsd, currency, false)}</p>
+              </div>
+            );
+          }}
+        />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
+        <Bar yAxisId="count" dataKey="notified" name="Notified" stackId="alerts" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} />
+        {hasSuppressed ? <Bar yAxisId="count" dataKey="suppressed" name="Suppressed" stackId="alerts" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[4, 4, 0, 0]} /> : null}
+        <Line yAxisId="usd" type="monotone" dataKey="observedIncreaseUsd" name="Observed increase" stroke="#fbbf24" strokeWidth={2} dot={false} />
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
