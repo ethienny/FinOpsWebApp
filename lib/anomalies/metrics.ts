@@ -4,11 +4,13 @@
 
 import type {
   AnomalyAlert,
+  AnomalyFilters,
   Comparison,
   ContactRowStatus,
   NamedValueLike,
   SubscriptionContact,
   SubscriptionOwnership,
+  TopSubscription,
   WeeklyCoverage,
   WeeklyStats,
   WeekOverWeek,
@@ -151,4 +153,33 @@ export function subscriptionOwnership(alerts: AnomalyAlert[], contacts: Subscrip
     });
   }
   return result.sort((a, b) => b.alertCount - a.alertCount || a.subscriptionName.localeCompare(b.subscriptionName));
+}
+
+export function hasAnomalyFilters(filters: AnomalyFilters): boolean {
+  return Boolean(filters.subscription || filters.routing || filters.attribution);
+}
+
+export function matchesAnomalyFilters(alert: AnomalyAlert, filters: AnomalyFilters): boolean {
+  if (filters.subscription && alert.subscriptionName !== filters.subscription) return false;
+  if (filters.routing && alert.routingSource !== filters.routing) return false;
+  if (filters.attribution && alert.attributionStatus !== filters.attribution) return false;
+  return true;
+}
+
+/**
+ * Top subscriptions derived from alerts, the same way the stats runbook
+ * builds TopSubs: observed increase adds reconciled and partial attributions.
+ */
+export function topSubscriptionsFromAlerts(alerts: AnomalyAlert[]): TopSubscription[] {
+  const map = new Map<string, TopSubscription>();
+  for (const a of alerts) {
+    const row = map.get(a.subscriptionName) ?? { name: a.subscriptionName, alertCount: 0, observedIncreaseUsd: 0, notReconciled: 0 };
+    row.alertCount += 1;
+    if (a.attributionStatus === "reconciled" || a.attributionStatus === "partial") row.observedIncreaseUsd += a.observedChangeUsd;
+    if (a.attributionStatus === "not_reconciled") row.notReconciled += 1;
+    map.set(a.subscriptionName, row);
+  }
+  return [...map.values()]
+    .map((r) => ({ ...r, observedIncreaseUsd: Math.round(r.observedIncreaseUsd * 100) / 100 }))
+    .sort((a, b) => b.alertCount - a.alertCount || b.observedIncreaseUsd - a.observedIncreaseUsd || a.name.localeCompare(b.name));
 }

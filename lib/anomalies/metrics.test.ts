@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import type { AnomalyAlert, SubscriptionContact, WeeklyStats } from "@/types/anomalies";
 import {
   alertsInWindow,
+  matchesAnomalyFilters,
+  topSubscriptionsFromAlerts,
   contactRowStatus,
   routingDistribution,
   runbookDate,
@@ -116,6 +118,30 @@ describe("subscription ownership", () => {
       ["sub-hub", 1, false, "tag invalid, contact lookup failed"],
       ["sub-legacy", 1, false, "tag missing, contact row invalid"],
       ["sub-ml", 1, true, "tag missing, contact row valid"],
+    ]);
+  });
+});
+
+describe("page scope", () => {
+  it("matches alerts on subscription, routing source and attribution", () => {
+    const a = alert("1", "sub-payments", "2026-09-07T08:00:00Z", { attributionStatus: "reconciled" });
+    expect(matchesAnomalyFilters(a, {})).toBe(true);
+    expect(matchesAnomalyFilters(a, { subscription: "sub-payments", routing: "tag_databricks" })).toBe(true);
+    expect(matchesAnomalyFilters(a, { subscription: "other" })).toBe(false);
+    expect(matchesAnomalyFilters(a, { attribution: "partial" })).toBe(false);
+  });
+
+  it("derives top subscriptions the way the stats runbook does", () => {
+    const alerts = [
+      alert("1", "sub-payments", "2026-09-07T08:00:00Z", { attributionStatus: "reconciled", observedChangeUsd: 1872.3 }),
+      alert("1", "sub-payments", "2026-09-09T08:00:00Z", { attributionStatus: "reconciled", observedChangeUsd: 1265.8 }),
+      alert("1", "sub-payments", "2026-09-12T08:00:00Z", { attributionStatus: "partial", observedChangeUsd: 802.45 }),
+      alert("3", "sub-data", "2026-09-08T08:00:00Z", { attributionStatus: "reconciled", observedChangeUsd: 3940.6 }),
+      alert("3", "sub-data", "2026-09-11T08:00:00Z", { attributionStatus: "not_reconciled", observedChangeUsd: 0 }),
+    ];
+    expect(topSubscriptionsFromAlerts(alerts)).toEqual([
+      { name: "sub-payments", alertCount: 3, observedIncreaseUsd: 3940.55, notReconciled: 0 },
+      { name: "sub-data", alertCount: 2, observedIncreaseUsd: 3940.6, notReconciled: 1 },
     ]);
   });
 });

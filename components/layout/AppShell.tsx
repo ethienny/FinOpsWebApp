@@ -22,9 +22,11 @@ import {
 } from "lucide-react";
 import { Suspense, useState } from "react";
 import type { FilterOptions, SidebarMeta } from "@/types/finops";
+import type { AnomalyFilterOptions } from "@/types/anomalies";
 import type { Entitlements } from "@/types/entitlements";
 import { hasModule, moduleForPath } from "@/lib/entitlements/catalog";
 import { FilterBar } from "@/components/filters/FilterBar";
+import { AnomalyFilterBar } from "@/components/filters/AnomalyFilterBar";
 import { PlanBanner } from "@/components/layout/PlanBanner";
 import { PlanSwitcher } from "@/components/layout/PlanSwitcher";
 import { cn } from "@/lib/cn";
@@ -210,9 +212,11 @@ export function AppShell({
   children,
   meta,
   filterOptions,
+  anomalyFilterOptions,
   entitlements,
 }: {
   children: React.ReactNode;
+  anomalyFilterOptions: AnomalyFilterOptions;
   meta: SidebarMeta;
   filterOptions: FilterOptions;
   entitlements: Entitlements;
@@ -257,10 +261,12 @@ export function AppShell({
                 <h1 className="hero-title">{copy.title}</h1>
                 <p className="mt-1 text-sm text-slate-400">{copy.subtitle}</p>
               </div>
-              <div className="scope-panel"><p className="scope-label">ANALYSIS SCOPE</p>
-              <Suspense fallback={<div className="h-16 rounded-xl bg-navy-800/60" />}>
-                <FilterBar options={filterOptions} />
-              </Suspense></div>
+              <div className="scope-panel">
+                <p className="scope-label">{pathname === "/anomalies" ? "ALERT SCOPE" : "ANALYSIS SCOPE"}</p>
+                <Suspense fallback={<div className="h-16 rounded-xl bg-navy-800/60" />}>
+                  {pathname === "/anomalies" ? <AnomalyFilterBar options={anomalyFilterOptions} /> : <FilterBar options={filterOptions} />}
+                </Suspense>
+              </div>
             </div>
           </div>
         </header>
