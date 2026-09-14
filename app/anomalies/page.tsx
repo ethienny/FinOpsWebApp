@@ -10,7 +10,7 @@ import { formatDate, formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard, QualityMetricCard } from "@/components/kpi/KpiCard";
 import { EmptyState } from "@/components/kpi/States";
 import { OutcomeBadge } from "@/components/badges";
-import { ChartCard, DonutChart, HorizontalBars } from "@/components/charts/Charts";
+import { ChartCard, DonutChart, HorizontalBars, TimelineChart } from "@/components/charts/Charts";
 import {
   AlertRoutingTable,
   AnomalyAlertsTable,
@@ -105,6 +105,18 @@ export default async function AnomaliesPage({
         />
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+        <ChartCard
+          title="Alerts Over the Year"
+          subtitle={filtered ? "Notified alerts in scope per reported week; suppressed hidden while a scope is active" : "Notified and suppressed alerts per reported week, observed increase as a line"}
+        >
+          <TimelineChart data={data.timeline} />
+        </ChartCard>
+        <ChartCard title="Observed Increase by Service" subtitle="This week, reconciled and partial attributions">
+          <HorizontalBars data={data.byService} currency="USD" labelWidth={130} />
+        </ChartCard>
+      </div>
+
       <section className="space-y-3">
         <div>
           <h3 className="text-sm font-semibold text-white">Top Subscriptions</h3>
@@ -168,29 +180,33 @@ export default async function AnomaliesPage({
             How each alert found its recipients: the subscription tag, the contact rows pushed by the data team, or the fallback list when neither resolved.
           </p>
         </div>
-        <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
+        <div className="grid gap-4 xl:grid-cols-[1fr_1.6fr]">
           <ChartCard title="Routing Source" subtitle={`${stats.routing.overlapAlerts} alerts where at least one address overlapped`}>
             <DonutChart data={data.routing} />
           </ChartCard>
           <section className="card-surface p-5">
-            <h4 className="mb-3 text-sm font-semibold text-white">Routing per alert</h4>
-            <AlertRoutingTable rows={data.alerts} />
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <h4 className="text-sm font-semibold text-white">Subscriptions without an owner</h4>
+              <p className="text-xs text-slate-400">
+                {formatNumber(stats.fallbackSubsTotal, false)} on the fallback list this week
+                {unownedNotInFallback ? `, ${unownedNotInFallback} more without a valid contact` : ""}
+              </p>
+            </div>
+            {data.unowned.length ? (
+              <UnownedSubscriptionsTable rows={data.unowned} />
+            ) : (
+              <p className="text-sm text-slate-400">Every subscription that alerted in scope has an owner.</p>
+            )}
+            {stats.contactSources.length ? (
+              <p className="mt-3 text-xs text-slate-500">
+                Contacts from {stats.contactSources.map((c) => `${c.source} (${c.alerts} alerts)`).join(", ")}
+              </p>
+            ) : null}
           </section>
         </div>
         <section className="card-surface p-5">
-          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <h4 className="text-sm font-semibold text-white">Subscriptions without an owner</h4>
-            <p className="text-xs text-slate-400">
-              {formatNumber(stats.fallbackSubsTotal, false)} on the fallback list this week
-              {unownedNotInFallback ? `, ${unownedNotInFallback} more without a valid contact` : ""}
-              {stats.contactSources.length ? ` · contacts from ${stats.contactSources.map((c) => `${c.source} (${c.alerts} alerts)`).join(", ")}` : ""}
-            </p>
-          </div>
-          {data.unowned.length ? (
-            <UnownedSubscriptionsTable rows={data.unowned} />
-          ) : (
-            <p className="text-sm text-slate-400">Every subscription that alerted in scope has an owner.</p>
-          )}
+          <h4 className="mb-3 text-sm font-semibold text-white">Routing per alert</h4>
+          <AlertRoutingTable rows={data.alerts} />
         </section>
       </section>
 

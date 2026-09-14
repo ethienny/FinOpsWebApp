@@ -21,6 +21,11 @@ export interface AnomalyAlert {
   windowSource: string;
   observedChangeUsd: number;
   attributionStatus: string;
+  /** Resource behind the anomaly, empty when the alert carries no resource detail. */
+  resourceId: string;
+  resourceName: string;
+  serviceType: string;
+  resourceGroup: string;
 }
 
 export interface MissingSubscription {
@@ -119,12 +124,14 @@ export interface AnomalyStore {
 
 export interface AnomalyFilters {
   subscription?: string;
+  service?: string;
   routing?: string;
   attribution?: string;
 }
 
 export interface AnomalyFilterOptions {
   subscriptions: string[];
+  services: string[];
   routingSources: string[];
   attributionStatuses: string[];
 }
@@ -156,6 +163,15 @@ export interface WeekOverWeek {
   suppressed: Comparison;
   suppressionRate: Comparison;
   runs: Comparison;
+}
+
+/** One reported week on the timeline. Suppressed is null when the scope hides it. */
+export interface TimelinePoint {
+  name: string;
+  weekStart: string;
+  notified: number;
+  suppressed: number | null;
+  observedIncreaseUsd: number;
 }
 
 export type ContactRowStatus = "valid" | "invalid" | "missing";
