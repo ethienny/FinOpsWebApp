@@ -114,6 +114,22 @@ export interface AnomalyStore {
 }
 
 // ───────────────────────────────────────────────
+// Scope of the anomalies page
+// ───────────────────────────────────────────────
+
+export interface AnomalyFilters {
+  subscription?: string;
+  routing?: string;
+  attribution?: string;
+}
+
+export interface AnomalyFilterOptions {
+  subscriptions: string[];
+  routingSources: string[];
+  attributionStatuses: string[];
+}
+
+// ───────────────────────────────────────────────
 // Derived views for the dashboard
 // ───────────────────────────────────────────────
 
