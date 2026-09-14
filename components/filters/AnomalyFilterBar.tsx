@@ -7,19 +7,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { X } from "lucide-react";
 import type { AnomalyFilterOptions } from "@/types/anomalies";
-
-const ROUTING_LABELS: Record<string, string> = {
-  tag_databricks: "Tag and contacts",
-  tag_only: "Tag only",
-  databricks_only: "Contacts only",
-  none: "None, fallback list",
-  legacy: "Legacy",
-};
+import { routingLabel } from "@/lib/anomalies/metrics";
 
 const FIELDS: Array<{ key: string; label: string; optionKey: keyof AnomalyFilterOptions; render?: (v: string) => string }> = [
   { key: "subscription", label: "Subscription", optionKey: "subscriptions" },
   { key: "service", label: "Service", optionKey: "services" },
-  { key: "routing", label: "Routing Source", optionKey: "routingSources", render: (v) => ROUTING_LABELS[v] ?? v },
+  { key: "routing", label: "Routing Source", optionKey: "routingSources", render: routingLabel },
   { key: "attribution", label: "Attribution", optionKey: "attributionStatuses", render: (v) => v.replace(/_/g, " ") },
 ];
 

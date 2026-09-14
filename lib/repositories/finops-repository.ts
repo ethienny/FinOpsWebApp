@@ -2,7 +2,7 @@
 // data store (CSV or SQL) and applies the business rules: PRICED and
 // HEURISTIC savings are never combined, official sizing savings count unique
 // resources, aging and run deltas are computed once per process.
-// DatabricksFinOpsRepository is the placeholder of the future provider.
+// The store decides between CSV and Azure SQL, so one class serves both.
 
 import type {
   EngineHealthData,
@@ -105,7 +105,7 @@ function riskLabel(score: number): string {
   return "—";
 }
 
-export class CsvFinOpsRepository implements FinOpsRepository {
+export class StoreFinOpsRepository implements FinOpsRepository {
   async getFilterOptions(): Promise<FilterOptions> {
     const { latest } = await getDataStore();
     return {
@@ -408,61 +408,9 @@ export class CsvFinOpsRepository implements FinOpsRepository {
 let agingCache: RecommendationAging[] | null = null;
 let deltaCache: { runId: string; changes: ReturnType<typeof diffRuns> } | null = null;
 
-/**
- * Future Databricks provider.
- *
- * DatabricksFinOpsRepository will implement the same FinOpsRepository contract
- * using SQL warehouses / Unity Catalog views:
- *   vw_finops_latest_complete_run
- *   finops_engine_runs
- *   vw_finops_target_options
- *   vw_finops_target_options_all_runs
- *
- * Credentials must stay server-side (env / secret store). Never expose tokens
- * to client components.
- */
-export class DatabricksFinOpsRepository implements FinOpsRepository {
-  async getFilterOptions(): Promise<FilterOptions> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getSidebarMeta(): Promise<SidebarMeta> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getExecutiveData(): Promise<ExecutiveData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getShowback(): Promise<ShowbackData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getOpportunities(): Promise<OpportunitiesData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getSizing(): Promise<SizingData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getResources(): Promise<ResourcesData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getResourceById(): Promise<ResourceDetailData | null> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getEngineHealth(): Promise<EngineHealthData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getRunHistory(): Promise<RunHistoryData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getRecommendationAging(): Promise<RecommendationAging[]> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-  async getRunDelta(): Promise<RunDeltaData> {
-    throw new Error("DatabricksFinOpsRepository is not implemented.");
-  }
-}
-
 let singleton: FinOpsRepository | null = null;
 
 export function getRepository(): FinOpsRepository {
-  if (!singleton) singleton = new CsvFinOpsRepository();
+  if (!singleton) singleton = new StoreFinOpsRepository();
   return singleton;
 }

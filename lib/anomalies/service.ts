@@ -92,7 +92,8 @@ export async function getAnomalyFilterOptions(): Promise<AnomalyFilterOptions> {
       routingSources: uniqueSorted(alerts.map((a) => a.routingSource)),
       attributionStatuses: uniqueSorted(alerts.map((a) => a.attributionStatus)),
     };
-  } catch {
+  } catch (err) {
+    console.error("[anomalies] filter options unavailable:", err instanceof Error ? err.message : err);
     return { subscriptions: [], services: [], routingSources: [], attributionStatuses: [] };
   }
 }

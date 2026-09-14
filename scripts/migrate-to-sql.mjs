@@ -163,7 +163,7 @@ async function main() {
 
   try {
     for (const dataset of DATASETS) {
-      console.log(`\n${dataset.table} <- ${dataset.csv}`);
+      console.log(`\n${dataset.table} from ${dataset.csv}`);
       const rows = loadCsv(dataset.csv);
       console.log(`  ${rows.length} rows read`);
 

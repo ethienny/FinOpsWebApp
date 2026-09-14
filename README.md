@@ -14,8 +14,7 @@ UI (App Router pages + client islands)
         ▼
 FinOpsRepository contract
         │
-        ├── CsvFinOpsRepository   (current)
-        └── DatabricksFinOpsRepository (future, not implemented)
+        └── StoreFinOpsRepository   (CSV or Azure SQL through the data store)
 ```
 
 Official executive numbers always come from `vw_finops_latest_complete_run.csv`. Multi-run recommendation history lives in `azure_finops_multiservice_recommendation.csv` and is used only for cross-run trends.
@@ -173,9 +172,9 @@ Decisions are stored in `data/state/decisions.json`, outside version control, th
 
 ## Repository abstraction
 
-`getRepository()` currently returns `CsvFinOpsRepository`.
+`getRepository()` returns `StoreFinOpsRepository`, which reads whichever source `DATA_SOURCE` selects.
 
-`DatabricksFinOpsRepository` implements the same contract and throws until wired to Unity Catalog / SQL warehouse views. Credentials must stay server-side. Do not put Databricks tokens in client components.
+A Databricks provider would implement the same contract over Unity Catalog or SQL warehouse views. Credentials must stay server side. Do not put Databricks tokens in client components.
 
 ## Future Databricks integration
 
