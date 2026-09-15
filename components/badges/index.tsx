@@ -1,5 +1,8 @@
 "use client";
 
+// Status pills used across tables and cards. Each badge maps a domain value
+// (reliability, priority, risk, decision, change, outcome) to a color tone.
+
 import { cn } from "@/lib/cn";
 
 const tones: Record<string, string> = {

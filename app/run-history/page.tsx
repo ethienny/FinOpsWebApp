@@ -1,3 +1,7 @@
+// Run History page. Trends across engine runs (savings, metric availability,
+// cost coverage, duration) and a side by side comparison of two runs chosen
+// in the query string.
+
 import { requireModule } from "@/lib/entitlements/gate";
 import { RunHistoryTable } from "@/components/tables/RunHistoryTable";
 import { Suspense } from "react";

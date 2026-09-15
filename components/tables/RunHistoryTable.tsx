@@ -1,5 +1,8 @@
 "use client";
 
+// Client table of engine runs with duration and coverage rates for the Run
+// History page.
+
 import { formatDate, formatDuration, formatPercent } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { StatusBadge } from "@/components/badges";

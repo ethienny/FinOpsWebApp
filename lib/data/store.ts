@@ -14,8 +14,8 @@ export function loadCsv(fileName: string): Record<string, string>[] {
   const path = join(DATA_DIR, fileName);
   if (!existsSync(path)) {
     throw new Error(
-      `Arquivo de dados ${fileName} nao encontrado em data/. Os CSVs nao sao versionados: rode "npm run data:restore" ` +
-        `para extrair as copias de data/mock, ou defina DATA_SOURCE=sql com as credenciais do Azure SQL.`,
+      `Data file ${fileName} not found in data/. The CSVs are not versioned: run "npm run data:restore" ` +
+        `to extract the copies from data/mock, or set DATA_SOURCE=sql with the Azure SQL credentials.`,
     );
   }
   const text = readFileSync(path, "utf8");
@@ -324,14 +324,14 @@ export function getSqlPool(): Promise<sql.ConnectionPool> {
 
 function requireEnv(name: string): string {
   const value = process.env[name];
-  if (!value) throw new Error(`Variável de ambiente ${name} não definida.`);
+  if (!value) throw new Error(`Environment variable ${name} is not set.`);
   return value;
 }
 
-// O SQL Serverless pode estar "acordando" de um auto-pause, e um container do
-// App Service recém-iniciado às vezes tem a rede ainda se estabilizando —
-// ambos se manifestam como ECONNRESET/"socket hang up" transitórios. Tenta de
-// novo com backoff, descartando o pool a cada falha para forçar reconexão limpa.
+// SQL Serverless may be waking up from auto pause, and a freshly started App
+// Service container sometimes has its network still settling. Both show up as
+// transient ECONNRESET or "socket hang up" errors. Retries with backoff and
+// drops the pool on every failure so the next attempt reconnects cleanly.
 export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelayMs = 2000): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -340,8 +340,10 @@ export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelay
     } catch (err) {
       lastError = err;
       const message = err instanceof Error ? err.message : String(err);
-      console.error(`[sql] tentativa ${attempt + 1}/${attempts} falhou: ${message}`);
+      console.error(`[sql] attempt ${attempt + 1}/${attempts} failed: ${message}`);
+      const failed = globalThis.__finopsSqlPool;
       globalThis.__finopsSqlPool = undefined;
+      failed?.then((pool) => pool.close()).catch(() => undefined);
       if (attempt < attempts - 1) {
         await new Promise((resolve) => setTimeout(resolve, baseDelayMs * 2 ** attempt));
       }
@@ -352,10 +354,10 @@ export async function withRetry<T>(fn: () => Promise<T>, attempts = 6, baseDelay
 
 async function loadFromSql(): Promise<DataStore> {
   const pool = await getSqlPool();
-  // Consultas sequenciais (não Promise.all): rodar as 5 juntas mantinha vários
-  // recordsets grandes (colunas NVARCHAR(MAX)) na memória ao mesmo tempo e
-  // estourava o heap do Node. Sequencial permite o GC liberar cada recordset
-  // bruto assim que ele é convertido para o tipo final.
+  // Sequential queries instead of Promise.all: running the five together kept
+  // several large recordsets (NVARCHAR(MAX) columns) in memory at once and
+  // exhausted the Node heap. Sequential lets the GC free each raw recordset
+  // as soon as it is converted to the final type.
   const latest = (await pool.request().query("SELECT * FROM dbo.FinOpsLatestRun")).recordset.map(recommendation);
   const allRecommendations = (await pool.request().query("SELECT * FROM dbo.FinOpsRecommendations")).recordset.map(
     recommendation,
@@ -372,12 +374,11 @@ async function loadFromSql(): Promise<DataStore> {
 
 export async function getDataStore(): Promise<DataStore> {
   if (globalThis.__finopsStore) return globalThis.__finopsStore;
-  // "Single-flight": se várias requisições chegam antes da primeira carga
-  // terminar (comum no cold start, com o probe de warmup batendo em "/"
-  // repetidamente), todas aguardam a MESMA promise em vez de cada uma abrir
-  // sua própria rodada de conexões ao SQL — evitar isso é essencial porque as
-  // tentativas concorrentes competindo por conexão pareciam causar os
-  // próprios resets (efeito manada).
+  // Single flight: when several requests arrive before the first load ends
+  // (common on cold start, with the warmup probe hitting "/" repeatedly), all
+  // of them await the same promise instead of each opening its own round of
+  // SQL connections. Concurrent attempts competing for a connection appeared
+  // to cause the resets themselves, so avoiding that is essential.
   if (!globalThis.__finopsStoreLoading) {
     globalThis.__finopsStoreLoading = (
       process.env.DATA_SOURCE === "sql" ? withRetry(loadFromSql) : Promise.resolve(loadFromCsv())

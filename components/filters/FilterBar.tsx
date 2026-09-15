@@ -1,5 +1,8 @@
 "use client";
 
+// Global analysis scope shown in the shell. Every field writes its value to the
+// query string, which the server pages read through filtersFromSearchParams.
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import type { FilterOptions } from "@/types/finops";

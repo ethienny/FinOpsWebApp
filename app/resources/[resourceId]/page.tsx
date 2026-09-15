@@ -1,3 +1,7 @@
+// Resource detail page. Loads the recommendation of one resource with its
+// sizing options, run history, insight fields and the team decision, gated by
+// the modules of the active plan.
+
 import { notFound } from "next/navigation";
 import { getRepository } from "@/lib/repositories";
 import { decodeResourceId } from "@/lib/data/parse";
@@ -14,13 +18,13 @@ export default async function ResourceDetailPage({
 }) {
   const { resourceId } = await params;
   const id = decodeResourceId(resourceId);
-  const [data, decision, insight, entitlements] = await Promise.all([
-    getRepository().getResourceById(id),
+  const data = id ? await getRepository().getResourceById(id) : null;
+  if (!data) notFound();
+  const [decision, insight, entitlements] = await Promise.all([
     getDecisionRepository().get(id),
     getResourceInsight(id),
     getEntitlements(),
   ]);
-  if (!data) notFound();
   return (
     <ResourceDetail
       data={data}

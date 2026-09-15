@@ -1,5 +1,7 @@
 "use client";
 
+// Client table of every engine run for the Engine Health page.
+
 import { formatDate } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { StatusBadge } from "@/components/badges";

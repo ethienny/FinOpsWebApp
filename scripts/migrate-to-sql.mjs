@@ -1,12 +1,11 @@
-// ============================================================================
-// Migra os CSVs de data/ para as tabelas do Azure SQL Database (infra/sql/schema.sql).
-// Rode uma vez após criar o schema. Pode ser rodado de novo (faz TRUNCATE antes).
+// Loads the CSVs in data/ into the Azure SQL Database tables defined by
+// infra/sql/schema.sql. Run it once after creating the schema. It can run
+// again, since every table is truncated before the insert.
 //
-// Uso:
+// Usage:
 //   node --env-file=.env.local scripts/migrate-to-sql.mjs
-// (ou exporte AZURE_SQL_SERVER / AZURE_SQL_DATABASE / AZURE_SQL_USER / AZURE_SQL_PASSWORD
-//  no ambiente antes de rodar)
-// ============================================================================
+// or export AZURE_SQL_SERVER, AZURE_SQL_DATABASE, AZURE_SQL_USER and
+// AZURE_SQL_PASSWORD in the environment before running.
 
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -159,14 +158,14 @@ async function main() {
     connectionTimeout: 60000,
   };
 
-  console.log(`Conectando em ${config.server}/${config.database}...`);
+  console.log(`Connecting to ${config.server}/${config.database}...`);
   const pool = await sql.connect(config);
 
   try {
     for (const dataset of DATASETS) {
-      console.log(`\n${dataset.table} <- ${dataset.csv}`);
+      console.log(`\n${dataset.table} from ${dataset.csv}`);
       const rows = loadCsv(dataset.csv);
-      console.log(`  ${rows.length} linhas lidas`);
+      console.log(`  ${rows.length} rows read`);
 
       await pool.request().query(`TRUNCATE TABLE ${dataset.table}`);
 
@@ -176,10 +175,10 @@ async function main() {
         for (const row of batch) addRow(table, dataset.columns, row);
         await pool.request().bulk(table);
         inserted += batch.length;
-        console.log(`  ${inserted}/${rows.length} linhas inseridas em ${dataset.table}`);
+        console.log(`  ${inserted}/${rows.length} rows inserted into ${dataset.table}`);
       }
     }
-    console.log("\nMigração concluída com sucesso.");
+    console.log("\nMigration completed.");
   } finally {
     await pool.close();
   }
@@ -187,11 +186,11 @@ async function main() {
 
 function requireEnv(name) {
   const value = process.env[name];
-  if (!value) throw new Error(`Variável de ambiente ${name} não definida.`);
+  if (!value) throw new Error(`Environment variable ${name} is not set.`);
   return value;
 }
 
 main().catch((err) => {
-  console.error("Falha na migração:", err);
+  console.error("Migration failed:", err);
   process.exit(1);
 });

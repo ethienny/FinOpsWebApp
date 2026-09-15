@@ -1,3 +1,7 @@
+// Parsing and aggregation helpers for the CSV and SQL rows: typed value
+// parsers, sums, distinct values, grouped sums and the resource id encoding
+// used in URLs.
+
 export function parseNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (value === null || value === undefined) return null;
@@ -70,10 +74,10 @@ export function encodeResourceId(resourceId: string): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+const ENCODED_RESOURCE_ID = /^[A-Za-z0-9_-]{1,1024}$/;
+
+/** Decodes a resource id from a URL segment, or returns an empty string when the segment is not base64url. */
 export function decodeResourceId(encoded: string): string {
-  try {
-    return Buffer.from(encoded, "base64url").toString("utf8");
-  } catch {
-    return decodeURIComponent(encoded);
-  }
+  if (!ENCODED_RESOURCE_ID.test(encoded)) return "";
+  return Buffer.from(encoded, "base64url").toString("utf8");
 }

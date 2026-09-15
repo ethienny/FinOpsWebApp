@@ -1,19 +1,17 @@
 -- ============================================================================
--- Cost Anomalies - Schema Azure SQL Database
--- Espelha as 4 tabelas lidas por lib/anomalies/store.ts em modo sql
--- (schema configurável via ANOMALY_SQL_SCHEMA, padrão dbo): a partição
--- AnomalyHistory, a partição WeeklyReport (linhas de coverage e stats) do
--- Azure Table Storage, e a tabela subscription_contacts publicada pelo time
--- de dados. Nomes de tabela e coluna são minúsculos/snake_case de propósito
--- — loadFromSql faz `SELECT *` e o mapeamento em lib/anomalies/store.ts
--- acessa os campos por esse nome exato.
+-- Cost Anomalies: Azure SQL Database schema
+-- Mirrors the four tables lib/anomalies/store.ts reads in sql mode (schema
+-- configurable through ANOMALY_SQL_SCHEMA, default dbo): the AnomalyHistory
+-- partition and the WeeklyReport partition (coverage and stats rows) of Azure
+-- Table Storage, and the subscription_contacts table published by the data
+-- team. Table and column names are lowercase snake_case on purpose: the store
+-- runs SELECT * and maps the fields by these exact names.
 --
--- Pode ser reaplicado com segurança: cada CREATE TABLE só roda se o objeto
--- ainda não existir.
+-- Safe to reapply: each CREATE TABLE only runs when the object does not exist.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- dbo.anomaly_history - uma linha por alerta de anomalia enviado
+-- dbo.anomaly_history: one row per anomaly alert notification
 -- ----------------------------------------------------------------------------
 IF OBJECT_ID('dbo.anomaly_history', 'U') IS NULL
 BEGIN
@@ -46,8 +44,8 @@ BEGIN
     CREATE INDEX IX_anomaly_history_notified_at ON dbo.anomaly_history (notified_at);
 END
 
--- Detalhe do recurso por trás do alerta, adicionado depois da primeira versão
--- desta tabela: reaplica em cima de um banco já provisionado sem recriar.
+-- Resource behind the alert. Databases created before these columns existed
+-- get them here without recreating the table.
 IF OBJECT_ID('dbo.anomaly_history', 'U') IS NOT NULL AND COL_LENGTH('dbo.anomaly_history', 'resource_id') IS NULL
 BEGIN
     ALTER TABLE dbo.anomaly_history ADD
@@ -58,8 +56,7 @@ BEGIN
 END
 
 -- ----------------------------------------------------------------------------
--- dbo.weekly_report_coverage - resultado do runbook de coverage, uma linha
--- por semana
+-- dbo.weekly_report_coverage: result of the coverage runbook, one row per week
 -- ----------------------------------------------------------------------------
 IF OBJECT_ID('dbo.weekly_report_coverage', 'U') IS NULL
 BEGIN
@@ -79,9 +76,8 @@ BEGIN
 END
 
 -- ----------------------------------------------------------------------------
--- dbo.weekly_report_stats - resultado do runbook de stats, uma linha por
--- semana. Colunas de lista guardam o mesmo JSON que o runbook agregador
--- publica.
+-- dbo.weekly_report_stats: result of the stats runbook, one row per week. List
+-- columns keep the same JSON the aggregator runbook publishes.
 -- ----------------------------------------------------------------------------
 IF OBJECT_ID('dbo.weekly_report_stats', 'U') IS NULL
 BEGIN
@@ -121,8 +117,8 @@ BEGIN
 END
 
 -- ----------------------------------------------------------------------------
--- dbo.subscription_contacts - linhas pushadas pelo time de dados, uma por
--- assinatura/aplicação
+-- dbo.subscription_contacts: rows pushed by the data team, one per
+-- subscription and application
 -- ----------------------------------------------------------------------------
 IF OBJECT_ID('dbo.subscription_contacts', 'U') IS NULL
 BEGIN

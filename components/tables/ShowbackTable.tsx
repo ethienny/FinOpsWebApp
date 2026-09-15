@@ -1,5 +1,7 @@
 "use client";
 
+// Client table of the cost allocation rows for the Showback page.
+
 import { formatMoney, formatPercent } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import type { ShowbackRow } from "@/types/finops";

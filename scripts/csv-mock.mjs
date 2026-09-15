@@ -15,5 +15,5 @@ export async function writeTableCsv(table, columns, rows) {
   const target = join(DATA_DIR, `${table}.csv`);
   writeFileSync(target, csv + "\n");
   await pipeline(createReadStream(target), createGzip(), createWriteStream(join(MOCK_DIR, `${table}.csv.gz`)));
-  console.log(`${table}: ${rows.length} linhas -> data/${table}.csv e data/mock/${table}.csv.gz`);
+  console.log(`${table}: ${rows.length} rows written to data/${table}.csv and data/mock/${table}.csv.gz`);
 }

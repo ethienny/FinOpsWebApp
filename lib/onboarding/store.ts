@@ -5,6 +5,7 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "fs";
 import { join } from "path";
 import type { AzureConnection, ProviderIdentity } from "@/types/onboarding";
+import { isGuid } from "./lighthouse";
 
 const STATE_DIR = join(process.cwd(), "data", "state");
 const CONNECTION_FILE = join(STATE_DIR, "connection.json");
@@ -27,15 +28,18 @@ export function getProviderIdentity(): ProviderIdentity & { placeholder: boolean
 export async function getConnection(): Promise<AzureConnection | null> {
   if (!existsSync(CONNECTION_FILE)) return null;
   try {
-    return JSON.parse(readFileSync(CONNECTION_FILE, "utf8")) as AzureConnection;
-  } catch {
+    const parsed = JSON.parse(readFileSync(CONNECTION_FILE, "utf8")) as AzureConnection;
+    // The subscription id feeds a command shown for copy and paste, so the file is checked like the form was.
+    return isGuid(parsed.subscriptionId) ? parsed : null;
+  } catch (err) {
+    console.error("[connection] stored connection could not be read:", err instanceof Error ? err.message : err);
     return null;
   }
 }
 
 export async function saveConnection(connection: AzureConnection): Promise<void> {
   mkdirSync(STATE_DIR, { recursive: true });
-  const tmp = `${CONNECTION_FILE}.tmp`;
+  const tmp = `${CONNECTION_FILE}.${process.pid}.${Date.now()}.tmp`;
   writeFileSync(tmp, JSON.stringify(connection, null, 2));
   renameSync(tmp, CONNECTION_FILE);
 }

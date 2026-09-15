@@ -7,21 +7,11 @@ import { formatDate, formatMoney, formatNumber } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { OutcomeBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
+import { routingLabel } from "@/lib/anomalies/metrics";
 import type { AnomalyAlert, SubscriptionOwnership, TopSubscription } from "@/types/anomalies";
 
 function pct(value: number): string {
   return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
-}
-
-function routingLabel(source: string): string {
-  const labels: Record<string, string> = {
-    tag_databricks: "Tag and contacts",
-    tag_only: "Tag only",
-    databricks_only: "Contacts only",
-    none: "None, fallback list",
-    legacy: "Legacy",
-  };
-  return labels[source] ?? (source || "Unknown");
 }
 
 const ALERT_SEARCH: Array<keyof AnomalyAlert> = ["subscriptionName", "resourceName", "serviceType", "attributionStatus", "routingSource"];

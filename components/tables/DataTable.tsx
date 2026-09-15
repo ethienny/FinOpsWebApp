@@ -23,15 +23,15 @@ export function DataTable<T extends object>({
   columns,
   searchKeys,
   pageSize = 12,
-  onRowClick,
   rowKey,
+  searchPlaceholder = "Search...",
 }: {
   rows: T[];
   columns: Column<T>[];
   searchKeys?: Array<keyof T>;
   pageSize?: number;
-  onRowClick?: (row: T) => void;
   rowKey?: (row: T) => string;
+  searchPlaceholder?: string;
 }) {
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -105,7 +105,8 @@ export function DataTable<T extends object>({
             setQ(e.target.value);
             setPage(0);
           }}
-          placeholder="Search resources..."
+          placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
           className="w-full rounded-xl border border-white/10 bg-navy-900 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400/40 placeholder:text-slate-500 focus:ring-2 sm:max-w-xs"
         />
         <p className="text-xs text-slate-400">{filtered.length} rows</p>
@@ -115,13 +116,18 @@ export function DataTable<T extends object>({
           <thead>
             <tr>
               {columns.map((col) => (
-                <th key={col.key} className={cn(col.numeric && "text-right")}>
+                <th
+                  key={col.key}
+                  className={cn(col.numeric && "text-right")}
+                  aria-sort={sortKey === col.key ? (dir === "asc" ? "ascending" : "descending") : "none"}
+                >
                   <button type="button" onClick={() => toggleSort(col.key)} className="hover:text-cyan-200">
                     {col.header}
                     {sortKey === col.key ? (dir === "asc" ? " ↑" : " ↓") : ""}
                   </button>
                   {col.filterable ? (
                     <select
+                      aria-label={`Filter ${col.header}`}
                       className="mt-1 block w-full rounded border border-white/10 bg-navy-900 px-1 py-0.5 text-[11px] font-normal normal-case tracking-normal text-slate-300"
                       value={colFilters[col.key] ?? ""}
                       onChange={(e) => {
@@ -143,11 +149,7 @@ export function DataTable<T extends object>({
           </thead>
           <tbody>
             {slice.map((row, i) => (
-              <tr
-                key={rowKey ? rowKey(row) : i}
-                onClick={() => onRowClick?.(row)}
-                className={cn(onRowClick && "cursor-pointer")}
-              >
+              <tr key={rowKey ? rowKey(row) : i}>
                 {columns.map((col) => (
                   <td key={col.key} className={cn(col.numeric && "num")}>
                     {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "—")}

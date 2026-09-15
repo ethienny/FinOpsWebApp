@@ -34,7 +34,7 @@ function stripComments(sql) {
 
 function columnsOf(sql, table) {
   const match = sql.match(new RegExp(`CREATE TABLE ${table} \\(([^;]*?)\\)\\s*(USING DELTA)?\\s*;`, "i"));
-  if (!match) throw new Error(`CREATE TABLE ${table} nao encontrado no seed.`);
+  if (!match) throw new Error(`CREATE TABLE ${table} not found in the seed.`);
   return match[1]
     .split(",")
     .map((line) => line.trim().split(/\s+/)[0])
@@ -95,7 +95,7 @@ function readTuple(sql, start) {
     current += ch;
     i++;
   }
-  throw new Error("Tupla sem fechamento no seed.");
+  throw new Error("Unterminated tuple in the seed.");
 }
 
 /** Tables of the seed as { columns, rows } with rows keyed by column name. */
@@ -105,7 +105,7 @@ export function parseSeed(seedPath = SEED_PATH) {
   for (const table of TABLES) {
     const columns = columnsOf(sql, table);
     const rows = tuplesOf(sql, table).map((tuple) => {
-      if (tuple.length !== columns.length) throw new Error(`${table}: linha com ${tuple.length} valores, esperava ${columns.length}.`);
+      if (tuple.length !== columns.length) throw new Error(`${table}: row with ${tuple.length} values, expected ${columns.length}.`);
       return Object.fromEntries(columns.map((c, i) => [c, tuple[i]]));
     });
     result[table] = { columns, rows };

@@ -1,3 +1,7 @@
+// Root layout. Loads the sidebar metadata, the filter options of both scopes
+// and the plan entitlements once per request, then wraps every page in the
+// application shell.
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -13,9 +17,9 @@ export const metadata: Metadata = {
   description: "Cloud Cost Intelligence & Optimization",
 };
 
-// O layout busca dados (SQL/CSV) em toda página; força renderização por
-// requisição para não depender de conectividade com o banco em build time
-// (o Azure SQL Serverless pode estar pausado durante o build).
+// The layout reads data (SQL or CSV) on every page. Rendering per request
+// avoids depending on database connectivity at build time, when Azure SQL
+// Serverless may be paused.
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

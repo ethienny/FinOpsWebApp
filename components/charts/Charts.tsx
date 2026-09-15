@@ -1,5 +1,9 @@
 "use client";
 
+// Recharts wrappers used by every page. ChartCard gives the frame, the other
+// exports are the chart shapes with the palette, tooltips and legends already
+// configured so pages only pass data.
+
 import type { ReactNode } from "react";
 import {
   ResponsiveContainer,
@@ -34,6 +38,7 @@ const CYAN_ACTIVE = "#7ce9fb";
 const BLUE = "#4895ff";
 const BLUE_ACTIVE = "#8fbcff";
 
+/** Card frame of every chart: title, optional subtitle and a fixed height body. */
 export function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <section className="card-surface chart-panel p-4 sm:p-5">
@@ -70,6 +75,7 @@ function Tip({
   );
 }
 
+/** Single series as vertical bars, one bar per category. */
 export function VerticalBars<T extends { name: string; value: number }>({
   data,
   currency,
@@ -92,6 +98,7 @@ export function VerticalBars<T extends { name: string; value: number }>({
   );
 }
 
+/** Single series as horizontal bars, for long category labels such as owners. */
 export function HorizontalBars({
   data,
   currency,
@@ -114,6 +121,7 @@ export function HorizontalBars({
   );
 }
 
+/** Share of each category as a donut with a legend. */
 export function DonutChart({
   data,
 }: {
@@ -134,6 +142,7 @@ export function DonutChart({
   );
 }
 
+/** Cost and validated savings side by side per category. */
 export function GroupedBars({
   data,
   currency,
@@ -156,6 +165,7 @@ export function GroupedBars({
   );
 }
 
+/** Validated savings, heuristic opportunity and cost across runs as lines. */
 export function DualLine({
   data,
   currency,
@@ -179,6 +189,7 @@ export function DualLine({
   );
 }
 
+/** One metric over time as a filled area. */
 export function AreaTrend({
   data,
   dataKey,
@@ -201,6 +212,7 @@ export function AreaTrend({
   );
 }
 
+/** Two series side by side per category, with configurable series labels. */
 export function CompareBars({
   data,
   labels = { current: "current", target: "target" },

@@ -1,10 +1,13 @@
 "use client";
 
+// Resource detail view. Summary of the recommendation, savings, insight strip,
+// decision panel and the evidence tabs (metrics, properties, sizing, history).
+
 import { MetricEvidence, RecommendationEvidence } from "./ResourceEvidence";
 import { useState } from "react";
 import type { InsightRow, RecommendationDecision, ResourceDetailData } from "@/types/finops";
 import { formatMoney, formatNumber } from "@/lib/formatters";
-import { Breadcrumbs } from "@/components/layout/PageHeader";
+import { Breadcrumbs } from "@/components/resource/Breadcrumbs";
 import {
   ConfidenceBadge,
   PriorityBadge,
