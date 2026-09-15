@@ -16,7 +16,7 @@ import { parseSeed, TABLES } from "./anomaly-seed-to-csv.mjs";
 import { writeTableCsv } from "./csv-mock.mjs";
 
 const RESOURCE_COLUMNS = ["resource_id", "resource_name", "service_type", "resource_group"];
-const FIRST_WEEK = "2026-01-05";
+const FIRST_WEEK = "2025-01-06";
 const LAST_GENERATED_WEEK = "2026-08-24";
 const DAY_MS = 86_400_000;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -84,7 +84,7 @@ for (const row of [...seed.anomaly_history.rows].sort((a, b) => a.notified_at.lo
   });
 }
 for (const sub of subscriptions.values()) {
-  const count = 3 + Math.floor(rand() * 4);
+  const count = 6 + Math.floor(rand() * 7);
   while (sub.resources.length < count) {
     const r = pick(inventory);
     if (!sub.resources.some((x) => x.ResourceId === r.ResourceId)) sub.resources.push(r);
@@ -101,9 +101,9 @@ function withResource(row) {
 // ───────────────────────────────────────────────
 
 function weeklyAlertCount(index) {
-  const seasonal = 3 + 1.5 * Math.sin((index / 52) * Math.PI * 2);
-  const spike = (index >= 10 && index <= 12) || (index >= 27 && index <= 29) ? 4 : 0;
-  return Math.max(1, Math.round(seasonal + spike + between(-1, 1.5)));
+  const seasonal = 6 + 3 * Math.sin((index / 52) * Math.PI * 2);
+  const spike = (index >= 10 && index <= 12) || (index >= 27 && index <= 29) ? 8 : 0;
+  return Math.max(1, Math.round(seasonal + spike + between(-1.5, 2.5)));
 }
 
 function weightedSubscription() {
