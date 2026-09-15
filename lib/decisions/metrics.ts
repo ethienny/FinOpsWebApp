@@ -77,9 +77,9 @@ export function decidedRows<T extends DecisionFields>(rows: T[]): T[] {
 }
 
 /** Count of decided rows per status label, in status order, omitting empty ones. */
-export function decisionsByStatus(rows: DecisionFields[]): NamedValue[] {
+export function decisionsByStatus(rows: DecisionFields[], labels: Record<DecisionStatus, string> = DECISION_LABELS): NamedValue[] {
   return DECISION_STATUSES.filter((s) => s !== "open")
-    .map((s) => ({ name: DECISION_LABELS[s], value: rows.filter((r) => r.decisionStatus === s).length }))
+    .map((s) => ({ name: labels[s], value: rows.filter((r) => r.decisionStatus === s).length }))
     .filter((x) => x.value > 0);
 }
 

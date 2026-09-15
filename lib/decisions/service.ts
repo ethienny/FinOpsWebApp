@@ -1,7 +1,7 @@
 // Joins FinOps rows with stored decisions for the pages. Reads both sources on
 // the server and hands pages ready to render values.
 
-import type { DecisionSavings, FinOpsFilters, NamedValue, OpportunityRow } from "@/types/finops";
+import type { DecisionSavings, DecisionStatus, FinOpsFilters, NamedValue, OpportunityRow } from "@/types/finops";
 import { getInsightRows } from "@/lib/insights/service";
 import { getDecisionRepository } from "./store";
 import {
@@ -24,7 +24,10 @@ export interface DecisionTracking {
 }
 
 /** Opportunity rows in the current scope with their decisions and the tracking figures. */
-export async function getDecisionTracking(filters: FinOpsFilters): Promise<DecisionTracking> {
+export async function getDecisionTracking(
+  filters: FinOpsFilters,
+  statusLabels?: Record<DecisionStatus, string>,
+): Promise<DecisionTracking> {
   const [insights, decisions] = await Promise.all([getInsightRows(filters), getDecisionRepository().list()]);
   const byResource = decisionsByResource(decisions);
   const rows = applyDecisions(insights.rows, byResource);
@@ -35,7 +38,7 @@ export async function getDecisionTracking(filters: FinOpsFilters): Promise<Decis
     decided,
     savings: decisionSavings(insights.rows, byResource),
     dismissedCount: decided.filter((r) => r.decisionStatus === "dismissed").length,
-    byStatus: decisionsByStatus(decided),
+    byStatus: decisionsByStatus(decided, statusLabels),
     byOwner: trackedSavingsByOwner(decided),
   };
 }

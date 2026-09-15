@@ -11,6 +11,9 @@ import { hasModule } from "@/lib/entitlements/catalog";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart } from "@/components/charts/Charts";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { decisionLabelsFromDict } from "@/lib/i18n/decision-labels";
 
 function toggleDismissedHref(sp: Record<string, string | string[] | undefined>, show: boolean): string {
   const next = new URLSearchParams();
@@ -28,12 +31,13 @@ export default async function OpportunitiesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = getDictionary(await getLocale());
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
   const showDismissed = sp.showDismissed === "1";
   const [data, tracking, entitlements] = await Promise.all([
     getRepository().getOpportunities(filters),
-    getDecisionTracking(filters),
+    getDecisionTracking(filters, decisionLabelsFromDict(dict)),
     getEntitlements(),
   ]);
   const showTracking = hasModule(entitlements, "tracking");
@@ -42,13 +46,13 @@ export default async function OpportunitiesPage({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Opportunities" value={formatNumber(data.totalOpportunities, false)} />
-        <KpiCard label="Validated Savings (PRICED)" value={formatMoney(data.validatedSavings, data.currency)} accent="green" />
-        <KpiCard label="Estimated Opportunity (HEURISTIC)" value={formatMoney(data.estimatedOpportunity, data.currency)} accent="amber" />
+        <KpiCard label={dict.opportunities.kpi.totalOpportunities} value={formatNumber(data.totalOpportunities, false)} />
+        <KpiCard label={dict.opportunities.kpi.validatedSavingsPriced} value={formatMoney(data.validatedSavings, data.currency)} accent="green" />
+        <KpiCard label={dict.opportunities.kpi.estimatedOpportunityHeuristic} value={formatMoney(data.estimatedOpportunity, data.currency)} accent="amber" />
         <KpiCard
-          label="Avg Savings / Actionable"
+          label={dict.opportunities.kpi.avgSavingsPerActionable}
           value={formatMoney(data.averageSavingsPerActionable, data.currency)}
-          hint="Primary recommendation only"
+          hint={dict.opportunities.kpi.avgSavingsHint}
           accent="blue"
         />
       </div>
@@ -56,43 +60,43 @@ export default async function OpportunitiesPage({
       {showTracking ? (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <KpiCard
-          label="Savings In Progress"
+          label={dict.opportunities.kpi.savingsInProgress}
           value={formatMoney(tracking.savings.inProgress, data.currency)}
-          hint="PRICED only, accepted or in progress"
+          hint={dict.opportunities.kpi.savingsInProgressHint}
           accent="blue"
         />
         <KpiCard
-          label="Realized Savings"
+          label={dict.opportunities.kpi.realizedSavings}
           value={formatMoney(tracking.savings.realized, data.currency)}
-          hint="PRICED only, marked done"
+          hint={dict.opportunities.kpi.realizedSavingsHint}
           accent="green"
         />
         <KpiCard
-          label="Recommendations Decided"
+          label={dict.opportunities.kpi.recommendationsDecided}
           value={formatNumber(tracking.savings.decided, false)}
-          hint="Any status other than open"
+          hint={dict.opportunities.kpi.recommendationsDecidedHint}
           accent="teal"
         />
       </div>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Savings Reliability Distribution" subtitle="Recommendations in scope by reliability">
+        <ChartCard title={dict.opportunities.charts.reliabilityTitle} subtitle={dict.opportunities.charts.reliabilitySubtitle}>
           <DonutChart data={data.reliabilityDistribution} />
         </ChartCard>
-        <ChartCard title="Priority Distribution">
+        <ChartCard title={dict.opportunities.charts.priorityTitle}>
           <DonutChart data={data.priorityDistribution} />
         </ChartCard>
       </div>
 
       <section className="card-surface p-5">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-400">
-            SecondaryAction is shown as an alternative only and is never added to primary savings totals.
-          </p>
+          <p className="text-xs text-slate-400">{dict.opportunities.secondaryActionNote}</p>
           {showTracking && tracking.dismissedCount ? (
             <Link href={toggleDismissedHref(sp, !showDismissed)} className="text-xs text-cyan-200 hover:text-white">
-              {showDismissed ? "Hide dismissed" : `Show dismissed (${tracking.dismissedCount})`}
+              {showDismissed
+                ? dict.opportunities.hideDismissed
+                : dict.opportunities.showDismissed.replace("{count}", String(tracking.dismissedCount))}
             </Link>
           ) : null}
         </div>

@@ -1,0 +1,37 @@
+export const runHistory = {
+  kpi: {
+    totalRuns: "Total Runs",
+    publishedRuns: "Published Runs",
+    avgMetricAvailability: "Average Metric Availability",
+    avgCostCoverage: "Average Cost Coverage",
+  },
+  charts: {
+    savingsEvolutionTitle: "Savings Evolution Across Runs",
+    savingsEvolutionSubtitle: "PRICED and HEURISTIC kept as separate series",
+    metricAvailabilityTrend: "Metric Availability Trend",
+    costCoverageTrend: "Cost Coverage Trend",
+    publishedVsNotPublished: "Published vs Non-Published Runs",
+    runDurationTrend: "Run Duration Trend (minutes)",
+    published: "Published",
+    notPublished: "Not published",
+  },
+  comparison: {
+    heading: "Run comparison",
+    tableHeading: "Run comparison table",
+    runA: "Run A",
+    runB: "Run B",
+    vs: "vs",
+    select: "Select",
+    selectToCompare: "Select a run to compare.",
+    rowsProduced: "Rows produced",
+    metricAvailability: "Metric availability",
+    costCoverage: "Cost coverage",
+    pricedSavingsRows: "Priced savings rows",
+    heuristicSavingsRows: "Heuristic savings rows",
+    dataQuality: "Data quality",
+    publication: "Publication",
+  },
+  table: {
+    duration: "Duration",
+  },
+} as const;

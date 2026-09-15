@@ -8,6 +8,8 @@ import { getRepository } from "@/lib/repositories";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart, HorizontalBars, VerticalBars } from "@/components/charts/Charts";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
 
 export default async function ShowbackPage({
   searchParams,
@@ -16,43 +18,54 @@ export default async function ShowbackPage({
 }) {
   const gate = await requireModule("showback");
   if (gate.locked) return gate.locked;
+  const dict = getDictionary(await getLocale());
   const data = await getRepository().getShowback(filtersFromSearchParams(await searchParams));
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Cost" value={formatMoney(data.totalCost, data.currency)} />
-        <KpiCard label="Allocated Cost" value={formatMoney(data.allocatedCost, data.currency)} hint="Owner or cost center present" accent="green" />
-        <KpiCard label="Unallocated Cost" value={formatMoney(data.unallocatedCost, data.currency)} hint="Missing ownership metadata" accent="amber" />
-        <KpiCard label="Total Resources" value={formatNumber(data.totalResources, false)} accent="blue" />
+        <KpiCard label={dict.showback.kpis.totalCost} value={formatMoney(data.totalCost, data.currency)} />
+        <KpiCard
+          label={dict.showback.kpis.allocatedCost}
+          value={formatMoney(data.allocatedCost, data.currency)}
+          hint={dict.showback.kpis.allocatedHint}
+          accent="green"
+        />
+        <KpiCard
+          label={dict.showback.kpis.unallocatedCost}
+          value={formatMoney(data.unallocatedCost, data.currency)}
+          hint={dict.showback.kpis.unallocatedHint}
+          accent="amber"
+        />
+        <KpiCard label={dict.showback.kpis.totalResources} value={formatNumber(data.totalResources, false)} accent="blue" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Cost Allocation by Owner">
+        <ChartCard title={dict.showback.charts.costByOwner}>
           <DonutChart data={data.costByOwner} />
         </ChartCard>
-        <ChartCard title="Validated Savings by Owner" subtitle="PRICED savings only">
+        <ChartCard title={dict.showback.charts.savingsByOwner} subtitle={dict.showback.charts.savingsByOwnerSubtitle}>
           <HorizontalBars data={data.savingsByOwner} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Cost by Environment">
+        <ChartCard title={dict.showback.charts.costByEnvironment}>
           <HorizontalBars data={data.costByEnvironment} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Cost by Cost Center">
+        <ChartCard title={dict.showback.charts.costByCostCenter}>
           <VerticalBars data={data.costByCostCenter} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Cost by Application">
+        <ChartCard title={dict.showback.charts.costByApplication}>
           <VerticalBars data={data.costByApplication} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Cost by Subscription">
+        <ChartCard title={dict.showback.charts.costBySubscription}>
           <HorizontalBars data={data.costBySubscription} currency={data.currency} />
         </ChartCard>
-        <ChartCard title="Cost by Tenant">
+        <ChartCard title={dict.showback.charts.costByTenant}>
           <DonutChart data={data.costByTenant} />
         </ChartCard>
       </div>
 
       <section className="card-surface p-5">
-        <h3 className="mb-4 text-sm font-semibold text-white">Allocation table</h3>
+        <h3 className="mb-4 text-sm font-semibold text-white">{dict.showback.tableHeading}</h3>
         <ShowbackTable rows={data.rows} currency={data.currency} />
       </section>
     </div>

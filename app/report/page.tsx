@@ -12,23 +12,16 @@ import { hasModule } from "@/lib/entitlements/catalog";
 import { agingSummary, metricCoverageSummary, savingsByAge, topQuickWins } from "@/lib/insights/metrics";
 import { formatDate, formatMoney, formatNumber, formatPercent } from "@/lib/formatters";
 import type { FinOpsFilters, NamedValue } from "@/types/finops";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
+import { decisionLabelsFromDict } from "@/lib/i18n/decision-labels";
 
-const FILTER_LABELS: Record<keyof FinOpsFilters, string> = {
-  tenant: "Tenant",
-  subscription: "Subscription",
-  serviceType: "Service type",
-  priority: "Priority",
-  owner: "Owner",
-  environment: "Environment",
-  costCenter: "Cost center",
-  search: "Search",
-};
-
-function scopeDescription(filters: FinOpsFilters): string {
-  const active = (Object.keys(FILTER_LABELS) as Array<keyof FinOpsFilters>)
+function scopeDescription(filters: FinOpsFilters, dict: Dictionary): string {
+  const labels = dict.report.filterLabels;
+  const active = (Object.keys(labels) as Array<keyof FinOpsFilters>)
     .filter((k) => filters[k])
-    .map((k) => `${FILTER_LABELS[k]}: ${filters[k]}`);
-  return active.length ? active.join(" · ") : "All tenants and subscriptions";
+    .map((k) => `${labels[k]}: ${filters[k]}`);
+  return active.length ? active.join(" · ") : dict.report.allTenantsAndSubscriptions;
 }
 
 function Figure({ label, value, note }: { label: string; value: string; note?: string }) {
@@ -41,12 +34,12 @@ function Figure({ label, value, note }: { label: string; value: string; note?: s
   );
 }
 
-function NamedTable({ rows, valueLabel, currency }: { rows: NamedValue[]; valueLabel: string; currency: string }) {
+function NamedTable({ rows, valueLabel, currency, nameLabel }: { rows: NamedValue[]; valueLabel: string; currency: string; nameLabel: string }) {
   return (
     <table className="report-table">
       <thead>
         <tr>
-          <th>Name</th>
+          <th>{nameLabel}</th>
           <th className="report-num">{valueLabel}</th>
         </tr>
       </thead>
@@ -67,10 +60,11 @@ export default async function ReportPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = getDictionary(await getLocale());
   const filters = filtersFromSearchParams(await searchParams);
   const [data, tracking, entitlements] = await Promise.all([
     getRepository().getExecutiveData(filters),
-    getDecisionTracking(filters),
+    getDecisionTracking(filters, decisionLabelsFromDict(dict)),
     getEntitlements(),
   ]);
   const currency = data.currency;
@@ -86,102 +80,117 @@ export default async function ReportPage({
   return (
     <div className="space-y-4">
       <div className="no-print flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-400">
-          Printable executive report for the current scope. Use the browser print dialog and choose &quot;Save as PDF&quot;.
-        </p>
+        <p className="text-sm text-slate-400">{dict.report.toolbar.instructions}</p>
         <PrintButton />
       </div>
 
       <article className="report-paper">
         <header className="report-header">
           <div>
-            <p className="report-eyebrow">FinOps Insight Engine</p>
-            <h1>Executive Report</h1>
-            <p className="report-note">Scope: {scopeDescription(filters)}</p>
+            <p className="report-eyebrow">{dict.report.header.brand}</p>
+            <h1>{dict.report.header.title}</h1>
+            <p className="report-note">{dict.report.header.scope.replace("{value}", scopeDescription(filters, dict))}</p>
           </div>
           <div className="report-meta">
             {run ? (
               <>
-                <p>Run {run.RunId}</p>
-                <p>Engine {run.EngineVersion}</p>
-                <p>Published {formatDate(run.PublishedAt)}</p>
+                <p>{dict.report.header.run.replace("{value}", run.RunId)}</p>
+                <p>{dict.report.header.engine.replace("{value}", run.EngineVersion)}</p>
+                <p>{dict.report.header.published.replace("{value}", formatDate(run.PublishedAt))}</p>
               </>
             ) : (
-              <p>No official run published</p>
+              <p>{dict.report.header.noOfficialRun}</p>
             )}
-            <p>Generated {formatDate(generatedAt)}</p>
+            <p>{dict.report.header.generated.replace("{value}", formatDate(generatedAt))}</p>
           </div>
         </header>
 
         <section className="report-section">
-          <h2>Headline</h2>
+          <h2>{dict.report.headline.heading}</h2>
           <div className="report-figures">
-            <Figure label="Monthly cost analyzed" value={formatMoney(data.monthlyCost, currency, false)} />
+            <Figure label={dict.report.headline.monthlyCostAnalyzed} value={formatMoney(data.monthlyCost, currency, false)} />
             <Figure
-              label="Validated savings (PRICED)"
+              label={dict.report.headline.validatedSavingsPriced}
               value={formatMoney(data.validatedSavings, currency, false)}
-              note={`${formatMoney(data.validatedSavings * 12, currency, false)} per year`}
+              note={dict.report.headline.perYear.replace("{value}", formatMoney(data.validatedSavings * 12, currency, false))}
             />
             <Figure
-              label="Estimated opportunity (HEURISTIC)"
+              label={dict.report.headline.estimatedOpportunityHeuristic}
               value={formatMoney(data.estimatedOpportunity, currency, false)}
-              note="Directional, never added to validated savings"
+              note={dict.report.headline.directionalNote}
             />
-            <Figure label="Actionable resources" value={formatNumber(data.actionableResources, false)} />
+            <Figure label={dict.report.headline.actionableResources} value={formatNumber(data.actionableResources, false)} />
           </div>
-          <p className="report-text">
-            Validated savings come from recommendations priced against the real cost of each resource. Heuristic values are
-            indicative and are reported separately. Alternative recommendations are never added to the primary total.
-          </p>
+          <p className="report-text">{dict.report.headline.text}</p>
         </section>
 
         <section className="report-section">
-          <h2>Where the savings are</h2>
+          <h2>{dict.report.whereSavingsAre.heading}</h2>
           <div className="report-columns">
             <div>
-              <h3>By service type</h3>
-              <NamedTable rows={data.savingsByService} valueLabel="Validated savings / month" currency={currency} />
+              <h3>{dict.report.whereSavingsAre.byServiceType}</h3>
+              <NamedTable
+                rows={data.savingsByService}
+                valueLabel={dict.report.whereSavingsAre.validatedSavingsPerMonth}
+                currency={currency}
+                nameLabel={dict.report.whereSavingsAre.name}
+              />
             </div>
             <div>
-              <h3>By action category</h3>
-              <NamedTable rows={data.savingsByAction} valueLabel="Savings / month" currency={currency} />
+              <h3>{dict.report.whereSavingsAre.byActionCategory}</h3>
+              <NamedTable
+                rows={data.savingsByAction}
+                valueLabel={dict.report.whereSavingsAre.savingsPerMonth}
+                currency={currency}
+                nameLabel={dict.report.whereSavingsAre.name}
+              />
             </div>
           </div>
         </section>
 
         {showInsights ? (
           <section className="report-section">
-            <h2>Cost of inaction</h2>
+            <h2>{dict.report.costOfInaction.heading}</h2>
             <div className="report-figures">
               <Figure
-                label="Missed savings to date"
+                label={dict.report.costOfInaction.missedSavingsToDate}
                 value={formatMoney(aging.missedSavings, currency, false)}
-                note="PRICED savings accrued since first detection"
+                note={dict.report.costOfInaction.missedSavingsNote}
               />
-              <Figure label="Persistent recommendations" value={formatNumber(aging.persistentCount, false)} note="Same recommendation for 5 or more runs" />
-              <Figure label="Average age" value={`${aging.averageRunsOpen.toFixed(1)} runs`} note={`Across ${formatNumber(aging.actionableCount, false)} actionable recommendations`} />
-              <Figure label="New this run" value={formatNumber(aging.newCount, false)} />
+              <Figure
+                label={dict.report.costOfInaction.persistentRecommendations}
+                value={formatNumber(aging.persistentCount, false)}
+                note={dict.report.costOfInaction.persistentNote}
+              />
+              <Figure
+                label={dict.report.costOfInaction.averageAge}
+                value={dict.report.costOfInaction.averageAgeValue.replace("{value}", aging.averageRunsOpen.toFixed(1))}
+                note={dict.report.costOfInaction.averageAgeNote.replace("{value}", formatNumber(aging.actionableCount, false))}
+              />
+              <Figure label={dict.report.costOfInaction.newThisRun} value={formatNumber(aging.newCount, false)} />
             </div>
-            <NamedTable rows={savingsByAge(tracking.rows)} valueLabel="Validated savings / month" currency={currency} />
+            <NamedTable
+              rows={savingsByAge(tracking.rows)}
+              valueLabel={dict.report.whereSavingsAre.validatedSavingsPerMonth}
+              currency={currency}
+              nameLabel={dict.report.whereSavingsAre.name}
+            />
           </section>
         ) : null}
 
         {showInsights ? (
           <section className="report-section">
-            <h2>Quick wins</h2>
-            <p className="report-text">
-              PRICED actions with low execution risk in the upper half of value. Risk combines confidence, sizing performance risk,
-              metric coverage and whether the action is destructive. Done and dismissed recommendations are left out.
-            </p>
+            <h2>{dict.report.quickWins.heading}</h2>
+            <p className="report-text">{dict.report.quickWins.text}</p>
             <table className="report-table">
               <thead>
                 <tr>
-                  <th>Resource</th>
-                  <th>Service</th>
-                  <th>Action</th>
-                  <th className="report-num">Savings / month</th>
-                  <th className="report-num">Score</th>
-                  <th>Age</th>
+                  <th>{dict.report.quickWins.columns.resource}</th>
+                  <th>{dict.report.quickWins.columns.service}</th>
+                  <th>{dict.report.quickWins.columns.action}</th>
+                  <th className="report-num">{dict.report.quickWins.columns.savingsPerMonth}</th>
+                  <th className="report-num">{dict.report.quickWins.columns.score}</th>
+                  <th>{dict.report.quickWins.columns.age}</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,27 +211,35 @@ export default async function ReportPage({
 
         {showTracking ? (
           <section className="report-section">
-            <h2>Decisions and realized savings</h2>
+            <h2>{dict.report.decisions.heading}</h2>
             <div className="report-figures">
-              <Figure label="Realized savings" value={formatMoney(tracking.savings.realized, currency, false)} note="PRICED recommendations marked done" />
-              <Figure label="Savings in progress" value={formatMoney(tracking.savings.inProgress, currency, false)} note="Accepted or in progress" />
-              <Figure label="Recommendations decided" value={formatNumber(tracking.savings.decided, false)} />
-              <Figure label="Dismissed" value={formatNumber(tracking.dismissedCount, false)} />
+              <Figure
+                label={dict.report.decisions.realizedSavings}
+                value={formatMoney(tracking.savings.realized, currency, false)}
+                note={dict.report.decisions.realizedSavingsNote}
+              />
+              <Figure
+                label={dict.report.decisions.savingsInProgress}
+                value={formatMoney(tracking.savings.inProgress, currency, false)}
+                note={dict.report.decisions.savingsInProgressNote}
+              />
+              <Figure label={dict.report.decisions.recommendationsDecided} value={formatNumber(tracking.savings.decided, false)} />
+              <Figure label={dict.report.decisions.dismissed} value={formatNumber(tracking.dismissedCount, false)} />
             </div>
           </section>
         ) : null}
 
         <section className="report-section">
-          <h2>Top 10 resources by validated savings</h2>
+          <h2>{dict.report.topResources.heading}</h2>
           <table className="report-table">
             <thead>
               <tr>
-                <th>Resource</th>
-                <th>Service</th>
-                <th>Subscription</th>
-                <th>Action</th>
-                <th className="report-num">Savings / month</th>
-                <th>Priority</th>
+                <th>{dict.report.topResources.columns.resource}</th>
+                <th>{dict.report.topResources.columns.service}</th>
+                <th>{dict.report.topResources.columns.subscription}</th>
+                <th>{dict.report.topResources.columns.action}</th>
+                <th className="report-num">{dict.report.topResources.columns.savingsPerMonth}</th>
+                <th>{dict.report.topResources.columns.priority}</th>
               </tr>
             </thead>
             <tbody>
@@ -241,31 +258,25 @@ export default async function ReportPage({
         </section>
 
         <section className="report-section">
-          <h2>Data quality</h2>
+          <h2>{dict.report.dataQuality.heading}</h2>
           <div className="report-figures">
             {run ? (
               <>
-                <Figure label="Metrics availability" value={formatPercent(run.MetricAvailabilityRate)} />
-                <Figure label="Metrics completeness" value={formatPercent(run.MetricCompletenessRate)} />
-                <Figure label="Cost coverage" value={formatPercent(run.CostFullCoverageRate)} />
+                <Figure label={dict.report.dataQuality.metricsAvailability} value={formatPercent(run.MetricAvailabilityRate)} />
+                <Figure label={dict.report.dataQuality.metricsCompleteness} value={formatPercent(run.MetricCompletenessRate)} />
+                <Figure label={dict.report.dataQuality.costCoverage} value={formatPercent(run.CostFullCoverageRate)} />
               </>
             ) : null}
             <Figure
-              label="Resources with partial metrics"
+              label={dict.report.dataQuality.resourcesWithPartialMetrics}
               value={formatNumber(coverage.partial, false)}
-              note={`${formatPercent(coverage.pricedOnPartialShare)} of validated savings rest on partial metrics`}
+              note={dict.report.dataQuality.partialMetricsNote.replace("{value}", formatPercent(coverage.pricedOnPartialShare))}
             />
           </div>
-          <p className="report-text">
-            Recommendations backed by partial metrics are still priced against real cost, but enabling full monitoring on those
-            resources raises confidence and can unlock further savings on the next run.
-          </p>
+          <p className="report-text">{dict.report.dataQuality.text}</p>
         </section>
 
-        <footer className="report-footer">
-          Generated by FinOps Insight Engine. Figures reflect the latest official run and the scope above. Validated and heuristic
-          savings are never combined.
-        </footer>
+        <footer className="report-footer">{dict.report.footer}</footer>
       </article>
     </div>
   );

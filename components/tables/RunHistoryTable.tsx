@@ -7,8 +7,10 @@ import { formatDate, formatDuration, formatPercent } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { StatusBadge } from "@/components/badges";
 import type { FinOpsRun } from "@/types/finops";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 export function RunHistoryTable({ rows }: { rows: FinOpsRun[] }) {
+  const dict = useDictionary();
   return (
     <DataTable<FinOpsRun>
       rows={rows}
@@ -37,7 +39,7 @@ export function RunHistoryTable({ rows }: { rows: FinOpsRun[] }) {
         { key: "PublishApproved", header: "PublishApproved", render: (r) => String(r.PublishApproved) },
         {
           key: "duration",
-          header: "Duration",
+          header: dict.runHistory.table.duration,
           render: (r) => formatDuration(r.RunStartedAt, r.RunFinishedAt),
         },
       ]}

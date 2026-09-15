@@ -4,9 +4,11 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 export function CopyBlock({ title, text, filename }: { title: string; text: string; filename?: string }) {
   const [copied, setCopied] = useState(false);
+  const dict = useDictionary().connect.copyBlock;
 
   async function copy() {
     try {
@@ -31,7 +33,7 @@ export function CopyBlock({ title, text, filename }: { title: string; text: stri
           className="inline-flex items-center gap-1 rounded-lg border border-white/10 px-2 py-1 text-[11px] text-slate-300 hover:bg-white/5 hover:text-white"
         >
           {copied ? <Check className="h-3 w-3 text-emerald-300" /> : <Copy className="h-3 w-3" />}
-          {copied ? "Copied" : "Copy"}
+          {copied ? dict.copied : dict.copy}
         </button>
       </div>
       <pre className="max-h-96 overflow-auto p-4 font-mono text-[11px] leading-relaxed text-slate-300">{text}</pre>

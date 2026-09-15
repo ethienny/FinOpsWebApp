@@ -8,6 +8,7 @@
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/kpi/States";
 import { cn } from "@/lib/cn";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 export interface Column<T> {
   key: string;
@@ -24,7 +25,7 @@ export function DataTable<T extends object>({
   searchKeys,
   pageSize = 12,
   rowKey,
-  searchPlaceholder = "Search...",
+  searchPlaceholder,
 }: {
   rows: T[];
   columns: Column<T>[];
@@ -33,6 +34,8 @@ export function DataTable<T extends object>({
   rowKey?: (row: T) => string;
   searchPlaceholder?: string;
 }) {
+  const dict = useDictionary();
+  const placeholder = searchPlaceholder ?? dict.common.table.searchPlaceholder;
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [dir, setDir] = useState<"asc" | "desc">("desc");
@@ -94,7 +97,7 @@ export function DataTable<T extends object>({
     setPage(0);
   }
 
-  if (!rows.length) return <EmptyState title="No rows in the current scope." />;
+  if (!rows.length) return <EmptyState title={dict.common.table.noRows} />;
 
   return (
     <div className="space-y-3">
@@ -105,11 +108,11 @@ export function DataTable<T extends object>({
             setQ(e.target.value);
             setPage(0);
           }}
-          placeholder={searchPlaceholder}
-          aria-label={searchPlaceholder}
+          placeholder={placeholder}
+          aria-label={placeholder}
           className="w-full rounded-xl border border-white/10 bg-navy-900 px-3 py-2 text-sm text-slate-100 outline-none ring-cyan-400/40 placeholder:text-slate-500 focus:ring-2 sm:max-w-xs"
         />
-        <p className="text-xs text-slate-400">{filtered.length} rows</p>
+        <p className="text-xs text-slate-400">{dict.common.table.rowsCount.replace("{count}", String(filtered.length))}</p>
       </div>
       <div className="table-wrap">
         <table className="data">
@@ -127,7 +130,7 @@ export function DataTable<T extends object>({
                   </button>
                   {col.filterable ? (
                     <select
-                      aria-label={`Filter ${col.header}`}
+                      aria-label={dict.common.table.filterAriaLabel.replace("{column}", col.header)}
                       className="mt-1 block w-full rounded border border-white/10 bg-navy-900 px-1 py-0.5 text-[11px] font-normal normal-case tracking-normal text-slate-300"
                       value={colFilters[col.key] ?? ""}
                       onChange={(e) => {
@@ -135,7 +138,7 @@ export function DataTable<T extends object>({
                         setPage(0);
                       }}
                     >
-                      <option value="">All</option>
+                      <option value="">{dict.common.table.allOption}</option>
                       {(filterValues[col.key] ?? []).map((v) => (
                         <option key={v} value={v}>
                           {v}
@@ -166,7 +169,7 @@ export function DataTable<T extends object>({
           disabled={safePage === 0}
           onClick={() => setPage((p) => Math.max(0, p - 1))}
         >
-          Previous
+          {dict.common.table.previous}
         </button>
         <span>
           {safePage + 1} / {pages}
@@ -176,7 +179,7 @@ export function DataTable<T extends object>({
           disabled={safePage >= pages - 1}
           onClick={() => setPage((p) => p + 1)}
         >
-          Next
+          {dict.common.table.next}
         </button>
       </div>
     </div>

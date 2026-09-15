@@ -12,17 +12,21 @@ import { ChartCard, AreaTrend, DonutChart, DualLine } from "@/components/charts/
 import { StatusBadge } from "@/components/badges";
 import { RunComparePicker } from "@/components/filters/RunComparePicker";
 import type { FinOpsRun } from "@/types/finops";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 function one(v: string | string[] | undefined) {
   return Array.isArray(v) ? v[0] : v;
 }
 
-function CompareCard({ title, run }: { title: string; run: FinOpsRun | null }) {
+function CompareCard({ title, run, dict }: { title: string; run: FinOpsRun | null; dict: Dictionary }) {
+  const t = dict.runHistory.comparison;
   if (!run) {
     return (
       <article className="card-surface p-5">
         <p className="text-xs uppercase tracking-wide text-slate-400">{title}</p>
-        <p className="mt-3 text-sm text-slate-500">Select a run to compare.</p>
+        <p className="mt-3 text-sm text-slate-500">{t.selectToCompare}</p>
       </article>
     );
   }
@@ -30,16 +34,26 @@ function CompareCard({ title, run }: { title: string; run: FinOpsRun | null }) {
     <article className="card-surface p-5 space-y-2 text-sm">
       <p className="text-xs uppercase tracking-wide text-cyan-300">{title}</p>
       <p className="text-lg font-semibold text-white">{run.RunId}</p>
-      <p>Rows produced: {formatNumber(run.RowsProduced, false)}</p>
-      <p>Metric availability: {formatPercent(run.MetricAvailabilityRate)}</p>
-      <p>Cost coverage: {formatPercent(run.CostFullCoverageRate)}</p>
-      <p>Priced savings rows: {formatNumber(run.PricedSavingsRows, false)}</p>
-      <p>Heuristic savings rows: {formatNumber(run.HeuristicSavingsRows, false)}</p>
       <p>
-        Data quality: <StatusBadge value={run.DataQualityStatus} />
+        {t.rowsProduced}: {formatNumber(run.RowsProduced, false)}
       </p>
       <p>
-        Publication: <StatusBadge value={run.PublishApproved ? "PUBLISHED" : "UNPUBLISHED"} />
+        {t.metricAvailability}: {formatPercent(run.MetricAvailabilityRate)}
+      </p>
+      <p>
+        {t.costCoverage}: {formatPercent(run.CostFullCoverageRate)}
+      </p>
+      <p>
+        {t.pricedSavingsRows}: {formatNumber(run.PricedSavingsRows, false)}
+      </p>
+      <p>
+        {t.heuristicSavingsRows}: {formatNumber(run.HeuristicSavingsRows, false)}
+      </p>
+      <p>
+        {t.dataQuality}: <StatusBadge value={run.DataQualityStatus} />
+      </p>
+      <p>
+        {t.publication}: <StatusBadge value={run.PublishApproved ? "PUBLISHED" : "UNPUBLISHED"} />
       </p>
     </article>
   );
@@ -52,6 +66,8 @@ export default async function RunHistoryPage({
 }) {
   const gate = await requireModule("governance");
   if (gate.locked) return gate.locked;
+  const dict = getDictionary(await getLocale());
+  const t = dict.runHistory;
   const sp = await searchParams;
   const runA = one(sp.runA);
   const runB = one(sp.runB);
@@ -85,8 +101,8 @@ export default async function RunHistoryPage({
       value: Math.round((new Date(r.RunFinishedAt).getTime() - new Date(r.RunStartedAt).getTime()) / 60000),
     }));
   const pubDist = [
-    { name: "Published", value: published },
-    { name: "Not published", value: data.runs.length - published },
+    { name: t.charts.published, value: published },
+    { name: t.charts.notPublished, value: data.runs.length - published },
   ];
 
   const currency = "USD";
@@ -94,47 +110,47 @@ export default async function RunHistoryPage({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Runs" value={formatNumber(data.runs.length, false)} />
-        <KpiCard label="Published Runs" value={formatNumber(published, false)} accent="green" />
-        <KpiCard label="Average Metric Availability" value={formatPercent(avgMetric)} />
-        <KpiCard label="Average Cost Coverage" value={formatPercent(avgCost)} accent="teal" />
+        <KpiCard label={t.kpi.totalRuns} value={formatNumber(data.runs.length, false)} />
+        <KpiCard label={t.kpi.publishedRuns} value={formatNumber(published, false)} accent="green" />
+        <KpiCard label={t.kpi.avgMetricAvailability} value={formatPercent(avgMetric)} />
+        <KpiCard label={t.kpi.avgCostCoverage} value={formatPercent(avgCost)} accent="teal" />
       </div>
 
-      <ChartCard title="Savings Evolution Across Runs" subtitle="PRICED and HEURISTIC kept as separate series">
+      <ChartCard title={t.charts.savingsEvolutionTitle} subtitle={t.charts.savingsEvolutionSubtitle}>
         <DualLine data={evolution} currency={currency} />
       </ChartCard>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title="Metric Availability Trend">
+        <ChartCard title={t.charts.metricAvailabilityTrend}>
           <AreaTrend data={metricTrend} dataKey="value" />
         </ChartCard>
-        <ChartCard title="Cost Coverage Trend">
+        <ChartCard title={t.charts.costCoverageTrend}>
           <AreaTrend data={costTrend} dataKey="value" color="#38bdf8" />
         </ChartCard>
-        <ChartCard title="Published vs Non-Published Runs">
+        <ChartCard title={t.charts.publishedVsNotPublished}>
           <DonutChart data={pubDist} />
         </ChartCard>
-        <ChartCard title="Run Duration Trend (minutes)">
+        <ChartCard title={t.charts.runDurationTrend}>
           <AreaTrend data={durationTrend} dataKey="value" color="#818cf8" />
         </ChartCard>
       </div>
 
       <section className="space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <h3 className="text-sm font-semibold text-white">Run comparison</h3>
+          <h3 className="text-sm font-semibold text-white">{t.comparison.heading}</h3>
           <Suspense fallback={null}>
             <RunComparePicker runs={data.runs} runA={runA} runB={runB} />
           </Suspense>
         </div>
         <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-          <CompareCard title="Run A" run={data.comparison?.a ?? null} />
-          <p className="text-center text-xs uppercase tracking-[0.2em] text-slate-500">vs</p>
-          <CompareCard title="Run B" run={data.comparison?.b ?? null} />
+          <CompareCard title={t.comparison.runA} run={data.comparison?.a ?? null} dict={dict} />
+          <p className="text-center text-xs uppercase tracking-[0.2em] text-slate-500">{t.comparison.vs}</p>
+          <CompareCard title={t.comparison.runB} run={data.comparison?.b ?? null} dict={dict} />
         </div>
       </section>
 
       <section className="card-surface p-5">
-        <h3 className="mb-4 text-sm font-semibold text-white">Run comparison table</h3>
+        <h3 className="mb-4 text-sm font-semibold text-white">{t.comparison.tableHeading}</h3>
         <RunHistoryTable rows={data.runs} />
       </section>
     </div>

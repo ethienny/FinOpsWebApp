@@ -98,7 +98,10 @@ export async function getAnomalyFilterOptions(): Promise<AnomalyFilterOptions> {
   }
 }
 
-export async function getAnomalyDashboard(filters: AnomalyFilters = {}): Promise<AnomalyDashboard> {
+export async function getAnomalyDashboard(
+  filters: AnomalyFilters = {},
+  routingLabels?: Record<string, string>,
+): Promise<AnomalyDashboard> {
   const store = await getAnomalyStore();
   const stats = latestRow(store.stats);
   if (!stats) return EMPTY;
@@ -124,7 +127,7 @@ export async function getAnomalyDashboard(filters: AnomalyFilters = {}): Promise
     alerts,
     pending: week.filter((a) => !isSent(a)),
     weekOverWeek: weekOverWeek(stats),
-    routing: routingDistribution(alerts),
+    routing: routingDistribution(alerts, routingLabels),
     topSubs,
     observedIncreaseTotal: filtered ? topSubs.reduce((a, s) => a + s.observedIncreaseUsd, 0) : stats.topSubsObservedIncreaseTotal,
     notReconciled: filtered ? topSubs.reduce((a, s) => a + s.notReconciled, 0) : stats.topSubsNotReconciled,

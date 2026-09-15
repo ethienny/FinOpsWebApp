@@ -27,6 +27,7 @@ import {
   ZAxis,
 } from "recharts";
 import { formatMoney, formatNumber } from "@/lib/formatters";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 const COLORS = ["#22d3ee", "#4895ff", "#818cf8", "#fbbf24", "#34d399", "#f472b6", "#94a3b8", "#22d3ee"];
 
@@ -150,6 +151,7 @@ export function GroupedBars({
   data: Array<{ name: string; cost: number; savings: number }>;
   currency?: string;
 }) {
+  const dict = useDictionary();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
@@ -158,8 +160,8 @@ export function GroupedBars({
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
-        <Bar dataKey="cost" name="Cost" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="savings" name="Validated savings" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="cost" name={dict.charts.cost} fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="savings" name={dict.charts.validatedSavings} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -173,6 +175,7 @@ export function DualLine({
   data: Array<Record<string, string | number>>;
   currency?: string;
 }) {
+  const dict = useDictionary();
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
@@ -181,9 +184,9 @@ export function DualLine({
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip content={<Tip currency={currency} />} />
         <Legend />
-        <Line type="monotone" dataKey="validated" name="Validated savings" stroke="#22d3ee" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="heuristic" name="Estimated opportunity" stroke="#fbbf24" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="cost" name="Monthly cost" stroke="#4895ff" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="validated" name={dict.charts.validatedSavings} stroke="#22d3ee" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="heuristic" name={dict.charts.estimatedOpportunity} stroke="#fbbf24" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="cost" name={dict.charts.monthlyCost} stroke="#4895ff" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -215,13 +218,15 @@ export function AreaTrend({
 /** Two series side by side per category, with configurable series labels. */
 export function CompareBars({
   data,
-  labels = { current: "current", target: "target" },
+  labels,
   currency,
 }: {
   data: Array<{ name: string; current: number; target: number }>;
   labels?: { current: string; target: string };
   currency?: string;
 }) {
+  const dict = useDictionary();
+  const resolvedLabels = labels ?? { current: dict.charts.current, target: dict.charts.target };
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 8, right: 8, left: 48, bottom: 8 }}>
@@ -230,8 +235,8 @@ export function CompareBars({
         <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={currency ? <Tip currency={currency} /> : undefined} />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
-        <Bar dataKey="current" name={labels.current} fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
-        <Bar dataKey="target" name={labels.target} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="current" name={resolvedLabels.current} fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="target" name={resolvedLabels.target} fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -248,25 +253,32 @@ function QuadrantTip({
   active,
   payload,
   currency,
+  labels,
 }: {
   active?: boolean;
   payload?: Array<{ payload: QuadrantPoint }>;
   currency?: string;
+  labels: { riskAdjustedSavings: string; executionRisk: string; quickWin: string };
 }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
   return (
     <div className="rounded-lg border border-white/10 bg-navy-900 px-3 py-2 text-xs shadow-xl">
       <p className="mb-1 font-medium text-slate-200">{point.name}</p>
-      <p className="text-slate-300">Risk adjusted savings: {formatMoney(point.savings, currency)}</p>
-      <p className="text-slate-300">Execution risk: {point.risk}/100</p>
-      {point.quickWin ? <p className="text-cyan-200">Quick win</p> : null}
+      <p className="text-slate-300">
+        {labels.riskAdjustedSavings}: {formatMoney(point.savings, currency)}
+      </p>
+      <p className="text-slate-300">
+        {labels.executionRisk}: {point.risk}/100
+      </p>
+      {point.quickWin ? <p className="text-cyan-200">{labels.quickWin}</p> : null}
     </div>
   );
 }
 
 /** Value against execution risk. Quick wins sit top left: high savings, low risk. */
 export function ScatterQuadrant({ data, currency }: { data: QuadrantPoint[]; currency?: string }) {
+  const dict = useDictionary();
   const quick = data.filter((d) => d.quickWin);
   const rest = data.filter((d) => !d.quickWin);
   return (
@@ -276,17 +288,29 @@ export function ScatterQuadrant({ data, currency }: { data: QuadrantPoint[]; cur
         <XAxis
           type="number"
           dataKey="risk"
-          name="Execution risk"
+          name={dict.charts.executionRisk}
           domain={[0, 100]}
           tick={{ fill: "#94a3b8", fontSize: 11 }}
-          label={{ value: "Execution risk", position: "insideBottom", offset: -2, fill: "#94a3b8", fontSize: 11 }}
+          label={{ value: dict.charts.executionRisk, position: "insideBottom", offset: -2, fill: "#94a3b8", fontSize: 11 }}
         />
-        <YAxis type="number" dataKey="savings" name="Savings" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <YAxis type="number" dataKey="savings" name={dict.charts.savings} tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <ZAxis range={[36, 36]} />
-        <Tooltip cursor={false} content={<QuadrantTip currency={currency} />} />
+        <Tooltip
+          cursor={false}
+          content={
+            <QuadrantTip
+              currency={currency}
+              labels={{
+                riskAdjustedSavings: dict.charts.riskAdjustedSavings,
+                executionRisk: dict.charts.executionRisk,
+                quickWin: dict.charts.quickWin,
+              }}
+            />
+          }
+        />
         <Legend />
-        <Scatter name="Other PRICED" data={rest} fill="#4895ff" fillOpacity={0.55} />
-        <Scatter name="Quick wins" data={quick} fill={CYAN} />
+        <Scatter name={dict.charts.otherPriced} data={rest} fill="#4895ff" fillOpacity={0.55} />
+        <Scatter name={dict.charts.quickWins} data={quick} fill={CYAN} />
       </ScatterChart>
     </ResponsiveContainer>
   );
@@ -301,6 +325,7 @@ export interface TimelinePointLike {
 
 /** Alerts per week as bars with the observed increase as a line on the right axis. */
 export function TimelineChart({ data, currency = "USD" }: { data: TimelinePointLike[]; currency?: string }) {
+  const dict = useDictionary();
   const hasSuppressed = data.some((p) => p.suppressed !== null);
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -316,18 +341,30 @@ export function TimelineChart({ data, currency = "USD" }: { data: TimelinePointL
             if (!active || !point) return null;
             return (
               <div className="rounded-lg border border-white/10 bg-navy-900 px-3 py-2 text-xs shadow-xl">
-                <p className="mb-1 font-medium text-slate-200">Week of {label}</p>
-                <p style={{ color: CYAN }}>Notified: {formatNumber(point.notified, false)}</p>
-                {point.suppressed !== null ? <p style={{ color: BLUE }}>Suppressed: {formatNumber(point.suppressed, false)}</p> : null}
-                <p style={{ color: "#fbbf24" }}>Observed increase: {formatMoney(point.observedIncreaseUsd, currency, false)}</p>
+                <p className="mb-1 font-medium text-slate-200">
+                  {dict.charts.weekOf} {label}
+                </p>
+                <p style={{ color: CYAN }}>
+                  {dict.charts.notified}: {formatNumber(point.notified, false)}
+                </p>
+                {point.suppressed !== null ? (
+                  <p style={{ color: BLUE }}>
+                    {dict.charts.suppressed}: {formatNumber(point.suppressed, false)}
+                  </p>
+                ) : null}
+                <p style={{ color: "#fbbf24" }}>
+                  {dict.charts.observedIncrease}: {formatMoney(point.observedIncreaseUsd, currency, false)}
+                </p>
               </div>
             );
           }}
         />
         <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 8, fontSize: 12 }} />
-        <Bar yAxisId="count" dataKey="notified" name="Notified" stackId="alerts" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} />
-        {hasSuppressed ? <Bar yAxisId="count" dataKey="suppressed" name="Suppressed" stackId="alerts" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[4, 4, 0, 0]} /> : null}
-        <Line yAxisId="usd" type="monotone" dataKey="observedIncreaseUsd" name="Observed increase" stroke="#fbbf24" strokeWidth={2} dot={false} />
+        <Bar yAxisId="count" dataKey="notified" name={dict.charts.notified} stackId="alerts" fill={CYAN} activeBar={{ fill: CYAN_ACTIVE }} />
+        {hasSuppressed ? (
+          <Bar yAxisId="count" dataKey="suppressed" name={dict.charts.suppressed} stackId="alerts" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[4, 4, 0, 0]} />
+        ) : null}
+        <Line yAxisId="usd" type="monotone" dataKey="observedIncreaseUsd" name={dict.charts.observedIncrease} stroke="#fbbf24" strokeWidth={2} dot={false} />
       </ComposedChart>
     </ResponsiveContainer>
   );

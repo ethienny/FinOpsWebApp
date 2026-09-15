@@ -8,22 +8,35 @@ import { useMemo } from "react";
 import { X } from "lucide-react";
 import type { AnomalyFilterOptions } from "@/types/anomalies";
 import { routingLabel } from "@/lib/anomalies/metrics";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
-const FIELDS: Array<{ key: string; label: string; optionKey: keyof AnomalyFilterOptions; render?: (v: string) => string }> = [
-  { key: "subscription", label: "Subscription", optionKey: "subscriptions" },
-  { key: "service", label: "Service", optionKey: "services" },
-  { key: "routing", label: "Routing Source", optionKey: "routingSources", render: routingLabel },
-  { key: "attribution", label: "Attribution", optionKey: "attributionStatuses", render: (v) => v.replace(/_/g, " ") },
-];
+function fields(
+  dict: Dictionary,
+): Array<{ key: string; label: string; optionKey: keyof AnomalyFilterOptions; render?: (v: string) => string }> {
+  return [
+    { key: "subscription", label: dict.filters.fields.subscription, optionKey: "subscriptions" },
+    { key: "service", label: dict.filters.fields.service, optionKey: "services" },
+    {
+      key: "routing",
+      label: dict.filters.fields.routingSource,
+      optionKey: "routingSources",
+      render: (v) => routingLabel(v, dict.anomalies.routingLabels),
+    },
+    { key: "attribution", label: dict.filters.fields.attribution, optionKey: "attributionStatuses", render: (v) => v.replace(/_/g, " ") },
+  ];
+}
 
 export function AnomalyFilterBar({ options }: { options: AnomalyFilterOptions }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const dict = useDictionary();
+  const FIELDS = useMemo(() => fields(dict), [dict]);
 
   const active = useMemo(
     () => FIELDS.map((f) => ({ ...f, value: sp.get(f.key) || "" })).filter((f) => f.value),
-    [sp],
+    [sp, FIELDS],
   );
 
   function setParam(key: string, value: string) {
@@ -45,7 +58,7 @@ export function AnomalyFilterBar({ options }: { options: AnomalyFilterOptions })
               value={sp.get(field.key) || ""}
               onChange={(e) => setParam(field.key, e.target.value)}
             >
-              <option value="">All</option>
+              <option value="">{dict.filters.allOption}</option>
               {options[field.optionKey].map((v) => (
                 <option key={v} value={v}>
                   {field.render ? field.render(v) : v}
@@ -69,10 +82,10 @@ export function AnomalyFilterBar({ options }: { options: AnomalyFilterOptions })
         ))}
         {active.length ? (
           <button type="button" onClick={() => router.replace(pathname)} className="text-xs text-slate-400 hover:text-white">
-            Clear Filters
+            {dict.filters.clearFilters}
           </button>
         ) : (
-          <span className="text-xs text-slate-500">Whole reported week</span>
+          <span className="text-xs text-slate-500">{dict.filters.wholeReportedWeek}</span>
         )}
       </div>
     </div>

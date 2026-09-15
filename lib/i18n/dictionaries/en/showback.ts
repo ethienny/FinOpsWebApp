@@ -1,0 +1,30 @@
+export const showback = {
+  kpis: {
+    totalCost: "Total Cost",
+    allocatedCost: "Allocated Cost",
+    allocatedHint: "Owner or cost center present",
+    unallocatedCost: "Unallocated Cost",
+    unallocatedHint: "Missing ownership metadata",
+    totalResources: "Total Resources",
+  },
+  charts: {
+    costByOwner: "Cost Allocation by Owner",
+    savingsByOwner: "Validated Savings by Owner",
+    savingsByOwnerSubtitle: "PRICED savings only",
+    costByEnvironment: "Cost by Environment",
+    costByCostCenter: "Cost by Cost Center",
+    costByApplication: "Cost by Application",
+    costBySubscription: "Cost by Subscription",
+    costByTenant: "Cost by Tenant",
+  },
+  tableHeading: "Allocation table",
+  columns: {
+    owner: "Owner",
+    costCenter: "Cost Center",
+    application: "Application",
+    environment: "Environment",
+    monthlyCost: "Monthly Cost",
+    resourceCount: "Resource Count",
+    percentOfTotal: "% of Total",
+  },
+} as const;

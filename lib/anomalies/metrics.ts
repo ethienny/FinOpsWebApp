@@ -28,8 +28,8 @@ export const ROUTING_LABELS: Record<string, string> = {
   legacy: "Legacy",
 };
 
-export function routingLabel(source: string): string {
-  return ROUTING_LABELS[source] ?? (source || "Unknown");
+export function routingLabel(source: string, labels: Record<string, string> = ROUTING_LABELS): string {
+  return labels[source] ?? (source || labels.unknown || "Unknown");
 }
 
 /** Latest row by generation time, or null when the table is empty. */
@@ -92,10 +92,10 @@ export function weekOverWeek(stats: WeeklyStats): WeekOverWeek {
 }
 
 /** Alerts per routing outcome, largest first. */
-export function routingDistribution(alerts: AnomalyAlert[]): NamedValueLike[] {
+export function routingDistribution(alerts: AnomalyAlert[], labels: Record<string, string> = ROUTING_LABELS): NamedValueLike[] {
   const map = new Map<string, number>();
   for (const a of alerts) map.set(a.routingSource, (map.get(a.routingSource) ?? 0) + 1);
-  return [...map.entries()].map(([source, value]) => ({ name: routingLabel(source), value })).sort((a, b) => b.value - a.value);
+  return [...map.entries()].map(([source, value]) => ({ name: routingLabel(source, labels), value })).sort((a, b) => b.value - a.value);
 }
 
 const EMAIL = /^[^\s@;]+@[^\s@;]+\.[^\s@;]+$/;

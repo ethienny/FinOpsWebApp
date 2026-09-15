@@ -22,14 +22,19 @@ import { DecisionPanel } from "@/components/resource/DecisionPanel";
 import { InsightStrip } from "@/components/resource/InsightStrip";
 import { cn } from "@/lib/cn";
 import type { TargetOptionHistory } from "@/types/finops";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
-const TABS = ["Overview", "Cost & Usage", "Recommendation", "Sizing", "Metrics", "History", "JSON"] as const;
+const TAB_KEYS = ["overview", "costUsage", "recommendation", "sizing", "metrics", "history", "json"] as const;
+type TabKey = (typeof TAB_KEYS)[number];
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  const dict = useDictionary();
   return (
     <div className="rounded-xl border border-white/10 bg-navy-900/40 px-3 py-2">
       <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
-      <p className="mt-1 break-all text-sm text-slate-100">{value == null || value === "" ? "Not provided" : typeof value === "boolean" ? String(value) : value}</p>
+      <p className="mt-1 break-all text-sm text-slate-100">
+        {value == null || value === "" ? dict.resources.detail.notProvided : typeof value === "boolean" ? String(value) : value}
+      </p>
     </div>
   );
 }
@@ -47,7 +52,8 @@ export function ResourceDetail({
   showDecision?: boolean;
   showInsight?: boolean;
 }) {
-  const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
+  const dict = useDictionary();
+  const [tab, setTab] = useState<TabKey>("overview");
   const r = data.recommendation;
   const currency = r.CostCurrency || "USD";
 
@@ -69,7 +75,7 @@ export function ResourceDetail({
 
   return (
     <div className="space-y-5">
-      <Breadcrumbs items={[{ label: "Resources", href: "/resources" }, { label: r.ResourceName }]} />
+      <Breadcrumbs items={[{ label: dict.resources.detail.breadcrumbResources, href: "/resources" }, { label: r.ResourceName }]} />
       <div className="card-surface p-5">
         <p className="text-xs uppercase tracking-[0.14em] text-cyan-300">{r.ServiceType}</p>
         <h2 className="mt-1 text-2xl font-semibold text-white">{r.ResourceName}</h2>
@@ -81,22 +87,22 @@ export function ResourceDetail({
       {showDecision ? <DecisionPanel resourceId={r.ResourceId} runId={r.RunId} decision={decision} /> : null}
 
       <div className="flex gap-2 overflow-x-auto">
-        {TABS.map((t) => (
+        {TAB_KEYS.map((key) => (
           <button
-            key={t}
+            key={key}
             type="button"
-            onClick={() => setTab(t)}
+            onClick={() => setTab(key)}
             className={cn(
               "whitespace-nowrap rounded-xl px-3 py-2 text-sm",
-              tab === t ? "bg-cyan-400/15 text-cyan-100" : "text-slate-400 hover:bg-white/5 hover:text-white",
+              tab === key ? "bg-cyan-400/15 text-cyan-100" : "text-slate-400 hover:bg-white/5 hover:text-white",
             )}
           >
-            {t}
+            {dict.resources.detail.tabs[key]}
           </button>
         ))}
       </div>
 
-      {tab === "Overview" ? (
+      {tab === "overview" ? (
         <div className="space-y-5">
         <RecommendationEvidence r={r} />
         <MetricEvidence r={r} />
@@ -118,7 +124,7 @@ export function ResourceDetail({
         </div>
       ) : null}
 
-      {tab === "Cost & Usage" ? (
+      {tab === "costUsage" ? (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           <Field label="MonthlyCost" value={formatMoney(r.MonthlyCost, currency, false)} />
           <Field label="AnnualCost" value={formatMoney(r.AnnualCost, currency, false)} />
@@ -130,7 +136,7 @@ export function ResourceDetail({
         </div>
       ) : null}
 
-      {tab === "Recommendation" ? (
+      {tab === "recommendation" ? (
         <div className="space-y-4">
           <RecommendationEvidence r={r} />
           <MetricEvidence r={r} detailed />
@@ -150,39 +156,55 @@ export function ResourceDetail({
           </div>
           {r.SecondaryAction ? (
             <div className="rounded-2xl border border-violet-400/20 bg-violet-400/10 p-4">
-              <p className="text-xs uppercase tracking-wide text-violet-200">Alternative recommendation</p>
+              <p className="text-xs uppercase tracking-wide text-violet-200">{dict.resources.detail.alternativeRecommendation}</p>
               <p className="mt-2 text-sm text-white">{r.SecondaryActionLabel || r.SecondaryAction}</p>
               <p className="mt-1 text-xs text-slate-300">
-                Secondary monthly savings {formatMoney(r.SecondaryMonthlySavings, currency)} — not added to primary totals.
+                {dict.resources.detail.secondaryMonthlySavings.replace("{value}", formatMoney(r.SecondaryMonthlySavings, currency))}
               </p>
             </div>
           ) : null}
         </div>
       ) : null}
 
-      {tab === "Sizing" ? (
+      {tab === "sizing" ? (
         <div className="grid gap-4 lg:grid-cols-3">
           {(["Conservative", "Moderate", "Aggressive"] as const).map((profile) => {
             const row = data.sizing.find((s) => s.Profile === profile);
+            const profileLabel =
+              profile === "Conservative"
+                ? dict.resources.detail.profiles.conservative
+                : profile === "Moderate"
+                  ? dict.resources.detail.profiles.moderate
+                  : dict.resources.detail.profiles.aggressive;
             return (
               <article key={profile} className="card-surface p-4">
-                <p className="text-xs uppercase tracking-wide text-cyan-300">{profile}</p>
+                <p className="text-xs uppercase tracking-wide text-cyan-300">{profileLabel}</p>
                 {row ? (
                   <div className="mt-3 space-y-2 text-sm">
-                    <p>Target SKU: {row.TargetSku || "—"}</p>
-                    <p>Target vCPU: {row.TargetVCpus ?? "—"}</p>
-                    <p>Target Memory GB: {row.TargetMemoryGB ?? "—"}</p>
-                    <p>Projected Peak: {row.ProjectedPeakPct != null ? `${row.ProjectedPeakPct}%` : "—"}</p>
-                    <p>Monthly Savings: {formatMoney(row.MonthlySavings, currency)}</p>
                     <p>
-                      Performance Risk: <RiskBadge value={row.PerformanceRisk} />
+                      {dict.resources.detail.targetSku}: {row.TargetSku || "—"}
                     </p>
                     <p>
-                      Status: <StatusBadge value={row.Status} />
+                      {dict.resources.detail.targetVCpu}: {row.TargetVCpus ?? "—"}
+                    </p>
+                    <p>
+                      {dict.resources.detail.targetMemoryGb}: {row.TargetMemoryGB ?? "—"}
+                    </p>
+                    <p>
+                      {dict.resources.detail.projectedPeak}: {row.ProjectedPeakPct != null ? `${row.ProjectedPeakPct}%` : "—"}
+                    </p>
+                    <p>
+                      {dict.resources.detail.monthlySavingsLabel}: {formatMoney(row.MonthlySavings, currency)}
+                    </p>
+                    <p>
+                      {dict.resources.detail.performanceRisk}: <RiskBadge value={row.PerformanceRisk} />
+                    </p>
+                    <p>
+                      {dict.resources.detail.statusLabel}: <StatusBadge value={row.Status} />
                     </p>
                   </div>
                 ) : (
-                  <p className="mt-3 text-sm text-slate-400">No sizing option for this profile.</p>
+                  <p className="mt-3 text-sm text-slate-400">{dict.resources.detail.noSizingOption}</p>
                 )}
               </article>
             );
@@ -190,14 +212,14 @@ export function ResourceDetail({
         </div>
       ) : null}
 
-      {tab === "Metrics" ? <MetricEvidence r={r} detailed /> : null}
+      {tab === "metrics" ? <MetricEvidence r={r} detailed /> : null}
 
-      {tab === "History" ? (
+      {tab === "history" ? (
         <div className="space-y-4">
-          <ChartCard title="Sizing savings across runs">
+          <ChartCard title={dict.resources.detail.chartSizingSavings}>
             <DualLine data={historyChart} currency={currency} />
           </ChartCard>
-          <ChartCard title="Official conservative savings by profile">
+          <ChartCard title={dict.resources.detail.chartOfficialConservative}>
             <VerticalBars
               data={data.history.map((h) => ({ name: `${h.RunId.slice(-12)}/${h.Profile}`, value: h.MonthlySavings ?? 0 }))}
               currency={currency}
@@ -225,7 +247,7 @@ export function ResourceDetail({
         </div>
       ) : null}
 
-      {tab === "JSON" ? (
+      {tab === "json" ? (
         <div className="space-y-3">
           <JsonViewer title="TriggeredRules" value={r.TriggeredRules} />
           <JsonViewer title="TriggeredMetricRules" value={r.TriggeredMetricRules} />

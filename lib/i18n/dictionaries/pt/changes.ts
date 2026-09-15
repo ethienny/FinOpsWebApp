@@ -1,0 +1,56 @@
+import type { changes as en } from "../en/changes";
+import type { Widen } from "../widen";
+
+export const changes: Widen<typeof en> = {
+  currentRunLabel: "Atual",
+  previousRunLabel: "Anterior",
+  noChange: "sem alteração",
+  kpis: {
+    validatedSavingsPriced: "Economia Validada (PRECIFICADA)",
+    actionableResources: "Recursos Acionáveis",
+    newRecommendations: "Novas Recomendações",
+    resolved: "Resolvidas",
+    monthlyCostAnalyzed: "Custo Mensal Analisado",
+    savingsMoved: "Economia Alterada",
+    actionOrReliabilityChanged: "Ação ou Confiabilidade Alterada",
+    unchanged: "Sem Alteração",
+  },
+  hints: {
+    vsPreviousRun: "vs execução anterior",
+    pricedSavingsNotSeen: "de economia PRECIFICADA não vista na execução anterior",
+    pricedSavingsNoLonger: "de economia PRECIFICADA não mais recomendada",
+    net: "Líquido de",
+    onRecommendationsKept: "em recomendações mantidas, PRECIFICADAS em ambas as execuções",
+    newAction: "nova ação",
+    movedBetween: "moveram entre PRECIFICADA e HEURÍSTICA",
+    sameActionReliabilityEstimate: "Mesma ação, confiabilidade e estimativa em ambas as execuções",
+  },
+  charts: {
+    byKindTitle: "Mudanças por Tipo",
+    byKindSubtitle: "Recursos cuja recomendação difere da execução anterior",
+    savingsCompareTitle: "Economia Validada: Anterior vs Atual",
+    savingsCompareSubtitle: "Economia PRECIFICADA que entrou, saiu e o total do escopo",
+    previousRun: "Execução anterior",
+    currentRun: "Execução atual",
+    validatedTotal: "Total validado",
+  },
+  table: {
+    heading: "Recomendações Alteradas",
+    noChangesTitle: "Nenhuma mudança neste escopo",
+    noChangesDetail: "Toda recomendação manteve a mesma ação, confiabilidade e estimativa.",
+    columns: {
+      resource: "Recurso",
+      service: "Serviço",
+      change: "Mudança",
+      previousAction: "Ação anterior",
+      currentAction: "Ação atual",
+      previousSavings: "Economia anterior",
+      currentSavings: "Economia atual",
+      delta: "Diferença",
+      owner: "Responsável",
+      decision: "Decisão",
+    },
+  },
+  emptyCompareTitle: "Ainda nada para comparar",
+  emptyCompareDetail: "A comparação exige duas execuções completas de escopo total. Ela aparece após a próxima execução oficial.",
+};

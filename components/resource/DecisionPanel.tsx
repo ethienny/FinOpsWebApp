@@ -5,12 +5,21 @@
 
 import { useActionState } from "react";
 import { saveDecision, type DecisionFormState } from "@/app/actions/decisions";
-import { DECISION_LABELS, DECISION_STATUSES } from "@/lib/decisions/metrics";
+import { DECISION_STATUSES } from "@/lib/decisions/metrics";
 import { DecisionBadge } from "@/components/badges";
 import { formatDate } from "@/lib/formatters";
-import type { RecommendationDecision } from "@/types/finops";
+import type { DecisionStatus, RecommendationDecision } from "@/types/finops";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
 const INITIAL: DecisionFormState = { ok: false, message: "" };
+
+function decisionLabel(status: DecisionStatus, dict: Dictionary): string {
+  const labels = dict.common.badges.decision;
+  return { open: labels.open, accepted: labels.accepted, in_progress: labels.inProgress, done: labels.done, dismissed: labels.dismissed }[
+    status
+  ];
+}
 
 export function DecisionPanel({
   resourceId,
@@ -23,22 +32,20 @@ export function DecisionPanel({
 }) {
   const [state, action, pending] = useActionState(saveDecision, INITIAL);
   const status = decision?.status ?? "open";
+  const dict = useDictionary();
+  const d = dict.resources.decision;
 
   return (
     <section className="card-surface p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-cyan-300">Decision</p>
-          <p className="mt-1 text-sm text-slate-400">
-            Record what the team decided about this recommendation. Tracked savings only count PRICED values.
-          </p>
+          <p className="text-xs uppercase tracking-[0.14em] text-cyan-300">{d.heading}</p>
+          <p className="mt-1 text-sm text-slate-400">{d.description}</p>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <DecisionBadge value={status} />
           {decision ? (
-            <span>
-              Updated {formatDate(decision.updatedAt)} by {decision.updatedBy}
-            </span>
+            <span>{d.updatedBy.replace("{date}", formatDate(decision.updatedAt)).replace("{user}", decision.updatedBy)}</span>
           ) : null}
         </div>
       </div>
@@ -50,32 +57,32 @@ export function DecisionPanel({
         <input type="hidden" name="resourceId" value={resourceId} />
         <input type="hidden" name="runId" value={runId} />
         <label className="block text-[11px] uppercase tracking-wide text-slate-400">
-          Status
+          {d.statusLabel}
           <select name="status" defaultValue={status} className="mt-1 w-full px-2 py-1.5 text-sm text-slate-100">
             {DECISION_STATUSES.map((s) => (
               <option key={s} value={s}>
-                {DECISION_LABELS[s]}
+                {decisionLabel(s, dict)}
               </option>
             ))}
           </select>
         </label>
         <label className="block text-[11px] uppercase tracking-wide text-slate-400">
-          Owner
+          {d.ownerLabel}
           <input
             name="owner"
             defaultValue={decision?.owner ?? ""}
-            placeholder="Team or person responsible"
+            placeholder={d.ownerPlaceholder}
             maxLength={120}
             className="mt-1 w-full px-3 py-1.5 text-sm text-slate-100 placeholder:text-slate-500"
           />
         </label>
         <label className="block text-[11px] uppercase tracking-wide text-slate-400 md:col-span-2">
-          Note
+          {d.noteLabel}
           <textarea
             name="note"
             rows={2}
             defaultValue={decision?.note ?? ""}
-            placeholder="Context for the decision, ticket reference, expected date"
+            placeholder={d.notePlaceholder}
             maxLength={1000}
             className="mt-1 w-full px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500"
           />
@@ -86,7 +93,7 @@ export function DecisionPanel({
             disabled={pending}
             className="rounded-xl border border-cyan-400/30 bg-cyan-400/15 px-4 py-2 text-sm font-medium text-cyan-100 hover:bg-cyan-400/25 disabled:opacity-50"
           >
-            {pending ? "Saving..." : "Save decision"}
+            {pending ? d.saving : d.save}
           </button>
           {state.message ? (
             <p className={state.ok ? "text-xs text-emerald-300" : "text-xs text-rose-300"} role="status">

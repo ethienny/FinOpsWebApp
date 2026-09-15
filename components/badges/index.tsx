@@ -4,6 +4,7 @@
 // (reliability, priority, risk, decision, change, outcome) to a color tone.
 
 import { cn } from "@/lib/cn";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 const tones: Record<string, string> = {
   green: "bg-emerald-400/15 text-emerald-300 border-emerald-400/25",
@@ -72,36 +73,41 @@ export function MetricStatusBadge({ value }: { value: string }) {
 }
 
 export function DecisionBadge({ value }: { value: string }) {
+  const dict = useDictionary();
   const v = value.toLowerCase();
-  if (v === "done") return <Badge value="Done" tone="green" />;
-  if (v === "in_progress") return <Badge value="In progress" tone="cyan" />;
-  if (v === "accepted") return <Badge value="Accepted" tone="blue" />;
-  if (v === "dismissed") return <Badge value="Dismissed" tone="gray" />;
-  return <Badge value="Open" tone="amber" />;
+  if (v === "done") return <Badge value={dict.common.badges.decision.done} tone="green" />;
+  if (v === "in_progress") return <Badge value={dict.common.badges.decision.inProgress} tone="cyan" />;
+  if (v === "accepted") return <Badge value={dict.common.badges.decision.accepted} tone="blue" />;
+  if (v === "dismissed") return <Badge value={dict.common.badges.decision.dismissed} tone="gray" />;
+  return <Badge value={dict.common.badges.decision.open} tone="amber" />;
 }
 
 export function AgeBadge({ value }: { value: string }) {
+  const dict = useDictionary();
   const v = value.toLowerCase();
-  if (v === "persistent") return <Badge value="Persistent" tone="red" />;
-  if (v === "recurring") return <Badge value="Recurring" tone="amber" />;
-  if (v === "new") return <Badge value="New" tone="blue" />;
+  if (v === "persistent") return <Badge value={dict.common.badges.age.persistent} tone="red" />;
+  if (v === "recurring") return <Badge value={dict.common.badges.age.recurring} tone="amber" />;
+  if (v === "new") return <Badge value={dict.common.badges.age.new} tone="blue" />;
   return <span className="text-slate-500">—</span>;
 }
 
 export function ChangeBadge({ value }: { value: string }) {
+  const dict = useDictionary();
   const v = value.toLowerCase();
-  if (v === "new") return <Badge value="New" tone="cyan" />;
-  if (v === "resolved") return <Badge value="Resolved" tone="green" />;
-  if (v === "action changed") return <Badge value="Action changed" tone="purple" />;
-  if (v === "reliability changed") return <Badge value="Reliability changed" tone="amber" />;
-  if (v === "savings changed") return <Badge value="Savings changed" tone="blue" />;
+  if (v === "new") return <Badge value={dict.common.badges.change.new} tone="cyan" />;
+  if (v === "resolved") return <Badge value={dict.common.badges.change.resolved} tone="green" />;
+  if (v === "action changed") return <Badge value={dict.common.badges.change.actionChanged} tone="purple" />;
+  if (v === "reliability changed") return <Badge value={dict.common.badges.change.reliabilityChanged} tone="amber" />;
+  if (v === "savings changed") return <Badge value={dict.common.badges.change.savingsChanged} tone="blue" />;
   return <Badge value={value} tone="gray" />;
 }
 
 /** Outcome of a lookup or reconciliation step: found, partial, missing, invalid or failed. */
 export function OutcomeBadge({ value }: { value: string }) {
+  const dict = useDictionary();
   const v = value.toLowerCase();
-  const label = value.replace(/_/g, " ");
+  const key = v as keyof typeof dict.common.badges.outcome;
+  const label = dict.common.badges.outcome[key] ?? value.replace(/_/g, " ");
   if (["found", "reconciled", "sent", "valid", "owned"].includes(v)) return <Badge value={label} tone="green" />;
   if (["partial", "missing", "pendingsend", "unowned"].includes(v)) return <Badge value={label} tone="amber" />;
   if (["invalid", "lookup_failed", "not_reconciled", "failed"].includes(v)) return <Badge value={label} tone="red" />;

@@ -7,25 +7,31 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import type { FilterOptions } from "@/types/finops";
 import { X } from "lucide-react";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import type { Dictionary } from "@/lib/i18n/dictionary";
 
-const FIELDS: Array<{ key: string; label: string; optionKey: keyof FilterOptions }> = [
-  { key: "tenant", label: "Tenant", optionKey: "tenants" },
-  { key: "subscription", label: "Subscription", optionKey: "subscriptions" },
-  { key: "serviceType", label: "Service Type", optionKey: "serviceTypes" },
-  { key: "priority", label: "Priority", optionKey: "priorities" },
-  { key: "owner", label: "Owner", optionKey: "owners" },
-  { key: "environment", label: "Environment", optionKey: "environments" },
-  { key: "costCenter", label: "Cost Center", optionKey: "costCenters" },
-];
+function fields(dict: Dictionary): Array<{ key: string; label: string; optionKey: keyof FilterOptions }> {
+  return [
+    { key: "tenant", label: dict.filters.fields.tenant, optionKey: "tenants" },
+    { key: "subscription", label: dict.filters.fields.subscription, optionKey: "subscriptions" },
+    { key: "serviceType", label: dict.filters.fields.serviceType, optionKey: "serviceTypes" },
+    { key: "priority", label: dict.filters.fields.priority, optionKey: "priorities" },
+    { key: "owner", label: dict.filters.fields.owner, optionKey: "owners" },
+    { key: "environment", label: dict.filters.fields.environment, optionKey: "environments" },
+    { key: "costCenter", label: dict.filters.fields.costCenter, optionKey: "costCenters" },
+  ];
+}
 
 export function FilterBar({ options }: { options: FilterOptions }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const dict = useDictionary();
+  const FIELDS = useMemo(() => fields(dict), [dict]);
 
   const active = useMemo(
     () => FIELDS.map((f) => ({ ...f, value: sp.get(f.key) || "" })).filter((f) => f.value),
-    [sp],
+    [sp, FIELDS],
   );
 
   function setParam(key: string, value: string) {
@@ -59,7 +65,7 @@ export function FilterBar({ options }: { options: FilterOptions }) {
               value={sp.get(field.key) || ""}
               onChange={(e) => setParam(field.key, e.target.value)}
             >
-              <option value="">All</option>
+              <option value="">{dict.filters.allOption}</option>
               {options[field.optionKey].map((v) => (
                 <option key={v} value={v}>
                   {v}
@@ -83,10 +89,10 @@ export function FilterBar({ options }: { options: FilterOptions }) {
         ))}
         {active.length ? (
           <button type="button" onClick={clearAll} className="text-xs text-slate-400 hover:text-white">
-            Clear Filters
+            {dict.filters.clearFilters}
           </button>
         ) : (
-          <span className="text-xs text-slate-500">No global filters applied</span>
+          <span className="text-xs text-slate-500">{dict.filters.noGlobalFilters}</span>
         )}
       </div>
     </div>

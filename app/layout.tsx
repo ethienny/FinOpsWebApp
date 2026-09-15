@@ -9,6 +9,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getRepository } from "@/lib/repositories";
 import { getEntitlements } from "@/lib/entitlements/store";
 import { getAnomalyFilterOptions } from "@/lib/anomalies/service";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -24,6 +27,8 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const repo = getRepository();
+  const locale = await getLocale();
+  const dict = getDictionary(locale);
   const [meta, filterOptions, anomalyFilterOptions, entitlements] = await Promise.all([
     repo.getSidebarMeta(),
     repo.getFilterOptions(),
@@ -32,11 +37,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ]);
 
   return (
-    <html lang="en">
+    <html lang={locale === "pt" ? "pt-BR" : "en"}>
       <body className={`${inter.variable} font-sans`}>
-        <AppShell meta={meta} filterOptions={filterOptions} anomalyFilterOptions={anomalyFilterOptions} entitlements={entitlements}>
-          {children}
-        </AppShell>
+        <LocaleProvider locale={locale} dict={dict}>
+          <AppShell meta={meta} filterOptions={filterOptions} anomalyFilterOptions={anomalyFilterOptions} entitlements={entitlements}>
+            {children}
+          </AppShell>
+        </LocaleProvider>
       </body>
     </html>
   );

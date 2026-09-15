@@ -10,6 +10,9 @@ import { getDecisionTracking } from "@/lib/decisions/service";
 import { formatMoney, formatNumber } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, ScatterQuadrant, VerticalBars } from "@/components/charts/Charts";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { decisionLabelsFromDict } from "@/lib/i18n/decision-labels";
 
 export default async function InsightsPage({
   searchParams,
@@ -18,7 +21,8 @@ export default async function InsightsPage({
 }) {
   const gate = await requireModule("insights");
   if (gate.locked) return gate.locked;
-  const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams));
+  const dict = getDictionary(await getLocale());
+  const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams), decisionLabelsFromDict(dict));
   const currency = tracking.currency;
   const aging = agingSummary(tracking.rows);
   const openRows = tracking.rows.filter((r) => r.decisionStatus !== "done" && r.decisionStatus !== "dismissed");
@@ -36,34 +40,32 @@ export default async function InsightsPage({
     <div className="space-y-6">
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">Cost of Inaction</h3>
-          <p className="text-xs text-slate-400">
-            How long the current recommendations have been open across complete engine runs, and the PRICED savings already missed while they waited.
-          </p>
+          <h3 className="text-sm font-semibold text-white">{dict.insights.costOfInaction.heading}</h3>
+          <p className="text-xs text-slate-400">{dict.insights.costOfInaction.description}</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <KpiCard
-            label="Missed Savings To Date"
+            label={dict.insights.kpi.missedSavingsToDate}
             value={formatMoney(aging.missedSavings, currency)}
-            hint="PRICED savings accrued since first detection"
+            hint={dict.insights.kpi.missedSavingsHint}
             accent="amber"
           />
           <KpiCard
-            label="Persistent Recommendations"
+            label={dict.insights.kpi.persistentRecommendations}
             value={formatNumber(aging.persistentCount, false)}
-            hint="Same recommendation for 5 or more runs"
+            hint={dict.insights.kpi.persistentRecommendationsHint}
             accent="amber"
           />
           <KpiCard
-            label="Average Age"
-            value={`${aging.averageRunsOpen.toFixed(1)} runs`}
-            hint={`Across ${formatNumber(aging.actionableCount, false)} actionable recommendations`}
+            label={dict.insights.kpi.averageAge}
+            value={`${aging.averageRunsOpen.toFixed(1)} ${dict.insights.kpi.runsUnit}`}
+            hint={dict.insights.kpi.averageAgeHint.replace("{count}", formatNumber(aging.actionableCount, false))}
             accent="blue"
           />
           <KpiCard
-            label="New This Run"
+            label={dict.insights.kpi.newThisRun}
             value={formatNumber(aging.newCount, false)}
-            hint="Recommendations first detected on the latest run"
+            hint={dict.insights.kpi.newThisRunHint}
             accent="cyan"
           />
         </div>
@@ -71,21 +73,22 @@ export default async function InsightsPage({
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">Quick Wins</h3>
-          <p className="text-xs text-slate-400">
-            PRICED actions ranked by value and execution safety: confidence, performance risk, metric coverage and whether the action is destructive.
-          </p>
+          <h3 className="text-sm font-semibold text-white">{dict.insights.quickWins.heading}</h3>
+          <p className="text-xs text-slate-400">{dict.insights.quickWins.description}</p>
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
-          <ChartCard title="Value vs Execution Risk" subtitle="Quick wins sit top left">
+          <ChartCard title={dict.insights.quickWins.valueVsRisk.title} subtitle={dict.insights.quickWins.valueVsRisk.subtitle}>
             <ScatterQuadrant data={quadrant} currency={currency} />
           </ChartCard>
-          <ChartCard title="Validated Savings by Age" subtitle="PRICED savings of open recommendations, oldest deserve attention first">
+          <ChartCard
+            title={dict.insights.quickWins.validatedSavingsByAge.title}
+            subtitle={dict.insights.quickWins.validatedSavingsByAge.subtitle}
+          >
             <VerticalBars data={savingsByAge(tracking.rows)} currency={currency} />
           </ChartCard>
         </div>
         <section className="card-surface p-5">
-          <h3 className="mb-4 text-sm font-semibold text-white">Top 10 Quick Wins</h3>
+          <h3 className="mb-4 text-sm font-semibold text-white">{dict.insights.quickWins.top10Heading}</h3>
           <QuickWinsTable rows={quickWins} />
         </section>
       </section>

@@ -1,0 +1,35 @@
+export const tracking = {
+  kpi: {
+    savingsInProgress: "Savings In Progress",
+    savingsInProgressHint: "PRICED only, accepted or in progress",
+    realizedSavings: "Realized Savings",
+    realizedSavingsHint: "PRICED only, marked done",
+    recommendationsDecided: "Recommendations Decided",
+    decidedHint: "{count} still open in this scope",
+    dismissed: "Dismissed",
+    dismissedHint: "Excluded from tracked savings",
+  },
+  charts: {
+    byStatusTitle: "Decisions by Status",
+    byStatusSubtitle: "Recommendations with a decision other than open",
+    byOwnerTitle: "Tracked Savings by Owner",
+    byOwnerSubtitle: "PRICED savings accepted, in progress or done",
+  },
+  decidedRecommendations: "Decided recommendations",
+  empty: {
+    title: "No decisions recorded in this scope yet.",
+    detail: "Open a resource from Opportunities and record what the team decided about its recommendation.",
+  },
+  table: {
+    resource: "Resource",
+    decision: "Decision",
+    assignedTo: "Assigned to",
+    service: "Service",
+    subscription: "Subscription",
+    recommendation: "Recommendation",
+    monthlySavings: "Monthly savings",
+    reliability: "Reliability",
+    run: "Run",
+    updated: "Updated",
+  },
+} as const;

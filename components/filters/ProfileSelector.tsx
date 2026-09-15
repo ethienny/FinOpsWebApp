@@ -6,6 +6,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { SizingProfile } from "@/types/finops";
 import { cn } from "@/lib/cn";
+import { useDictionary } from "@/lib/i18n/LocaleProvider";
 
 const PROFILES: SizingProfile[] = ["Conservative", "Moderate", "Aggressive"];
 
@@ -13,6 +14,7 @@ export function ProfileSelector({ value }: { value: SizingProfile }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const dict = useDictionary();
 
   function setProfile(profile: SizingProfile) {
     const next = new URLSearchParams(sp.toString());
@@ -32,7 +34,7 @@ export function ProfileSelector({ value }: { value: SizingProfile }) {
             value === p ? "bg-cyan-400/15 text-cyan-100" : "text-slate-400 hover:text-white",
           )}
         >
-          {p}
+          {dict.sizing.profiles[p]}
         </button>
       ))}
     </div>

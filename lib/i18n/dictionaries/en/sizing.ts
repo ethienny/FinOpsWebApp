@@ -1,0 +1,37 @@
+export const sizing = {
+  profileNote: "Profile is mandatory and single-select. Official conservative savings never come from summing all profiles.",
+  profiles: {
+    Conservative: "Conservative",
+    Moderate: "Moderate",
+    Aggressive: "Aggressive",
+  },
+  kpi: {
+    selectedProfileSavings: "Selected Profile Savings",
+    officialConservativeSavings: "Official Conservative Savings",
+    officialConservativeSavingsHint: "OfficialConservativeSavings, unique resources",
+    resourcesWithSizing: "Resources With Sizing",
+    averagePerformanceRisk: "Average Performance Risk",
+    averagePerformanceRiskHint: "Score {score} (Low=1 Medium=2 High=3)",
+  },
+  charts: {
+    savingsByServiceType: "Savings by Service Type",
+    riskDistribution: "Risk Distribution",
+    targetProfileDistribution: { title: "Target Profile Distribution", subtitle: "Row counts across all profiles" },
+    currentVsTargetVcpu: "Current vs Target vCPU",
+    currentVsTargetMemory: "Current vs Target Memory (GB)",
+  },
+  recommendationsHeading: "{profile} sizing recommendations",
+  table: {
+    resource: "Resource",
+    service: "Service",
+    currentSku: "Current SKU",
+    currentVcpu: "Current vCPU",
+    currentMemory: "Current Memory",
+    targetSku: "Target SKU",
+    targetVcpu: "Target vCPU",
+    targetMemory: "Target Memory",
+    projectedPeak: "Projected Peak",
+    monthlySavings: "Monthly Savings",
+    performanceRisk: "Performance Risk",
+  },
+} as const;

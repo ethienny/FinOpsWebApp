@@ -1,0 +1,47 @@
+import type { opportunities as en } from "../en/opportunities";
+import type { Widen } from "../widen";
+
+export const opportunities: Widen<typeof en> = {
+  kpi: {
+    totalOpportunities: "Total de Oportunidades",
+    validatedSavingsPriced: "Economia Validada (PRECIFICADA)",
+    estimatedOpportunityHeuristic: "Oportunidade Estimada (HEURÍSTICA)",
+    avgSavingsPerActionable: "Economia Média / Acionável",
+    avgSavingsHint: "Apenas recomendação primária",
+    savingsInProgress: "Economia em Andamento",
+    savingsInProgressHint: "Somente PRECIFICADA, aceita ou em andamento",
+    realizedSavings: "Economia Realizada",
+    realizedSavingsHint: "Somente PRECIFICADA, marcada como concluída",
+    recommendationsDecided: "Recomendações Decididas",
+    recommendationsDecidedHint: "Qualquer status diferente de aberto",
+  },
+  charts: {
+    reliabilityTitle: "Distribuição de Confiabilidade da Economia",
+    reliabilitySubtitle: "Recomendações no escopo por confiabilidade",
+    priorityTitle: "Distribuição por Prioridade",
+  },
+  secondaryActionNote: "SecondaryAction é exibida apenas como alternativa e nunca é somada aos totais principais de economia.",
+  hideDismissed: "Ocultar descartadas",
+  showDismissed: "Mostrar descartadas ({count})",
+  table: {
+    resourceName: "Nome do Recurso",
+    decision: "Decisão",
+    assignedTo: "Responsável",
+    serviceType: "Tipo de Serviço",
+    subscriptionName: "Assinatura",
+    resourceGroup: "Grupo de Recursos",
+    actionLabel: "Ação",
+    age: "Idade",
+    runsSuffix: "execuções",
+    missedSoFar: "Perdido até agora",
+    quickWinScore: "Pontuação de Quick Win",
+    executionRisk: "Risco de Execução",
+    estimatedMonthlySavings: "Economia Mensal Estimada",
+    savingsReliability: "Confiabilidade da Economia",
+    priority: "Prioridade",
+    confidence: "Confiança",
+    tagOwner: "Responsável (Tag)",
+    tagEnvironment: "Ambiente (Tag)",
+    metricCollectionStatus: "Status de Coleta de Métricas",
+  },
+};

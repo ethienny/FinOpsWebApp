@@ -18,16 +18,23 @@ import {
   UnownedSubscriptionsTable,
 } from "@/components/tables/AnomalyTables";
 import type { Comparison } from "@/types/anomalies";
+import { getLocale } from "@/lib/i18n/get-locale";
+import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
 
-function deltaHint(c: Comparison, label: string, format: (n: number) => string = (n) => formatNumber(n, false)): string {
+function deltaHint(
+  dict: Dictionary,
+  c: Comparison,
+  label: string,
+  format: (n: number) => string = (n) => formatNumber(n, false),
+): string {
   const sign = c.delta > 0 ? "+" : c.delta < 0 ? "−" : "";
-  const move = c.delta ? `${sign}${format(Math.abs(c.delta))}` : "no change";
-  return `${move} vs ${label} (${format(c.previous)})`;
+  const move = c.delta ? `${sign}${format(Math.abs(c.delta))}` : dict.anomalies.noChange;
+  return `${move} ${dict.anomalies.vs} ${label} (${format(c.previous)})`;
 }
 
-function rateHint(c: Comparison, label: string): string {
-  const move = c.delta ? `${c.delta > 0 ? "+" : "−"}${Math.abs(c.delta).toFixed(1)} pp` : "no change";
-  return `${move} vs ${label} (${c.previous.toFixed(1)}%)`;
+function rateHint(dict: Dictionary, c: Comparison, label: string): string {
+  const move = c.delta ? `${c.delta > 0 ? "+" : "−"}${Math.abs(c.delta).toFixed(1)} pp` : dict.anomalies.noChange;
+  return `${move} ${dict.anomalies.vs} ${label} (${c.previous.toFixed(1)}%)`;
 }
 
 export default async function AnomaliesPage({
@@ -35,16 +42,17 @@ export default async function AnomaliesPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const dict = getDictionary(await getLocale());
   const gate = await requireModule("anomalies");
   if (gate.locked) return gate.locked;
-  const data = await getAnomalyDashboard(anomalyFiltersFromSearchParams(await searchParams));
+  const data = await getAnomalyDashboard(anomalyFiltersFromSearchParams(await searchParams), dict.anomalies.routingLabels);
   const { stats, coverage, weekOverWeek, filtered } = data;
 
   if (!stats || !weekOverWeek) {
-    return <EmptyState title="No weekly report yet" detail="The stats runbook has not written a WeeklyReport row." />;
+    return <EmptyState title={dict.anomalies.noWeeklyReport.title} detail={dict.anomalies.noWeeklyReport.detail} />;
   }
 
-  const prev = stats.prevWeekLabel || "prior week";
+  const prev = stats.prevWeekLabel || dict.anomalies.priorWeek;
   const ownedByName = new Map(data.ownership.map((o) => [o.subscriptionName, o.owned]));
   const topRows = data.topSubs.map((s) => ({ ...s, owned: ownedByName.get(s.name) ?? null }));
   const increaseBySub = data.topSubs
@@ -58,21 +66,21 @@ export default async function AnomaliesPage({
     <div className="space-y-6">
       <section className="card-surface flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">Reported week</span>
+          <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">{dict.anomalies.reportedWeek}</span>
           <span className="text-white">{stats.weekLabel}</span>
-          <span className="text-slate-400">Generated {formatDate(stats.generatedAt)}</span>
+          <span className="text-slate-400">{dict.anomalies.generated} {formatDate(stats.generatedAt)}</span>
           <OutcomeBadge value={stats.failedRuns ? "partial" : "found"} />
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
           <span>
-            Logic App runs <span className="text-slate-200">{stats.succeededRuns}/{stats.totalRuns}</span> succeeded
+            {dict.anomalies.logicAppRuns} <span className="text-slate-200">{stats.succeededRuns}/{stats.totalRuns}</span> {dict.anomalies.succeeded}
           </span>
           <span>
-            Failed <span className="text-slate-200">{stats.failedRuns}</span>
+            {dict.anomalies.failed} <span className="text-slate-200">{stats.failedRuns}</span>
           </span>
           {data.pending.length ? (
             <span>
-              Pending send <span className="text-amber-200">{data.pending.length}</span>
+              {dict.anomalies.pendingSend} <span className="text-amber-200">{data.pending.length}</span>
             </span>
           ) : null}
         </div>
@@ -80,53 +88,61 @@ export default async function AnomaliesPage({
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard
-          label="Alerts Notified"
+          label={dict.anomalies.kpi.alertsNotified}
           value={formatNumber(filtered ? data.alerts.length : stats.totalNotified, false)}
-          hint={filtered ? `In scope, of ${formatNumber(stats.totalNotified, false)} in the week` : deltaHint(weekOverWeek.notified, prev)}
+          hint={
+            filtered
+              ? dict.anomalies.kpi.inScopeOf.replace("{n}", formatNumber(stats.totalNotified, false))
+              : deltaHint(dict, weekOverWeek.notified, prev)
+          }
           accent="cyan"
         />
         <KpiCard
-          label="Alerts Suppressed"
+          label={dict.anomalies.kpi.alertsSuppressed}
           value={formatNumber(stats.totalSuppressed, false)}
-          hint={filtered ? "Week total, suppressed alerts leave no row to scope" : deltaHint(weekOverWeek.suppressed, prev)}
+          hint={filtered ? dict.anomalies.kpi.weekTotalSuppressed : deltaHint(dict, weekOverWeek.suppressed, prev)}
           accent="amber"
         />
         <KpiCard
-          label="Suppression Rate"
+          label={dict.anomalies.kpi.suppressionRate}
           value={pct(stats.suppressionRate)}
-          hint={filtered ? "Week total" : rateHint(weekOverWeek.suppressionRate, prev)}
+          hint={filtered ? dict.anomalies.kpi.weekTotal : rateHint(dict, weekOverWeek.suppressionRate, prev)}
           accent="blue"
         />
         <KpiCard
-          label="Observed Increase"
+          label={dict.anomalies.kpi.observedIncrease}
           value={formatMoney(data.observedIncreaseTotal, "USD")}
-          hint={`${formatNumber(data.notReconciled, false)} alerts the billed cost could not reproduce`}
+          hint={dict.anomalies.kpi.notReconciledHint.replace("{n}", formatNumber(data.notReconciled, false))}
           accent="green"
         />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <ChartCard
-          title="Alerts Over the Year"
-          subtitle={filtered ? "Notified alerts in scope per reported week; suppressed hidden while a scope is active" : "Notified and suppressed alerts per reported week, observed increase as a line"}
+          title={dict.anomalies.charts.alertsOverYear}
+          subtitle={filtered ? dict.anomalies.charts.alertsOverYearSubtitleFiltered : dict.anomalies.charts.alertsOverYearSubtitle}
         >
           <TimelineChart data={data.timeline} />
         </ChartCard>
-        <ChartCard title="Observed Increase by Service" subtitle="This week, reconciled and partial attributions">
+        <ChartCard title={dict.anomalies.charts.increaseByService} subtitle={dict.anomalies.charts.increaseByServiceSubtitle}>
           <HorizontalBars data={data.byService} currency="USD" labelWidth={130} />
         </ChartCard>
       </div>
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">Top Subscriptions</h3>
+          <h3 className="text-sm font-semibold text-white">{dict.anomalies.topSubscriptions.heading}</h3>
           <p className="text-xs text-slate-400">
-            Subscriptions with notified alerts in the week, observed increase reconciled against billed cost.
-            {filtered ? " Derived from the alerts in scope." : stats.topSubsBeyondCap ? ` ${stats.topSubsBeyondCap} more beyond the report cap.` : ""}
+            {dict.anomalies.topSubscriptions.description}
+            {filtered
+              ? dict.anomalies.topSubscriptions.derivedFromScope
+              : stats.topSubsBeyondCap
+                ? dict.anomalies.topSubscriptions.moreBeyondCap.replace("{n}", String(stats.topSubsBeyondCap))
+                : ""}
           </p>
         </div>
         <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
-          <ChartCard title="Observed Increase by Subscription" subtitle="USD, reconciled and partial attributions">
+          <ChartCard title={dict.anomalies.charts.increaseBySubscription} subtitle={dict.anomalies.charts.increaseBySubscriptionSubtitle}>
             <HorizontalBars data={increaseBySub} currency="USD" labelWidth={160} />
           </ChartCard>
           <section className="card-surface p-5">
@@ -137,23 +153,26 @@ export default async function AnomaliesPage({
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">Alert Coverage</h3>
+          <h3 className="text-sm font-semibold text-white">{dict.anomalies.coverage.heading}</h3>
           <p className="text-xs text-slate-400">
             {coverage
-              ? `Result of the coverage runbook for alert "${coverage.alertName}" from workspace ${coverage.tfeWorkspace}, generated ${formatDate(coverage.generatedAt)}.`
-              : "The coverage runbook has not written a row for this week."}
+              ? dict.anomalies.coverage.description
+                  .replace("{alertName}", coverage.alertName)
+                  .replace("{workspace}", coverage.tfeWorkspace)
+                  .replace("{date}", formatDate(coverage.generatedAt))
+              : dict.anomalies.coverage.noRunbookRow}
           </p>
         </div>
         {coverage ? (
           <div className="grid gap-4 xl:grid-cols-[1fr_1.4fr]">
             <div className="grid gap-3 sm:grid-cols-2">
-              <QualityMetricCard label="Covered" value={`${coverage.covered} / ${coverage.totalChecked}`} />
-              <QualityMetricCard label="Missing" value={formatNumber(coverage.missing, false)} />
-              <QualityMetricCard label="Skipped" value={formatNumber(coverage.skipped, false)} />
-              <QualityMetricCard label="Failed" value={formatNumber(coverage.failed, false)} />
+              <QualityMetricCard label={dict.anomalies.coverage.covered} value={`${coverage.covered} / ${coverage.totalChecked}`} />
+              <QualityMetricCard label={dict.anomalies.coverage.missing} value={formatNumber(coverage.missing, false)} />
+              <QualityMetricCard label={dict.anomalies.coverage.skipped} value={formatNumber(coverage.skipped, false)} />
+              <QualityMetricCard label={dict.anomalies.coverage.failed} value={formatNumber(coverage.failed, false)} />
             </div>
             <section className="card-surface p-5">
-              <h4 className="mb-3 text-sm font-semibold text-white">Subscriptions without the alert</h4>
+              <h4 className="mb-3 text-sm font-semibold text-white">{dict.anomalies.coverage.subscriptionsWithoutAlert}</h4>
               {coverage.missingSubs.length ? (
                 <ul className="divide-y divide-white/5 text-sm">
                   {coverage.missingSubs.map((sub) => (
@@ -165,7 +184,7 @@ export default async function AnomaliesPage({
                 </ul>
               ) : (
                 <p className="text-sm text-slate-400">
-                  {filtered ? "No subscription in scope is missing the alert." : "Every checked subscription carries the alert."}
+                  {filtered ? dict.anomalies.coverage.noneMissingInScope : dict.anomalies.coverage.everyCarriesAlert}
                 </p>
               )}
             </section>
@@ -175,47 +194,48 @@ export default async function AnomaliesPage({
 
       <section className="space-y-3">
         <div>
-          <h3 className="text-sm font-semibold text-white">Governance</h3>
-          <p className="text-xs text-slate-400">
-            How each alert found its recipients: the subscription tag, the contact rows pushed by the data team, or the fallback list when neither resolved.
-          </p>
+          <h3 className="text-sm font-semibold text-white">{dict.anomalies.governance.heading}</h3>
+          <p className="text-xs text-slate-400">{dict.anomalies.governance.description}</p>
         </div>
         <div className="grid gap-4 xl:grid-cols-[1fr_1.6fr]">
-          <ChartCard title="Routing Source" subtitle={`${stats.routing.overlapAlerts} alerts where at least one address overlapped`}>
+          <ChartCard
+            title={dict.anomalies.charts.routingSource}
+            subtitle={dict.anomalies.charts.routingSourceSubtitle.replace("{n}", String(stats.routing.overlapAlerts))}
+          >
             <DonutChart data={data.routing} />
           </ChartCard>
           <section className="card-surface p-5">
             <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <h4 className="text-sm font-semibold text-white">Subscriptions without an owner</h4>
+              <h4 className="text-sm font-semibold text-white">{dict.anomalies.governance.subscriptionsWithoutOwner}</h4>
               <p className="text-xs text-slate-400">
-                {formatNumber(stats.fallbackSubsTotal, false)} on the fallback list this week
-                {unownedNotInFallback ? `, ${unownedNotInFallback} more without a valid contact` : ""}
+                {dict.anomalies.governance.onFallbackList.replace("{n}", formatNumber(stats.fallbackSubsTotal, false))}
+                {unownedNotInFallback ? dict.anomalies.governance.moreWithoutContact.replace("{n}", String(unownedNotInFallback)) : ""}
               </p>
             </div>
             {data.unowned.length ? (
               <UnownedSubscriptionsTable rows={data.unowned} />
             ) : (
-              <p className="text-sm text-slate-400">Every subscription that alerted in scope has an owner.</p>
+              <p className="text-sm text-slate-400">{dict.anomalies.governance.everyHasOwner}</p>
             )}
             {stats.contactSources.length ? (
               <p className="mt-3 text-xs text-slate-500">
-                Contacts from {stats.contactSources.map((c) => `${c.source} (${c.alerts} alerts)`).join(", ")}
+                {dict.anomalies.governance.contactsFrom} {stats.contactSources.map((c) => `${c.source} (${c.alerts} ${dict.anomalies.table.alerts.toLowerCase()})`).join(", ")}
               </p>
             ) : null}
           </section>
         </div>
         <section className="card-surface p-5">
-          <h4 className="mb-3 text-sm font-semibold text-white">Routing per alert</h4>
+          <h4 className="mb-3 text-sm font-semibold text-white">{dict.anomalies.governance.routingPerAlert}</h4>
           <AlertRoutingTable rows={data.alerts} />
         </section>
       </section>
 
       <section className="card-surface p-5">
-        <h3 className="mb-4 text-sm font-semibold text-white">Alerts Notified This Week</h3>
+        <h3 className="mb-4 text-sm font-semibold text-white">{dict.anomalies.alertsThisWeek.heading}</h3>
         {data.alerts.length ? (
           <AnomalyAlertsTable rows={data.alerts} />
         ) : (
-          <EmptyState title="No alerts in scope" detail="Clear the alert scope to see the whole week." />
+          <EmptyState title={dict.anomalies.alertsThisWeek.emptyTitle} detail={dict.anomalies.alertsThisWeek.emptyDetail} />
         )}
       </section>
     </div>
