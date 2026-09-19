@@ -28,15 +28,19 @@ export function KpiCard({
   }[accent];
 
   return (
-    <article className="card-surface kpi-card relative overflow-hidden p-5">
+    <article className="card-surface kpi-card relative overflow-hidden">
       <div className={cn("absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r", bar)} />
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-400">{label}</p>
-      <p className="mt-3 kpi-value text-3xl font-semibold tracking-tight text-white">{value}</p>
-      {hint ? <p className="mt-2 text-xs text-slate-400">{hint}</p> : null}
-      {href ? (
-        <Link href={href} className="mt-3 inline-block text-xs text-cyan-200 hover:text-white">
-          {linkLabel}
-        </Link>
+      <p className="kpi-value text-3xl font-semibold tracking-tight text-white">{value}</p>
+      {hint || href ? (
+        <div className="relative z-[1] mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          {hint ? <p className="text-xs text-slate-400">{hint}</p> : <span />}
+          {href ? (
+            <Link href={href} className="text-xs text-cyan-200 hover:text-white">
+              {linkLabel}
+            </Link>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );

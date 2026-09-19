@@ -38,13 +38,13 @@ export default async function InsightsPage({
     }));
 
   return (
-    <div className="space-y-6">
+    <div className="dense space-y-6">
       <section className="space-y-3">
         <div>
           <h3 className="text-sm font-semibold text-white">{dict.insights.costOfInaction.heading}</h3>
           <p className="text-xs text-slate-400">{dict.insights.costOfInaction.description}</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="kpi-grid">
           <KpiCard
             label={dict.insights.kpi.missedSavingsToDate}
             value={formatMoney(aging.missedSavings, currency)}

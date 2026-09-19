@@ -26,8 +26,8 @@ export default async function TrackingPage({
   const openCount = tracking.rows.length - tracking.decided.length;
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="dense space-y-6">
+      <div className="kpi-grid">
         <KpiCard
           label={dict.tracking.kpi.savingsInProgress}
           value={formatMoney(tracking.savings.inProgress, tracking.currency)}
@@ -56,7 +56,7 @@ export default async function TrackingPage({
 
       {tracking.decided.length ? (
         <>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <ChartCard title={dict.tracking.charts.byStatusTitle} subtitle={dict.tracking.charts.byStatusSubtitle}>
               <DonutChart data={tracking.byStatus} />
             </ChartCard>

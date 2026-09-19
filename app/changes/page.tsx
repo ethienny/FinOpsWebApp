@@ -72,8 +72,8 @@ export default async function ChangesPage({
   );
 
   return (
-    <div className="space-y-6">
-      <section className="card-surface flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="dense-charts space-y-6">
+      <section className="card-surface flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">{dict.changes.currentRunLabel}</span>
           <span className="text-white">{data.currentRun.RunId}</span>

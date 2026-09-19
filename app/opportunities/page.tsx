@@ -45,8 +45,8 @@ export default async function OpportunitiesPage({
   const rows = showDismissed || !showTracking ? tracking.rows : tracking.rows.filter((r) => r.decisionStatus !== "dismissed");
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="dense space-y-6">
+      <div className={showTracking ? "kpi-grid-7" : "kpi-grid"}>
         <KpiCard label={dict.opportunities.kpi.totalOpportunities} value={formatNumber(data.totalOpportunities, false)} />
         <KpiCard label={dict.opportunities.kpi.validatedSavingsPriced} value={formatMoney(data.validatedSavings, data.currency)} accent="green" />
         <KpiCard label={dict.opportunities.kpi.estimatedOpportunityHeuristic} value={formatMoney(data.estimatedOpportunity, data.currency)} accent="amber" />
@@ -56,10 +56,8 @@ export default async function OpportunitiesPage({
           hint={dict.opportunities.kpi.avgSavingsHint}
           accent="blue"
         />
-      </div>
-
-      {showTracking ? (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {showTracking ? (
+          <>
         <KpiCard
           label={dict.opportunities.kpi.savingsInProgress}
           value={formatMoney(tracking.savings.inProgress, data.currency)}
@@ -78,8 +76,9 @@ export default async function OpportunitiesPage({
           hint={dict.opportunities.kpi.recommendationsDecidedHint}
           accent="teal"
         />
+          </>
+        ) : null}
       </div>
-      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ChartCard title={dict.opportunities.charts.reliabilityTitle} subtitle={dict.opportunities.charts.reliabilitySubtitle}>

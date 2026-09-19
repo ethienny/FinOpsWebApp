@@ -23,7 +23,7 @@ export default async function ShowbackPage({
   const data = await getRepository().getShowback(filtersFromSearchParams(await searchParams));
 
   return (
-    <div className="space-y-6">
+    <div className="dense-charts space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard label={dict.showback.kpis.totalCost} value={formatMoney(data.totalCost, data.currency)} />
         <KpiCard

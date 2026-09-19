@@ -44,7 +44,7 @@ export function LanguageSwitcher() {
           disabled={pending}
           aria-pressed={locale === option.code}
           className={cn(
-            "rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide disabled:opacity-60",
+            "rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide disabled:opacity-60",
             locale === option.code ? "bg-cyan-400/10 text-cyan-100" : "text-slate-400 hover:text-white",
           )}
         >

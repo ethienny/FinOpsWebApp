@@ -26,7 +26,7 @@ export default async function EngineHealthPage() {
   const degraded = splitServices(run?.DegradedServices ?? "");
 
   return (
-    <div className="space-y-6">
+    <div className="dense space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard label={t.kpi.latestRun} value={run?.RunId ?? "—"} hint={run ? formatDate(run.RunStartedAt) : undefined} />
         <KpiCard label={t.kpi.engineVersion} value={run?.EngineVersion ?? "—"} accent="blue" />
@@ -39,8 +39,8 @@ export default async function EngineHealthPage() {
       </div>
 
       <section className="card-surface p-5">
-        <h3 className="mb-4 text-sm font-semibold text-white">{t.processingMetrics.heading}</h3>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 text-sm">
+        <h3 className="mb-2 text-sm font-semibold text-white">{t.processingMetrics.heading}</h3>
+        <div className="metric-grid text-sm">
           {[
             [t.processingMetrics.rowsProduced, formatNumber(run?.RowsProduced, false)],
             [t.processingMetrics.rowsPersisted, formatNumber(run?.RowsPersisted, false)],
@@ -52,9 +52,9 @@ export default async function EngineHealthPage() {
             [t.processingMetrics.heuristicSavingsRows, formatNumber(run?.HeuristicSavingsRows, false)],
             [t.processingMetrics.unpricedSavingsRows, formatNumber(run?.UnpricedSavingsRows, false)],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-white/10 px-3 py-3">
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">{label}</p>
-              <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+            <div key={label} className="rounded-lg border border-white/10 px-3 py-2">
+              <p className="text-[10px] uppercase leading-tight tracking-wide text-slate-400">{label}</p>
+              <p className="mt-0.5 text-base font-semibold text-white">{value}</p>
             </div>
           ))}
         </div>

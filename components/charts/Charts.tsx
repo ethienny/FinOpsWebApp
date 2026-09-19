@@ -26,6 +26,7 @@ import {
   Scatter,
   ZAxis,
 } from "recharts";
+import { cn } from "@/lib/cn";
 import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 const COLORS = ["#22d3ee", "#4895ff", "#818cf8", "#fbbf24", "#34d399", "#f472b6", "#94a3b8", "#22d3ee"];
@@ -39,12 +40,22 @@ const BLUE = "#4895ff";
 const BLUE_ACTIVE = "#8fbcff";
 
 /** Card frame of every chart: title, optional subtitle and a fixed height body. */
-export function ChartCard({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function ChartCard({
+  title,
+  subtitle,
+  children,
+  className,
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="card-surface chart-panel p-4 sm:p-5">
-      <div className="mb-4">
+    <section className={cn("card-surface chart-panel", className)}>
+      <div className="mb-2">
         <h3 className="text-sm font-semibold text-white">{title}</h3>
-        {subtitle ? <p className="mt-1 text-xs text-slate-400">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-0.5 text-xs text-slate-400">{subtitle}</p> : null}
       </div>
       <div className="h-64">{children}</div>
     </section>
@@ -114,7 +125,7 @@ export function HorizontalBars({
       <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.06)" horizontal={false} />
         <XAxis type="number" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-        <YAxis type="category" dataKey="name" width={labelWidth} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+        <YAxis type="category" dataKey="name" width={labelWidth} interval={0} tick={{ fill: "#94a3b8", fontSize: 11 }} />
         <Tooltip cursor={false} content={<Tip currency={currency} />} />
         <Bar dataKey="value" fill={BLUE} activeBar={{ fill: BLUE_ACTIVE }} radius={[0, 6, 6, 0]} />
       </BarChart>
@@ -130,14 +141,14 @@ export function DonutChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={58} outerRadius={86} paddingAngle={2}>
+      <PieChart margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius="56%" outerRadius="80%" paddingAngle={2}>
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
-        <Legend wrapperStyle={{ fontSize: 12, color: "#cbd5e1" }} />
+        <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 12, color: "#cbd5e1" }} />
       </PieChart>
     </ResponsiveContainer>
   );
@@ -309,7 +320,7 @@ export function ScatterQuadrant({ data, currency }: { data: QuadrantPoint[]; cur
             />
           }
         />
-        <Legend />
+        <Legend verticalAlign="top" align="right" wrapperStyle={{ paddingBottom: 4, fontSize: 12 }} />
         <Scatter name={dict.charts.otherPriced} data={rest} fill="#4895ff" fillOpacity={0.55} />
         <Scatter name={dict.charts.quickWins} data={quick} fill={CYAN} />
       </ScatterChart>

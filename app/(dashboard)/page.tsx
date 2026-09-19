@@ -43,9 +43,9 @@ export default async function ExecutivePage({
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="dense-charts space-y-6">
       {run ? (
-        <section className="card-surface flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+        <section className="card-surface flex flex-col gap-3 px-4 py-2.5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">{dict.home.latestRun.label}</span>
             <span className="text-white">{run.RunId}</span>

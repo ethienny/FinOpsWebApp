@@ -36,7 +36,7 @@ export default async function SizingPage({
   const profileLabel = dict.sizing.profiles[profile];
 
   return (
-    <div className="space-y-6">
+    <div className="dense space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-400">{dict.sizing.profileNote}</p>
         <Suspense fallback={null}>
@@ -44,7 +44,7 @@ export default async function SizingPage({
         </Suspense>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="kpi-grid">
         <KpiCard
           label={`${dict.sizing.kpi.selectedProfileSavings} (${profileLabel})`}
           value={formatMoney(data.selectedProfileSavings, data.currency)}
@@ -64,8 +64,8 @@ export default async function SizingPage({
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ChartCard title={dict.sizing.charts.savingsByServiceType}>
+      <div className="grid gap-4 xl:grid-cols-4">
+        <ChartCard title={dict.sizing.charts.savingsByServiceType} className="xl:col-span-2">
           <VerticalBars data={data.savingsByService} currency={data.currency} />
         </ChartCard>
         <ChartCard title={dict.sizing.charts.riskDistribution}>
@@ -74,13 +74,13 @@ export default async function SizingPage({
         <ChartCard title={dict.sizing.charts.targetProfileDistribution.title} subtitle={dict.sizing.charts.targetProfileDistribution.subtitle}>
           <DonutChart data={data.profileDistribution} />
         </ChartCard>
-        <ChartCard title={dict.sizing.charts.currentVsTargetVcpu}>
+        <ChartCard title={dict.sizing.charts.currentVsTargetVcpu} className="xl:col-span-2">
           <CompareBars data={data.currentVsTargetVcpu} />
         </ChartCard>
+        <ChartCard title={dict.sizing.charts.currentVsTargetMemory} className="xl:col-span-2">
+          <CompareBars data={data.currentVsTargetMemory} />
+        </ChartCard>
       </div>
-      <ChartCard title={dict.sizing.charts.currentVsTargetMemory}>
-        <CompareBars data={data.currentVsTargetMemory} />
-      </ChartCard>
 
       <section className="card-surface p-5">
         <h3 className="mb-4 text-sm font-semibold text-white">{dict.sizing.recommendationsHeading.replace("{profile}", profileLabel)}</h3>

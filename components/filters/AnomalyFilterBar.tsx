@@ -48,7 +48,7 @@ export function AnomalyFilterBar({ options }: { options: AnomalyFilterOptions })
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {FIELDS.map((field) => (
           <label key={field.key} className="block text-[11px] uppercase tracking-wide text-slate-400">

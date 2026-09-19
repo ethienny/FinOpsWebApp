@@ -122,7 +122,7 @@ function SidebarBody({
                     onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm",
+                      "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm",
                       active
                         ? "bg-cyan-400/10 text-cyan-100 shadow-glow"
                         : "text-slate-300 hover:bg-white/5 hover:text-white",
@@ -138,7 +138,7 @@ function SidebarBody({
           </div>
         ))}
       </nav>
-      <div className="space-y-2 border-t border-white/10 px-4 py-4 text-xs text-slate-400">
+      <div className="space-y-1.5 border-t border-white/10 px-4 py-3 text-xs text-slate-400">
         <PlanSwitcher plan={entitlements.plan} />
         <div className="flex justify-between gap-2">
           <span>{dict.shell.sidebar.engineVersion}</span>
@@ -213,7 +213,7 @@ export function AppShell({
     (pathname.startsWith("/resources/") ? dict.shell.pages.resourceDetail : dict.shell.pages.fallback);
 
   return (
-    <div className="finops-shell min-h-screen lg:grid lg:grid-cols-[260px_1fr]">
+    <div className="finops-shell min-h-screen lg:grid lg:grid-cols-[256px_1fr]">
       <a href="#main-content" className="skip-link">{dict.shell.skipLink}</a>
       <aside className="desktop-sidebar hidden flex-col lg:flex">
         <SidebarBody meta={meta} entitlements={entitlements} />
@@ -241,7 +241,7 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-col">
         <header className="workspace-header">
-          <div className="flex items-start gap-3 px-4 py-4 sm:px-6">
+          <div className="flex items-start gap-3 px-4 py-2.5 sm:px-6">
             <button
               className="mt-1 rounded-lg border border-white/10 p-2 lg:hidden"
               onClick={() => setOpen(true)}
@@ -251,11 +251,11 @@ export function AppShell({
             >
               <Menu className="h-4 w-4" />
             </button>
-            <div className="min-w-0 flex-1 space-y-4">
+            <div className="min-w-0 flex-1 space-y-2.5">
               <div className="page-hero">
                 <div className="hero-art" style={{ backgroundImage: `url(${heroBanner.src})` }} aria-hidden="true" />
-                <div className="relative z-[2] flex items-start justify-between gap-3">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">{dict.shell.eyebrow}</p>
+                <p className="relative z-[2] text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">{dict.shell.eyebrow}</p>
+                <div className="absolute right-4 top-3 z-[3]">
                   <LanguageSwitcher />
                 </div>
                 <h1 className="hero-title">{copy.title}</h1>
@@ -270,7 +270,7 @@ export function AppShell({
             </div>
           </div>
         </header>
-        <main id="main-content" className="workspace-content space-y-6 px-4 py-6 sm:px-6">
+        <main id="main-content" className="workspace-content space-y-6 px-4 sm:px-6">
           <PlanBanner entitlements={entitlements} subscriptionCount={filterOptions.subscriptions.length} />
           {children}
         </main>
