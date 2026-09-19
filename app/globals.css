@@ -78,7 +78,10 @@ body::before { content:""; position:fixed; inset:0; pointer-events:none; backgro
 .page-hero > p,.hero-title { position:relative; z-index:2; max-width:72%; }
 .hero-title { margin-top:12px; color:#f5f9ff; font-size:clamp(26px,2.6vw,40px); line-height:1.15; font-weight:650; letter-spacing:-.035em; }
 .page-hero > p:last-child { margin-top:14px; color:#a9bedb; line-height:1.6; }
-.hero-network { position:absolute; width:280px; height:246px; right:1%; top:-14px; opacity:.85; }
+/* Decorative banner art: fades out to the left and toward the top-right corner, where the EN/PT switcher sits, so it never competes with the controls. */
+.hero-art { position:absolute; z-index:0; top:0; right:0; bottom:0; width:64%; pointer-events:none; opacity:.8; background-repeat:no-repeat; background-size:cover; background-position:right center;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 55%),linear-gradient(180deg,#0004 0,#000 62%); -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(90deg,transparent 0,#000 55%),linear-gradient(180deg,#0004 0,#000 62%); mask-composite:intersect; }
 .scope-panel { padding:18px 22px 12px; border:1px solid var(--line); border-radius:18px; background:#07162ce6; }
 .scope-label { font-size:10px; letter-spacing:.18em; color:#7b9ec7; margin-bottom:12px; }
 .workspace-content { padding-top:8px; padding-bottom:48px; }
@@ -102,7 +105,7 @@ button:focus-visible,a:focus-visible { outline:2px solid #67e8f9; outline-offset
 .skip-link { position:fixed; top:8px; left:8px; z-index:100; padding:10px 16px; background:#10284a; transform:translateY(-160%); }
 .skip-link:focus { transform:translateY(0); }
 @media (min-width:1600px) { .workspace-content,.workspace-header { padding-left:18px; padding-right:18px; } }
-@media (max-width:767px) { .page-hero { padding:24px 20px; min-height:180px; } .hero-network { right:-95px; opacity:.3; } .page-hero > p,.hero-title { max-width:100%; } .scope-panel { padding:14px; } .chart-panel { padding:16px; } .chart-panel > div:last-child { height:260px; } }
+@media (max-width:767px) { .page-hero { padding:24px 20px; min-height:180px; } .hero-art { width:100%; opacity:.32; } .page-hero > p,.hero-title { max-width:100%; } .scope-panel { padding:14px; } .chart-panel { padding:16px; } .chart-panel > div:last-child { height:260px; } }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
 
 /* ─────────────────────────────────────────────── */

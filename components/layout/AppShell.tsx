@@ -35,7 +35,7 @@ import { PlanBanner } from "@/components/layout/PlanBanner";
 import { PlanSwitcher } from "@/components/layout/PlanSwitcher";
 import { cn } from "@/lib/cn";
 import { StatusBadge } from "@/components/badges";
-import { NetworkGlyph } from "@/components/layout/NetworkGlyph";
+import heroBanner from "@/assets/hero-banner.png";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { Dictionary } from "@/lib/i18n/dictionary";
@@ -253,7 +253,7 @@ export function AppShell({
             </button>
             <div className="min-w-0 flex-1 space-y-4">
               <div className="page-hero">
-                <NetworkGlyph className="hero-network" />
+                <div className="hero-art" style={{ backgroundImage: `url(${heroBanner.src})` }} aria-hidden="true" />
                 <div className="relative z-[2] flex items-start justify-between gap-3">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-cyan-300/80">{dict.shell.eyebrow}</p>
                   <LanguageSwitcher />

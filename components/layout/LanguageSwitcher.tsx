@@ -34,7 +34,7 @@ export function LanguageSwitcher() {
     <div
       role="group"
       aria-label={dict.shell.languageSwitcher.aria}
-      className="flex items-center gap-0.5 rounded-lg border border-white/10 p-0.5"
+      className="flex items-center gap-0.5 rounded-lg border border-white/15 bg-[#071429]/80 p-0.5 backdrop-blur-sm"
     >
       {OPTIONS.map((option) => (
         <button
