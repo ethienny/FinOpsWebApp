@@ -4,7 +4,8 @@
 import { requireModule } from "@/lib/entitlements/gate";
 import { EngineHealthRunsTable } from "@/components/tables/EngineHealthRunsTable";
 import { getRepository } from "@/lib/repositories";
-import { formatDate, formatDuration, formatNumber, formatPercent } from "@/lib/formatters";
+import { formatDuration } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary } from "@/lib/i18n/dictionary";
@@ -18,6 +19,7 @@ export default async function EngineHealthPage() {
   const gate = await requireModule("governance");
   if (gate.locked) return gate.locked;
   const dict = getDictionary(await getLocale());
+  const { formatNumber, formatDate, formatPercent } = await getFormatters();
   const t = dict.engineHealth;
   const data = await getRepository().getEngineHealth();
   const run = data.latestRun;

@@ -7,9 +7,8 @@ import { useActionState } from "react";
 import { saveDecision, type DecisionFormState } from "@/app/actions/decisions";
 import { DECISION_STATUSES } from "@/lib/decisions/metrics";
 import { DecisionBadge } from "@/components/badges";
-import { formatDate } from "@/lib/formatters";
 import type { DecisionStatus, RecommendationDecision } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 const INITIAL: DecisionFormState = { ok: false, message: "" };
@@ -33,6 +32,7 @@ export function DecisionPanel({
   const [state, action, pending] = useActionState(saveDecision, INITIAL);
   const status = decision?.status ?? "open";
   const dict = useDictionary();
+  const { formatDate } = useFormatters();
   const d = dict.resources.decision;
 
   return (

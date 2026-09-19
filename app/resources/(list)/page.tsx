@@ -4,7 +4,7 @@
 import { ResourcesTable } from "@/components/tables/ResourcesTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary } from "@/lib/i18n/dictionary";
@@ -15,6 +15,7 @@ export default async function ResourcesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber } = await getFormatters();
   const data = await getRepository().getResources(filtersFromSearchParams(await searchParams));
 
   return (

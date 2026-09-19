@@ -6,7 +6,8 @@ import { requireModule } from "@/lib/entitlements/gate";
 import { RunHistoryTable } from "@/components/tables/RunHistoryTable";
 import { Suspense } from "react";
 import { getRepository } from "@/lib/repositories";
-import { formatNumber, formatPercent } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
+import type { Formatters } from "@/lib/formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, AreaTrend, DonutChart, DualLine } from "@/components/charts/Charts";
 import { StatusBadge } from "@/components/badges";
@@ -20,7 +21,8 @@ function one(v: string | string[] | undefined) {
   return Array.isArray(v) ? v[0] : v;
 }
 
-function CompareCard({ title, run, dict }: { title: string; run: FinOpsRun | null; dict: Dictionary }) {
+function CompareCard({ title, run, dict, fmt }: { title: string; run: FinOpsRun | null; dict: Dictionary; fmt: Formatters }) {
+  const { formatNumber, formatPercent } = fmt;
   const t = dict.runHistory.comparison;
   if (!run) {
     return (
@@ -67,6 +69,8 @@ export default async function RunHistoryPage({
   const gate = await requireModule("governance");
   if (gate.locked) return gate.locked;
   const dict = getDictionary(await getLocale());
+  const fmt = await getFormatters();
+  const { formatNumber, formatPercent } = fmt;
   const t = dict.runHistory;
   const sp = await searchParams;
   const runA = one(sp.runA);
@@ -143,9 +147,9 @@ export default async function RunHistoryPage({
           </Suspense>
         </div>
         <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
-          <CompareCard title={t.comparison.runA} run={data.comparison?.a ?? null} dict={dict} />
+          <CompareCard title={t.comparison.runA} run={data.comparison?.a ?? null} dict={dict} fmt={fmt} />
           <p className="text-center text-xs uppercase tracking-[0.2em] text-slate-500">{t.comparison.vs}</p>
-          <CompareCard title={t.comparison.runB} run={data.comparison?.b ?? null} dict={dict} />
+          <CompareCard title={t.comparison.runB} run={data.comparison?.b ?? null} dict={dict} fmt={fmt} />
         </div>
       </section>
 

@@ -60,6 +60,18 @@ export function weekWindow(stats: WeeklyStats): WeekWindow {
   return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
 }
 
+/**
+ * Inclusive first and last day of the reported week shifted by whole weeks
+ * (-1 is the week before). WeekWindow.to is exclusive, so the last day is the
+ * day before it.
+ */
+export function weekRange(window: WeekWindow, offsetWeeks = 0): { from: string; to: string } {
+  const shift = offsetWeeks * 7 * DAY_MS;
+  const from = new Date(new Date(`${window.from}T00:00:00Z`).getTime() + shift);
+  const to = new Date(new Date(`${window.to}T00:00:00Z`).getTime() + shift - DAY_MS);
+  return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+}
+
 /** Alerts notified inside the window, most recent first. */
 export function alertsInWindow(alerts: AnomalyAlert[], window: WeekWindow): AnomalyAlert[] {
   return alerts
@@ -194,6 +206,14 @@ function isAttributed(alert: AnomalyAlert): boolean {
  * One point per stats row, oldest first: notified alerts and observed
  * increase come from the alerts of that week, suppressed from the row.
  */
+const EN_MONTH = new Intl.DateTimeFormat("en-US", { month: "short", timeZone: "UTC" });
+
+/** "15 Sep" style label of a week start (YYYY-MM-DD); pass a locale month formatter to translate it. */
+export function weekLabel(weekStart: string, monthShort: (d: Date) => string = (d) => EN_MONTH.format(d)): string {
+  const start = new Date(`${weekStart}T00:00:00Z`);
+  return `${String(start.getUTCDate()).padStart(2, "0")} ${monthShort(start)}`;
+}
+
 export function timeline(stats: WeeklyStats[], alerts: AnomalyAlert[], includeSuppressed = true): TimelinePoint[] {
   const sent = alerts.filter(isSent);
   return [...stats]
@@ -201,9 +221,8 @@ export function timeline(stats: WeeklyStats[], alerts: AnomalyAlert[], includeSu
     .map((row) => {
       const window = weekWindow(row);
       const week = alertsInWindow(sent, window);
-      const start = new Date(`${window.from}T00:00:00Z`);
       return {
-        name: `${String(start.getUTCDate()).padStart(2, "0")} ${start.toLocaleString("en-US", { month: "short", timeZone: "UTC" })}`,
+        name: weekLabel(window.from),
         weekStart: window.from,
         notified: week.length,
         suppressed: includeSuppressed ? row.totalSuppressed : null,

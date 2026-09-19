@@ -4,8 +4,7 @@
 "use client";
 
 import type { FinOpsRecommendation } from "@/types/finops";
-import { formatMoney, formatPercent } from "@/lib/formatters";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 function display(value: unknown, missing: string): string {
   if (value == null || value === "") return missing;
@@ -48,6 +47,7 @@ function Evidence({ title, value, missing, noEntries, noDetails }: { title: stri
 
 export function RecommendationEvidence({ r }: { r: FinOpsRecommendation }) {
   const dict = useDictionary();
+  const { formatMoney } = useFormatters();
   const e = dict.resources.evidence;
   const missing = dict.resources.detail.notProvided;
   const money = (value: number | null) => value == null ? missing : r.CostCurrency ? formatMoney(value, r.CostCurrency, false) : `${value} (currency not provided)`;
@@ -82,6 +82,7 @@ export function RecommendationEvidence({ r }: { r: FinOpsRecommendation }) {
 
 export function MetricEvidence({ r, detailed = false }: { r: FinOpsRecommendation; detailed?: boolean }) {
   const dict = useDictionary();
+  const { formatPercent } = useFormatters();
   const e = dict.resources.evidence;
   const missing = dict.resources.detail.notProvided;
   return <section className="card-surface space-y-4 p-5">

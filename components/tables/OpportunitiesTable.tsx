@@ -3,13 +3,13 @@
 // Client table for actionable optimization opportunities. Columns and search
 // keys are module level constants so DataTable keeps its memoized work stable.
 
-import { formatMoney } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { AgeBadge, ConfidenceBadge, DecisionBadge, MetricStatusBadge, PriorityBadge, ReliabilityBadge, RiskBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { OpportunityRow } from "@/types/finops";
 import type { Module } from "@/types/entitlements";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
+import type { Formatters } from "@/lib/formatters";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 /** Columns that only make sense when their module is in the plan. */
@@ -30,7 +30,8 @@ const SEARCH_KEYS: Array<keyof OpportunityRow> = [
   "decisionOwner",
 ];
 
-function columns(dict: Dictionary): Column<OpportunityRow>[] {
+function columns(dict: Dictionary, fmt: Formatters): Column<OpportunityRow>[] {
+  const { formatMoney } = fmt;
   const t = dict.opportunities.table;
   return [
     {
@@ -111,8 +112,8 @@ function columns(dict: Dictionary): Column<OpportunityRow>[] {
   ];
 }
 
-function columnsFor(dict: Dictionary, modules: Module[]): Column<OpportunityRow>[] {
-  return columns(dict).filter((c) => {
+function columnsFor(dict: Dictionary, fmt: Formatters, modules: Module[]): Column<OpportunityRow>[] {
+  return columns(dict, fmt).filter((c) => {
     const required = COLUMN_MODULE[c.key];
     return !required || modules.includes(required);
   });
@@ -120,13 +121,14 @@ function columnsFor(dict: Dictionary, modules: Module[]): Column<OpportunityRow>
 
 export function OpportunitiesTable({ rows, modules }: { rows: OpportunityRow[]; modules: Module[] }) {
   const dict = useDictionary();
+  const fmt = useFormatters();
   return (
     <DataTable<OpportunityRow>
       rows={rows}
       searchKeys={SEARCH_KEYS}
       pageSize={15}
       rowKey={(r) => r.ResourceId}
-      columns={columnsFor(dict, modules)}
+      columns={columnsFor(dict, fmt, modules)}
     />
   );
 }

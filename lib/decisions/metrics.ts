@@ -30,6 +30,7 @@ export function decisionsByResource(decisions: RecommendationDecision[]): Map<st
 export function applyDecisions<T extends ResourceSummary>(
   rows: T[],
   decisions: Map<string, RecommendationDecision>,
+  labels: Record<DecisionStatus, string> = DECISION_LABELS,
 ): Array<T & DecisionFields> {
   return rows.map((row) => {
     const decision = decisions.get(row.ResourceId);
@@ -37,7 +38,7 @@ export function applyDecisions<T extends ResourceSummary>(
     return {
       ...row,
       decisionStatus: status,
-      decisionLabel: DECISION_LABELS[status],
+      decisionLabel: labels[status],
       decisionOwner: decision?.owner ?? "",
       decisionRunId: decision?.runId ?? "",
       decisionUpdatedAt: decision?.updatedAt ?? "",

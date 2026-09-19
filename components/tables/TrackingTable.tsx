@@ -3,17 +3,18 @@
 // Client table listing every recommendation with a decision, newest first,
 // with owner, run and date. Used by the Tracking page.
 
-import { formatDate, formatMoney } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { DecisionBadge, ReliabilityBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { OpportunityRow } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
+import type { Formatters } from "@/lib/formatters";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 const SEARCH_KEYS: Array<keyof OpportunityRow> = ["ResourceName", "decisionOwner", "SubscriptionName", "ActionLabel"];
 
-function columns(dict: Dictionary): Column<OpportunityRow>[] {
+function columns(dict: Dictionary, fmt: Formatters): Column<OpportunityRow>[] {
+  const { formatMoney, formatDate } = fmt;
   const t = dict.tracking.table;
   return [
     {
@@ -41,7 +42,8 @@ function columns(dict: Dictionary): Column<OpportunityRow>[] {
 
 export function TrackingTable({ rows }: { rows: OpportunityRow[] }) {
   const dict = useDictionary();
+  const fmt = useFormatters();
   return (
-    <DataTable<OpportunityRow> rows={rows} searchKeys={SEARCH_KEYS} pageSize={15} rowKey={(r) => r.ResourceId} columns={columns(dict)} />
+    <DataTable<OpportunityRow> rows={rows} searchKeys={SEARCH_KEYS} pageSize={15} rowKey={(r) => r.ResourceId} columns={columns(dict, fmt)} />
   );
 }

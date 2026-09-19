@@ -5,6 +5,7 @@ import type {
   ChangeRow,
   ChangeSummary,
   DecisionFields,
+  DecisionStatus,
   FinOpsFilters,
   InsightFields,
   InsightRow,
@@ -58,9 +59,12 @@ export interface RunChanges extends Omit<RunDeltaData, "rows"> {
 }
 
 /** What changed since the previous complete run, biggest savings moves first, with the team decisions overlaid. */
-export async function getRunChanges(filters: FinOpsFilters): Promise<RunChanges> {
+export async function getRunChanges(
+  filters: FinOpsFilters,
+  statusLabels?: Record<DecisionStatus, string>,
+): Promise<RunChanges> {
   const [delta, decisions] = await Promise.all([getRepository().getRunDelta(filters), getDecisionRepository().list()]);
-  const rows = applyDecisions(delta.rows, decisionsByResource(decisions)).sort(
+  const rows = applyDecisions(delta.rows, decisionsByResource(decisions), statusLabels).sort(
     (a, b) => Math.abs(b.savingsDelta) - Math.abs(a.savingsDelta),
   );
   return { ...delta, rows, summary: changeSummary(rows) };

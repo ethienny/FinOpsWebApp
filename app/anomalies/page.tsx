@@ -6,7 +6,7 @@
 
 import { requireModule } from "@/lib/entitlements/gate";
 import { anomalyFiltersFromSearchParams, getAnomalyDashboard } from "@/lib/anomalies/service";
-import { formatDate, formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard, QualityMetricCard } from "@/components/kpi/KpiCard";
 import { EmptyState } from "@/components/kpi/States";
 import { OutcomeBadge } from "@/components/badges";
@@ -18,6 +18,7 @@ import {
   UnownedSubscriptionsTable,
 } from "@/components/tables/AnomalyTables";
 import type { Comparison } from "@/types/anomalies";
+import { weekLabel, weekRange, weekWindow } from "@/lib/anomalies/metrics";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
 
@@ -25,16 +26,16 @@ function deltaHint(
   dict: Dictionary,
   c: Comparison,
   label: string,
-  format: (n: number) => string = (n) => formatNumber(n, false),
+  format: (n: number) => string,
 ): string {
   const sign = c.delta > 0 ? "+" : c.delta < 0 ? "−" : "";
   const move = c.delta ? `${sign}${format(Math.abs(c.delta))}` : dict.anomalies.noChange;
   return `${move} ${dict.anomalies.vs} ${label} (${format(c.previous)})`;
 }
 
-function rateHint(dict: Dictionary, c: Comparison, label: string): string {
-  const move = c.delta ? `${c.delta > 0 ? "+" : "−"}${Math.abs(c.delta).toFixed(1)} pp` : dict.anomalies.noChange;
-  return `${move} ${dict.anomalies.vs} ${label} (${c.previous.toFixed(1)}%)`;
+function rateHint(dict: Dictionary, c: Comparison, label: string, decimal: (n: number) => string): string {
+  const move = c.delta ? `${c.delta > 0 ? "+" : "−"}${decimal(Math.abs(c.delta))} pp` : dict.anomalies.noChange;
+  return `${move} ${dict.anomalies.vs} ${label} (${decimal(c.previous)}%)`;
 }
 
 export default async function AnomaliesPage({
@@ -43,6 +44,8 @@ export default async function AnomaliesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber, formatDate, formatPercent, formatDecimal, formatMonthShort, formatDateRange } = await getFormatters();
+  const count = (n: number) => formatNumber(n, false);
   const gate = await requireModule("anomalies");
   if (gate.locked) return gate.locked;
   const data = await getAnomalyDashboard(anomalyFiltersFromSearchParams(await searchParams), dict.anomalies.routingLabels);
@@ -52,7 +55,14 @@ export default async function AnomaliesPage({
     return <EmptyState title={dict.anomalies.noWeeklyReport.title} detail={dict.anomalies.noWeeklyReport.detail} />;
   }
 
-  const prev = stats.prevWeekLabel || dict.anomalies.priorWeek;
+  // The dataset ships week labels pre-formatted in English, so both ranges are
+  // rebuilt from the report window to follow the UI language.
+  const range = (offsetWeeks: number) => {
+    const { from, to } = weekRange(weekWindow(stats), offsetWeeks);
+    return formatDateRange(from, to);
+  };
+  const currentWeek = stats.weekLabel ? range(0) : "";
+  const prev = stats.prevWeekLabel ? range(-1) : dict.anomalies.priorWeek;
   const ownedByName = new Map(data.ownership.map((o) => [o.subscriptionName, o.owned]));
   const topRows = data.topSubs.map((s) => ({ ...s, owned: ownedByName.get(s.name) ?? null }));
   const increaseBySub = data.topSubs
@@ -60,14 +70,15 @@ export default async function AnomaliesPage({
     .map((s) => ({ name: s.name, value: s.observedIncreaseUsd }));
   const fallbackNames = new Set(stats.fallbackSubs.map((s) => s.name));
   const unownedNotInFallback = data.unowned.filter((u) => !fallbackNames.has(u.subscriptionName)).length;
-  const pct = (n: number) => `${n.toFixed(1)}%`;
+  const pct = (n: number) => formatPercent(n, false);
+  const timelineData = data.timeline.map((p) => ({ ...p, name: weekLabel(p.weekStart, formatMonthShort) }));
 
   return (
     <div className="space-y-6">
       <section className="card-surface flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3 text-sm">
           <span className="text-xs uppercase tracking-[0.16em] text-cyan-300">{dict.anomalies.reportedWeek}</span>
-          <span className="text-white">{stats.weekLabel}</span>
+          <span className="text-white">{currentWeek}</span>
           <span className="text-slate-400">{dict.anomalies.generated} {formatDate(stats.generatedAt)}</span>
           <OutcomeBadge value={stats.failedRuns ? "partial" : "found"} />
         </div>
@@ -93,20 +104,20 @@ export default async function AnomaliesPage({
           hint={
             filtered
               ? dict.anomalies.kpi.inScopeOf.replace("{n}", formatNumber(stats.totalNotified, false))
-              : deltaHint(dict, weekOverWeek.notified, prev)
+              : deltaHint(dict, weekOverWeek.notified, prev, count)
           }
           accent="cyan"
         />
         <KpiCard
           label={dict.anomalies.kpi.alertsSuppressed}
           value={formatNumber(stats.totalSuppressed, false)}
-          hint={filtered ? dict.anomalies.kpi.weekTotalSuppressed : deltaHint(dict, weekOverWeek.suppressed, prev)}
+          hint={filtered ? dict.anomalies.kpi.weekTotalSuppressed : deltaHint(dict, weekOverWeek.suppressed, prev, count)}
           accent="amber"
         />
         <KpiCard
           label={dict.anomalies.kpi.suppressionRate}
           value={pct(stats.suppressionRate)}
-          hint={filtered ? dict.anomalies.kpi.weekTotal : rateHint(dict, weekOverWeek.suppressionRate, prev)}
+          hint={filtered ? dict.anomalies.kpi.weekTotal : rateHint(dict, weekOverWeek.suppressionRate, prev, formatDecimal)}
           accent="blue"
         />
         <KpiCard
@@ -122,7 +133,7 @@ export default async function AnomaliesPage({
           title={dict.anomalies.charts.alertsOverYear}
           subtitle={filtered ? dict.anomalies.charts.alertsOverYearSubtitleFiltered : dict.anomalies.charts.alertsOverYearSubtitle}
         >
-          <TimelineChart data={data.timeline} />
+          <TimelineChart data={timelineData} />
         </ChartCard>
         <ChartCard title={dict.anomalies.charts.increaseByService} subtitle={dict.anomalies.charts.increaseByServiceSubtitle}>
           <HorizontalBars data={data.byService} currency="USD" labelWidth={130} />

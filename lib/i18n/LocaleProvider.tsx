@@ -8,6 +8,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 import type { Locale } from "./config";
+import { createFormatters } from "@/lib/formatters";
 import type { Dictionary } from "./dictionary";
 
 const LocaleContext = createContext<{ locale: Locale; dict: Dictionary } | null>(null);
@@ -34,4 +35,9 @@ export function useLocale() {
 /** Convenience hook for client components that only need the dictionary. */
 export function useDictionary() {
   return useLocale().dict;
+}
+
+/** Money, number, percent and date formatters for the active locale. */
+export function useFormatters() {
+  return createFormatters(useLocale().locale);
 }

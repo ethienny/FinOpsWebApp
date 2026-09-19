@@ -5,7 +5,7 @@ import { requireModule } from "@/lib/entitlements/gate";
 import { ShowbackTable } from "@/components/tables/ShowbackTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart, HorizontalBars, VerticalBars } from "@/components/charts/Charts";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -19,6 +19,7 @@ export default async function ShowbackPage({
   const gate = await requireModule("showback");
   if (gate.locked) return gate.locked;
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber } = await getFormatters();
   const data = await getRepository().getShowback(filtersFromSearchParams(await searchParams));
 
   return (

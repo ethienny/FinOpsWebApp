@@ -3,25 +3,26 @@
 // Client table for the resources whose recommendation changed since the
 // previous complete run.
 
-import { formatMoney } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { ChangeBadge, DecisionBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import type { ChangeRow, DecisionFields } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
+import type { Formatters } from "@/lib/formatters";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
 export type ChangeTableRow = ChangeRow & DecisionFields;
 
 const SEARCH_KEYS: Array<keyof ChangeTableRow> = ["ResourceName", "ServiceType", "ActionLabel", "previousActionLabel", "TagOwner"];
 
-function delta(row: ChangeTableRow): string {
+function delta(row: ChangeTableRow, formatMoney: Formatters["formatMoney"]): string {
   if (!row.savingsDelta) return "—";
   const sign = row.savingsDelta > 0 ? "+" : "−";
   return `${sign}${formatMoney(Math.abs(row.savingsDelta), row.CostCurrency)}`;
 }
 
-function columns(dict: Dictionary): Column<ChangeTableRow>[] {
+function columns(dict: Dictionary, fmt: Formatters): Column<ChangeTableRow>[] {
+  const { formatMoney } = fmt;
   const t = dict.changes.table.columns;
   return [
     {
@@ -53,7 +54,7 @@ function columns(dict: Dictionary): Column<ChangeTableRow>[] {
       numeric: true,
       sortValue: (r) => r.savingsDelta,
       render: (r) => (
-        <span className={r.savingsDelta > 0 ? "text-emerald-300" : r.savingsDelta < 0 ? "text-rose-300" : "text-slate-500"}>{delta(r)}</span>
+        <span className={r.savingsDelta > 0 ? "text-emerald-300" : r.savingsDelta < 0 ? "text-rose-300" : "text-slate-500"}>{delta(r, formatMoney)}</span>
       ),
     },
     { key: "TagOwner", header: t.owner, filterable: true },
@@ -63,5 +64,6 @@ function columns(dict: Dictionary): Column<ChangeTableRow>[] {
 
 export function ChangesTable({ rows }: { rows: ChangeTableRow[] }) {
   const dict = useDictionary();
-  return <DataTable<ChangeTableRow> rows={rows} searchKeys={SEARCH_KEYS} pageSize={15} rowKey={(r) => r.ResourceId} columns={columns(dict)} />;
+  const fmt = useFormatters();
+  return <DataTable<ChangeTableRow> rows={rows} searchKeys={SEARCH_KEYS} pageSize={15} rowKey={(r) => r.ResourceId} columns={columns(dict, fmt)} />;
 }

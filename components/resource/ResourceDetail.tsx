@@ -6,7 +6,6 @@
 import { MetricEvidence, RecommendationEvidence } from "./ResourceEvidence";
 import { useState } from "react";
 import type { InsightRow, RecommendationDecision, ResourceDetailData } from "@/types/finops";
-import { formatMoney, formatNumber } from "@/lib/formatters";
 import { Breadcrumbs } from "@/components/resource/Breadcrumbs";
 import {
   ConfidenceBadge,
@@ -22,7 +21,7 @@ import { DecisionPanel } from "@/components/resource/DecisionPanel";
 import { InsightStrip } from "@/components/resource/InsightStrip";
 import { cn } from "@/lib/cn";
 import type { TargetOptionHistory } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 const TAB_KEYS = ["overview", "costUsage", "recommendation", "sizing", "metrics", "history", "json"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
@@ -53,6 +52,7 @@ export function ResourceDetail({
   showInsight?: boolean;
 }) {
   const dict = useDictionary();
+  const { formatMoney, formatNumber } = useFormatters();
   const [tab, setTab] = useState<TabKey>("overview");
   const r = data.recommendation;
   const currency = r.CostCurrency || "USD";

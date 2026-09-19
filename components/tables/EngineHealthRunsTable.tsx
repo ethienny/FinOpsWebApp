@@ -2,14 +2,14 @@
 
 // Client table of every engine run for the Engine Health page.
 
-import { formatDate } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { StatusBadge } from "@/components/badges";
 import type { FinOpsRun } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 export function EngineHealthRunsTable({ rows }: { rows: FinOpsRun[] }) {
   const dict = useDictionary();
+  const { formatDate } = useFormatters();
   return (
     <DataTable<FinOpsRun>
       rows={rows}

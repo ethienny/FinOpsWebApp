@@ -30,7 +30,7 @@ export async function getDecisionTracking(
 ): Promise<DecisionTracking> {
   const [insights, decisions] = await Promise.all([getInsightRows(filters), getDecisionRepository().list()]);
   const byResource = decisionsByResource(decisions);
-  const rows = applyDecisions(insights.rows, byResource);
+  const rows = applyDecisions(insights.rows, byResource, statusLabels);
   const decided = decidedRows(rows);
   return {
     currency: insights.currency,

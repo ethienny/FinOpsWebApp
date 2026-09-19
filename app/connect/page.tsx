@@ -7,7 +7,7 @@ import { ConnectForm } from "@/components/onboarding/ConnectForm";
 import { CopyBlock } from "@/components/onboarding/CopyBlock";
 import { StatusBadge } from "@/components/badges";
 import { disconnectAzure } from "@/app/actions/connection";
-import { formatDate } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { buildLighthouseTemplate, deployCommand, REQUIRED_ROLES, revokeCommand } from "@/lib/onboarding/lighthouse";
 import { getConnection, getProviderIdentity } from "@/lib/onboarding/store";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -29,6 +29,7 @@ function Step({ number, title, children }: { number: number; title: string; chil
 
 export default async function ConnectPage() {
   const dict = getDictionary(await getLocale());
+  const { formatDate } = await getFormatters();
   const t = dict.connect;
   const [connection, provider] = await Promise.all([getConnection(), getProviderIdentity()]);
   const template = JSON.stringify(buildLighthouseTemplate(provider), null, 2);

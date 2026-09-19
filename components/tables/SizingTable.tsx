@@ -2,15 +2,15 @@
 
 // Client table of the target options of the selected sizing profile.
 
-import { formatMoney } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { RiskBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 import type { SizingRow } from "@/types/finops";
 
 export function SizingTable({ rows, currency }: { rows: SizingRow[]; currency: string }) {
   const dict = useDictionary();
+  const { formatMoney } = useFormatters();
   return (
     <DataTable<SizingRow>
       rows={rows}

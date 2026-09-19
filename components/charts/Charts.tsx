@@ -26,8 +26,7 @@ import {
   Scatter,
   ZAxis,
 } from "recharts";
-import { formatMoney, formatNumber } from "@/lib/formatters";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 const COLORS = ["#22d3ee", "#4895ff", "#818cf8", "#fbbf24", "#34d399", "#f472b6", "#94a3b8", "#22d3ee"];
 
@@ -63,6 +62,7 @@ function Tip({
   label?: string;
   currency?: string;
 }) {
+  const { formatMoney, formatNumber } = useFormatters();
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-white/10 bg-navy-900 px-3 py-2 text-xs shadow-xl">
@@ -260,6 +260,7 @@ function QuadrantTip({
   currency?: string;
   labels: { riskAdjustedSavings: string; executionRisk: string; quickWin: string };
 }) {
+  const { formatMoney } = useFormatters();
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
   return (
@@ -326,6 +327,7 @@ export interface TimelinePointLike {
 /** Alerts per week as bars with the observed increase as a line on the right axis. */
 export function TimelineChart({ data, currency = "USD" }: { data: TimelinePointLike[]; currency?: string }) {
   const dict = useDictionary();
+  const { formatMoney, formatNumber } = useFormatters();
   const hasSuppressed = data.some((p) => p.suppressed !== null);
   return (
     <ResponsiveContainer width="100%" height="100%">

@@ -7,7 +7,7 @@ import { QuickWinsTable } from "@/components/tables/QuickWinsTable";
 import { agingSummary, savingsByAge, topQuickWins } from "@/lib/insights/metrics";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getDecisionTracking } from "@/lib/decisions/service";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, ScatterQuadrant, VerticalBars } from "@/components/charts/Charts";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -22,6 +22,7 @@ export default async function InsightsPage({
   const gate = await requireModule("insights");
   if (gate.locked) return gate.locked;
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber, formatDecimal } = await getFormatters();
   const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams), decisionLabelsFromDict(dict));
   const currency = tracking.currency;
   const aging = agingSummary(tracking.rows);
@@ -58,7 +59,7 @@ export default async function InsightsPage({
           />
           <KpiCard
             label={dict.insights.kpi.averageAge}
-            value={`${aging.averageRunsOpen.toFixed(1)} ${dict.insights.kpi.runsUnit}`}
+            value={`${formatDecimal(aging.averageRunsOpen)} ${dict.insights.kpi.runsUnit}`}
             hint={dict.insights.kpi.averageAgeHint.replace("{count}", formatNumber(aging.actionableCount, false))}
             accent="blue"
           />

@@ -15,6 +15,7 @@ import {
   subscriptionOwnership,
   suppressionRate,
   weekOverWeek,
+  weekRange,
   weekWindow,
 } from "./metrics";
 
@@ -54,6 +55,13 @@ describe("week window", () => {
   it("reads the runbook date from the row key and reports the seven days before it", () => {
     expect(runbookDate("stats_2026-09-14")).toBe("2026-09-14");
     expect(weekWindow(stats())).toEqual({ from: "2026-09-07", to: "2026-09-14" });
+  });
+
+  it("gives the inclusive last day of the week and shifts by whole weeks", () => {
+    const window = weekWindow(stats());
+    expect(weekRange(window)).toEqual({ from: "2026-09-07", to: "2026-09-13" });
+    expect(weekRange(window, -1)).toEqual({ from: "2026-08-31", to: "2026-09-06" });
+    expect(weekRange({ from: "2025-12-29", to: "2026-01-05" })).toEqual({ from: "2025-12-29", to: "2026-01-04" });
   });
 
   it("falls back to the generation date when the key has no date", () => {

@@ -2,13 +2,13 @@
 
 // Client table of the cost allocation rows for the Showback page.
 
-import { formatMoney, formatPercent } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import type { ShowbackRow } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 export function ShowbackTable({ rows, currency }: { rows: ShowbackRow[]; currency: string }) {
   const dict = useDictionary();
+  const { formatMoney, formatPercent } = useFormatters();
   const t = dict.showback.columns;
   return (
     <DataTable<ShowbackRow>

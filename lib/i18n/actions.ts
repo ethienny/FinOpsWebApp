@@ -10,5 +10,5 @@ export async function setLocale(formData: FormData): Promise<void> {
   const locale = formData.get("locale");
   if (!isLocale(locale)) return;
   const cookieStore = await cookies();
-  cookieStore.set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+  cookieStore.set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
 }

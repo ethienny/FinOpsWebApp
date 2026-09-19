@@ -10,7 +10,7 @@ import { getDecisionTracking } from "@/lib/decisions/service";
 import { getEntitlements } from "@/lib/entitlements/store";
 import { hasModule } from "@/lib/entitlements/catalog";
 import { agingSummary, metricCoverageSummary, savingsByAge, topQuickWins } from "@/lib/insights/metrics";
-import { formatDate, formatMoney, formatNumber, formatPercent } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import type { FinOpsFilters, NamedValue } from "@/types/finops";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary, type Dictionary } from "@/lib/i18n/dictionary";
@@ -34,7 +34,19 @@ function Figure({ label, value, note }: { label: string; value: string; note?: s
   );
 }
 
-function NamedTable({ rows, valueLabel, currency, nameLabel }: { rows: NamedValue[]; valueLabel: string; currency: string; nameLabel: string }) {
+function NamedTable({
+  rows,
+  valueLabel,
+  currency,
+  nameLabel,
+  money,
+}: {
+  rows: NamedValue[];
+  valueLabel: string;
+  currency: string;
+  nameLabel: string;
+  money: (value: number, currency: string) => string;
+}) {
   return (
     <table className="report-table">
       <thead>
@@ -47,7 +59,7 @@ function NamedTable({ rows, valueLabel, currency, nameLabel }: { rows: NamedValu
         {rows.map((r) => (
           <tr key={r.name}>
             <td>{r.name}</td>
-            <td className="report-num">{formatMoney(r.value, currency, false)}</td>
+            <td className="report-num">{money(r.value, currency)}</td>
           </tr>
         ))}
       </tbody>
@@ -61,6 +73,8 @@ export default async function ReportPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber, formatDate, formatPercent, formatDecimal } = await getFormatters();
+  const money = (value: number, currency: string) => formatMoney(value, currency, false);
   const filters = filtersFromSearchParams(await searchParams);
   const [data, tracking, entitlements] = await Promise.all([
     getRepository().getExecutiveData(filters),
@@ -134,6 +148,7 @@ export default async function ReportPage({
                 valueLabel={dict.report.whereSavingsAre.validatedSavingsPerMonth}
                 currency={currency}
                 nameLabel={dict.report.whereSavingsAre.name}
+                money={money}
               />
             </div>
             <div>
@@ -143,6 +158,7 @@ export default async function ReportPage({
                 valueLabel={dict.report.whereSavingsAre.savingsPerMonth}
                 currency={currency}
                 nameLabel={dict.report.whereSavingsAre.name}
+                money={money}
               />
             </div>
           </div>
@@ -164,7 +180,7 @@ export default async function ReportPage({
               />
               <Figure
                 label={dict.report.costOfInaction.averageAge}
-                value={dict.report.costOfInaction.averageAgeValue.replace("{value}", aging.averageRunsOpen.toFixed(1))}
+                value={dict.report.costOfInaction.averageAgeValue.replace("{value}", formatDecimal(aging.averageRunsOpen))}
                 note={dict.report.costOfInaction.averageAgeNote.replace("{value}", formatNumber(aging.actionableCount, false))}
               />
               <Figure label={dict.report.costOfInaction.newThisRun} value={formatNumber(aging.newCount, false)} />
@@ -174,6 +190,7 @@ export default async function ReportPage({
               valueLabel={dict.report.whereSavingsAre.validatedSavingsPerMonth}
               currency={currency}
               nameLabel={dict.report.whereSavingsAre.name}
+              money={money}
             />
           </section>
         ) : null}

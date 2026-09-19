@@ -3,14 +3,15 @@
 // Client table of engine runs with duration and coverage rates for the Run
 // History page.
 
-import { formatDate, formatDuration, formatPercent } from "@/lib/formatters";
+import { formatDuration } from "@/lib/formatters";
 import { DataTable } from "@/components/tables/DataTable";
 import { StatusBadge } from "@/components/badges";
 import type { FinOpsRun } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 export function RunHistoryTable({ rows }: { rows: FinOpsRun[] }) {
   const dict = useDictionary();
+  const { formatDate, formatPercent } = useFormatters();
   return (
     <DataTable<FinOpsRun>
       rows={rows}

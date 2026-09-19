@@ -4,9 +4,8 @@
 // has been open, what was missed meanwhile, and the quick win score.
 
 import { AgeBadge, RiskBadge } from "@/components/badges";
-import { formatDate, formatMoney } from "@/lib/formatters";
 import type { InsightRow } from "@/types/finops";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
 
 function Tile({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -19,6 +18,7 @@ function Tile({ label, children }: { label: string; children: React.ReactNode })
 
 export function InsightStrip({ insight, currency }: { insight: InsightRow | null; currency: string }) {
   const dict = useDictionary();
+  const { formatDate, formatMoney } = useFormatters();
   const i = dict.resources.insight;
   if (!insight || !insight.IsActionable || insight.runsOpen === 0) {
     return <section className="card-surface p-4 text-sm text-slate-400">{i.noActionable}</section>;

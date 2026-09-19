@@ -11,7 +11,7 @@ import { getDecisionTracking } from "@/lib/decisions/service";
 import { getRunChanges } from "@/lib/insights/service";
 import { getEntitlements } from "@/lib/entitlements/store";
 import { hasModule } from "@/lib/entitlements/catalog";
-import { formatMoney, formatNumber, formatDate } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { StatusBadge } from "@/components/badges";
 import { ChartCard, GroupedBars, HorizontalBars } from "@/components/charts/Charts";
@@ -25,6 +25,7 @@ export default async function ExecutivePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber, formatDate } = await getFormatters();
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
   const [data, tracking, entitlements] = await Promise.all([
@@ -34,7 +35,7 @@ export default async function ExecutivePage({
   ]);
   const showTracking = hasModule(entitlements, "tracking");
   const showInsights = hasModule(entitlements, "insights");
-  const changes = showInsights ? await getRunChanges(filters) : null;
+  const changes = showInsights ? await getRunChanges(filters, decisionLabelsFromDict(dict)) : null;
   const run = data.publishedRun;
   const aging = agingSummary(tracking.rows);
   const quickWinCount = tracking.rows.filter(

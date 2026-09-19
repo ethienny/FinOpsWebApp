@@ -7,7 +7,7 @@ import { SizingTable } from "@/components/tables/SizingTable";
 import { Suspense } from "react";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getRepository } from "@/lib/repositories";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, CompareBars, DonutChart, VerticalBars } from "@/components/charts/Charts";
 import { ProfileSelector } from "@/components/filters/ProfileSelector";
@@ -29,6 +29,7 @@ export default async function SizingPage({
   const gate = await requireModule("sizing");
   if (gate.locked) return gate.locked;
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber, formatDecimal } = await getFormatters();
   const sp = await searchParams;
   const profile = asProfile(sp.profile);
   const data = await getRepository().getSizing(filtersFromSearchParams(sp), profile);
@@ -58,7 +59,7 @@ export default async function SizingPage({
         <KpiCard
           label={dict.sizing.kpi.averagePerformanceRisk}
           value={data.averagePerformanceRisk}
-          hint={dict.sizing.kpi.averagePerformanceRiskHint.replace("{score}", data.averagePerformanceRiskScore.toFixed(2))}
+          hint={dict.sizing.kpi.averagePerformanceRiskHint.replace("{score}", formatDecimal(data.averagePerformanceRiskScore, 2))}
           accent="amber"
         />
       </div>

@@ -8,7 +8,7 @@ import { getRepository } from "@/lib/repositories";
 import { getDecisionTracking } from "@/lib/decisions/service";
 import { getEntitlements } from "@/lib/entitlements/store";
 import { hasModule } from "@/lib/entitlements/catalog";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { ChartCard, DonutChart } from "@/components/charts/Charts";
 import { getLocale } from "@/lib/i18n/get-locale";
@@ -32,6 +32,7 @@ export default async function OpportunitiesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber } = await getFormatters();
   const sp = await searchParams;
   const filters = filtersFromSearchParams(sp);
   const showDismissed = sp.showDismissed === "1";

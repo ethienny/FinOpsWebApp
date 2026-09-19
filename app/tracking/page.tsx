@@ -5,7 +5,7 @@ import { requireModule } from "@/lib/entitlements/gate";
 import { TrackingTable } from "@/components/tables/TrackingTable";
 import { filtersFromSearchParams } from "@/lib/aggregations/filters";
 import { getDecisionTracking } from "@/lib/decisions/service";
-import { formatMoney, formatNumber } from "@/lib/formatters";
+import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { EmptyState } from "@/components/kpi/States";
 import { ChartCard, DonutChart, HorizontalBars } from "@/components/charts/Charts";
@@ -19,6 +19,7 @@ export default async function TrackingPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const dict = getDictionary(await getLocale());
+  const { formatMoney, formatNumber } = await getFormatters();
   const gate = await requireModule("tracking");
   if (gate.locked) return gate.locked;
   const tracking = await getDecisionTracking(filtersFromSearchParams(await searchParams), decisionLabelsFromDict(dict));

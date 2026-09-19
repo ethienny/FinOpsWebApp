@@ -3,17 +3,17 @@
 // Client tables of the cost anomaly dashboard: alerts of the week, routing
 // per alert, top subscriptions and subscriptions without an owner.
 
-import { formatDate, formatMoney, formatNumber } from "@/lib/formatters";
 import { DataTable, type Column } from "@/components/tables/DataTable";
 import { OutcomeBadge } from "@/components/badges";
 import { ResourceLink } from "@/components/resource/ResourceLink";
 import { routingLabel } from "@/lib/anomalies/metrics";
 import type { AnomalyAlert, SubscriptionOwnership, TopSubscription } from "@/types/anomalies";
-import { useDictionary } from "@/lib/i18n/LocaleProvider";
+import { useDictionary, useFormatters } from "@/lib/i18n/LocaleProvider";
+import type { Formatters } from "@/lib/formatters";
 import type { Dictionary } from "@/lib/i18n/dictionary";
 
-function pct(value: number): string {
-  return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
+function pct(value: number, decimal: (n: number) => string): string {
+  return `${value > 0 ? "+" : ""}${decimal(value)}%`;
 }
 
 const ALERT_SEARCH: Array<keyof AnomalyAlert> = ["subscriptionName", "resourceName", "serviceType", "attributionStatus", "routingSource"];
@@ -28,14 +28,15 @@ function resourceCell(r: AnomalyAlert) {
   );
 }
 
-function alertColumns(dict: Dictionary): Column<AnomalyAlert>[] {
+function alertColumns(dict: Dictionary, fmt: Formatters): Column<AnomalyAlert>[] {
+  const { formatMoney, formatDecimal } = fmt;
   const t = dict.anomalies.table;
   return [
     { key: "subscriptionName", header: t.subscription, filterable: true },
     { key: "resourceName", header: t.resource, render: resourceCell },
     { key: "serviceType", header: t.service, filterable: true, render: (r) => r.serviceType || "—" },
     { key: "detectionDate", header: t.detected, render: (r) => r.detectionDate },
-    { key: "deltaPercent", header: t.delta, numeric: true, sortValue: (r) => r.deltaPercent, render: (r) => pct(r.deltaPercent) },
+    { key: "deltaPercent", header: t.delta, numeric: true, sortValue: (r) => r.deltaPercent, render: (r) => pct(r.deltaPercent, formatDecimal) },
     { key: "totalCost", header: t.totalCost, numeric: true, sortValue: (r) => r.totalCost, render: (r) => formatMoney(r.totalCost, "USD", false) },
     {
       key: "observedChangeUsd",
@@ -50,10 +51,12 @@ function alertColumns(dict: Dictionary): Column<AnomalyAlert>[] {
 
 export function AnomalyAlertsTable({ rows }: { rows: AnomalyAlert[] }) {
   const dict = useDictionary();
-  return <DataTable<AnomalyAlert> rows={rows} columns={alertColumns(dict)} searchKeys={ALERT_SEARCH} pageSize={12} rowKey={(r) => r.rowKey} />;
+  const fmt = useFormatters();
+  return <DataTable<AnomalyAlert> rows={rows} columns={alertColumns(dict, fmt)} searchKeys={ALERT_SEARCH} pageSize={12} rowKey={(r) => r.rowKey} />;
 }
 
-function routingColumns(dict: Dictionary): Column<AnomalyAlert>[] {
+function routingColumns(dict: Dictionary, fmt: Formatters): Column<AnomalyAlert>[] {
+  const { formatNumber, formatDate } = fmt;
   const t = dict.anomalies.table;
   return [
     { key: "subscriptionName", header: t.subscription, filterable: true },
@@ -69,12 +72,14 @@ function routingColumns(dict: Dictionary): Column<AnomalyAlert>[] {
 
 export function AlertRoutingTable({ rows }: { rows: AnomalyAlert[] }) {
   const dict = useDictionary();
-  return <DataTable<AnomalyAlert> rows={rows} columns={routingColumns(dict)} searchKeys={ALERT_SEARCH} pageSize={12} rowKey={(r) => r.rowKey} />;
+  const fmt = useFormatters();
+  return <DataTable<AnomalyAlert> rows={rows} columns={routingColumns(dict, fmt)} searchKeys={ALERT_SEARCH} pageSize={12} rowKey={(r) => r.rowKey} />;
 }
 
 export type TopSubscriptionRow = TopSubscription & { owned: boolean | null };
 
-function topColumns(dict: Dictionary): Column<TopSubscriptionRow>[] {
+function topColumns(dict: Dictionary, fmt: Formatters): Column<TopSubscriptionRow>[] {
+  const { formatMoney } = fmt;
   const t = dict.anomalies.table;
   return [
     { key: "name", header: t.subscription },
@@ -93,7 +98,8 @@ function topColumns(dict: Dictionary): Column<TopSubscriptionRow>[] {
 
 export function TopSubscriptionsTable({ rows }: { rows: TopSubscriptionRow[] }) {
   const dict = useDictionary();
-  return <DataTable<TopSubscriptionRow> rows={rows} columns={topColumns(dict)} searchKeys={["name"]} pageSize={10} rowKey={(r) => r.name} />;
+  const fmt = useFormatters();
+  return <DataTable<TopSubscriptionRow> rows={rows} columns={topColumns(dict, fmt)} searchKeys={["name"]} pageSize={10} rowKey={(r) => r.name} />;
 }
 
 function unownedColumns(dict: Dictionary): Column<SubscriptionOwnership>[] {
