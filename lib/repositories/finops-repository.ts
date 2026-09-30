@@ -45,6 +45,10 @@ function asOk(run: FinOpsRun): boolean {
   return run.RunStatus === "SUCCEEDED" || run.RunStatus === "DEGRADED";
 }
 
+// The idle verdict is Evaluate-Idle up to engine 6.7 and Review-Decommission
+// in the Azure edition vocabulary; both carry the probable savings floor.
+const IDLE_ACTIONS = new Set(["Evaluate-Idle", "Review-Decommission"]);
+
 function currency(rows: FinOpsRecommendation[]): string {
   return rows.find((r) => r.CostCurrency)?.CostCurrency || "USD";
 }
@@ -155,7 +159,7 @@ export class StoreFinOpsRepository implements FinOpsRepository {
     // for the same compute and are never summed.
     const idleCostCeiling = sum(rows.map((r) => r.IdleMonthlyCost));
     const probableSavingsFloor = sum(
-      rows.filter((r) => r.RecommendationAction === "Evaluate-Idle").map((r) => r.SecondaryMonthlySavings),
+      rows.filter((r) => IDLE_ACTIONS.has(r.RecommendationAction)).map((r) => r.SecondaryMonthlySavings),
     );
     const licenseSavings = sum(
       rows.filter((r) => r.LicenseBenefitStatus === "NOT_APPLIED").map((r) => r.LicenseMonthlySavings),

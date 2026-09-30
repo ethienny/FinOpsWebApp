@@ -178,6 +178,10 @@ export interface FinOpsRun {
   UnpricedSavingsRows: number | null;
   DegradedServices: string;
   Notes: string;
+  /** Billing currency of the run's cost export; USD when the engine did not write it. */
+  BillingCurrency: string;
+  /** Units of BillingCurrency per US dollar the run converted with. */
+  BillingCurrencyRate: number | null;
 }
 
 export interface TargetOption {

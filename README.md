@@ -59,6 +59,8 @@ The mock CSVs are not tracked by git. Compressed copies live in `data/mock/*.csv
 
 `DATA_SOURCE=csv` is the default. To read from Azure SQL instead, copy `.env.example` to `.env.local`, set `DATA_SOURCE=sql` and fill in the `AZURE_SQL_*` variables.
 
+With `AZURE_SQL_AUTHENTICATION=managed-identity` the app signs in to Azure SQL with Entra ID instead of a SQL login: the App Service managed identity (`AZURE_CLIENT_ID` selects a user assigned one) or, locally, the Azure CLI login. This is how an installation of the Azure edition of the engine (`ethienny/finops-engine-azure`, which deploys this app beside the engine) reads its database. There the engine publishes the five `dbo.FinOps*` views the app reads, and every row carries the billing currency of the customer's cost export (`BillingCurrency`, `BillingCurrencyRate`). The engine computes in USD, so the app converts the amounts of a run billed in another currency, for example BRL, and shows them in that currency (`lib/data/currency.ts`). The anomaly tables are not produced by the engine; when they do not exist, the Cost Anomalies page is empty instead of failing.
+
 ```bash
 npm run build
 npm start

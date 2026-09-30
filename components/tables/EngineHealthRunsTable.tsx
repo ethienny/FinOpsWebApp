@@ -27,6 +27,12 @@ export function EngineHealthRunsTable({ rows }: { rows: FinOpsRun[] }) {
           render: (r) => <StatusBadge value={r.PublishApproved ? "PUBLISHED" : "UNPUBLISHED"} />,
         },
         { key: "EngineVersion", header: "EngineVersion" },
+        {
+          key: "BillingCurrency",
+          header: "BillingCurrency",
+          filterable: true,
+          render: (r) => (r.BillingCurrencyRate && r.BillingCurrency !== "USD" ? `${r.BillingCurrency} (${r.BillingCurrencyRate})` : r.BillingCurrency),
+        },
         { key: "RowsProduced", header: "RowsProduced", numeric: true, sortValue: (r) => r.RowsProduced ?? 0 },
       ]}
     />

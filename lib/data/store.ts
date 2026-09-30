@@ -7,6 +7,7 @@ import { join } from "path";
 import sql from "mssql";
 import type { FinOpsRecommendation, FinOpsRun, TargetOption, TargetOptionHistory } from "@/types/finops";
 import { asString, parseBoolean, parseJson, parseNumber } from "./parse";
+import { inBillingCurrency, RECOMMENDATION_MONEY_FIELDS, TARGET_OPTION_MONEY_FIELDS } from "./currency";
 
 const DATA_DIR = join(process.cwd(), "data");
 
@@ -34,6 +35,10 @@ export function loadCsv(fileName: string): Record<string, string>[] {
 }
 
 function recommendation(row: Record<string, unknown>): FinOpsRecommendation {
+  return inBillingCurrency(row, recommendationInUsd(row), RECOMMENDATION_MONEY_FIELDS, "CostCurrency");
+}
+
+function recommendationInUsd(row: Record<string, unknown>): FinOpsRecommendation {
   return {
     TenantId: asString(row.TenantId),
     TenantName: asString(row.TenantName),
@@ -207,10 +212,16 @@ function run(row: Record<string, unknown>): FinOpsRun {
     UnpricedSavingsRows: parseNumber(row.UnpricedSavingsRows),
     DegradedServices: asString(row.DegradedServices),
     Notes: asString(row.Notes),
+    BillingCurrency: asString(row.BillingCurrency) || "USD",
+    BillingCurrencyRate: parseNumber(row.BillingCurrencyRate),
   };
 }
 
 function targetOption(row: Record<string, unknown>): TargetOption {
+  return inBillingCurrency(row, targetOptionInUsd(row), TARGET_OPTION_MONEY_FIELDS);
+}
+
+function targetOptionInUsd(row: Record<string, unknown>): TargetOption {
   return {
     rundate: asString(row.rundate),
     RunId: asString(row.RunId),
@@ -323,23 +334,41 @@ function loadFromCsv(): DataStore {
 export function getSqlPool(): Promise<sql.ConnectionPool> {
   let pool = globalThis.__finopsSqlPool;
   if (!pool) {
-    pool = sql.connect({
-      server: requireEnv("AZURE_SQL_SERVER"),
-      database: requireEnv("AZURE_SQL_DATABASE"),
-      user: requireEnv("AZURE_SQL_USER"),
-      password: requireEnv("AZURE_SQL_PASSWORD"),
-      port: Number(process.env.AZURE_SQL_PORT ?? 1433),
-      options: { encrypt: true, trustServerCertificate: false },
-      requestTimeout: 60000,
-      connectionTimeout: 20000,
-    });
+    pool = sql.connect(sqlConfig(process.env));
     globalThis.__finopsSqlPool = pool;
   }
   return pool;
 }
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
+/**
+ * Connection settings from the environment. AZURE_SQL_AUTHENTICATION=managed-identity
+ * signs in with Entra ID instead of a SQL login: the App Service managed identity
+ * (AZURE_CLIENT_ID picks a user assigned one) or, on a developer machine, the
+ * Azure CLI login. Any other value keeps AZURE_SQL_USER and AZURE_SQL_PASSWORD.
+ */
+export function sqlConfig(env: Record<string, string | undefined>): sql.config {
+  const base = {
+    server: requireEnv(env, "AZURE_SQL_SERVER"),
+    database: requireEnv(env, "AZURE_SQL_DATABASE"),
+    port: Number(env.AZURE_SQL_PORT ?? 1433),
+    options: { encrypt: true, trustServerCertificate: false },
+    requestTimeout: 60000,
+    connectionTimeout: 20000,
+  };
+  if (env.AZURE_SQL_AUTHENTICATION === "managed-identity") {
+    return {
+      ...base,
+      authentication: {
+        type: "azure-active-directory-default",
+        options: { clientId: env.AZURE_CLIENT_ID || undefined },
+      },
+    };
+  }
+  return { ...base, user: requireEnv(env, "AZURE_SQL_USER"), password: requireEnv(env, "AZURE_SQL_PASSWORD") };
+}
+
+function requireEnv(env: Record<string, string | undefined>, name: string): string {
+  const value = env[name];
   if (!value) throw new Error(`Environment variable ${name} is not set.`);
   return value;
 }
