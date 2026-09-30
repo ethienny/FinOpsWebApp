@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   Gauge,
   History,
+  KeyRound,
   LayoutDashboard,
   Lightbulb,
   Lock,
@@ -58,6 +59,7 @@ function navGroups(dict: Dictionary) {
         { href: "/opportunities", label: dict.shell.nav.items.opportunities, icon: Sparkles },
         { href: "/insights", label: dict.shell.nav.items.insights, icon: Lightbulb },
         { href: "/sizing", label: dict.shell.nav.items.sizing, icon: Scale },
+        { href: "/hybrid-benefit", label: dict.shell.nav.items.hybridBenefit, icon: KeyRound },
       ],
     },
     {
@@ -173,6 +175,7 @@ function pageCopy(dict: Dictionary): Record<string, { title: string; subtitle: s
     "/anomalies": dict.shell.pages.anomalies,
     "/insights": dict.shell.pages.insights,
     "/sizing": dict.shell.pages.sizing,
+    "/hybrid-benefit": dict.shell.pages.hybridBenefit,
     "/resources": dict.shell.pages.resources,
     "/engine-health": dict.shell.pages.engineHealth,
     "/run-history": dict.shell.pages.runHistory,

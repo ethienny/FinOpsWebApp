@@ -23,6 +23,7 @@ export const shell: Widen<typeof en> = {
       opportunities: "Oportunidades",
       insights: "Insights",
       sizing: "Sizing",
+      hybridBenefit: "Hybrid Benefit",
       tracking: "Acompanhamento",
       costAnomalies: "Anomalias de Custo",
       resources: "Recursos",
@@ -88,6 +89,10 @@ export const shell: Widen<typeof en> = {
     insights: {
       title: "Insights",
       subtitle: "Quanto custa esperar e quais ações valem a pena priorizar.",
+    },
+    hybridBenefit: {
+      title: "Hybrid Benefit",
+      subtitle: "Recursos que ainda pagam licença de Windows Server, SQL Server, RHEL ou SQL License sem o benefício aplicado.",
     },
     sizing: {
       title: "Sizing",

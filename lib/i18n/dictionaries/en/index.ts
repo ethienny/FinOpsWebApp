@@ -9,6 +9,7 @@ import { connect } from "./connect";
 import { engineHealth } from "./engineHealth";
 import { filters } from "./filters";
 import { home } from "./home";
+import { hybridBenefit } from "./hybridBenefit";
 import { insights } from "./insights";
 import { opportunities } from "./opportunities";
 import { report } from "./report";
@@ -28,6 +29,7 @@ export const en = {
   engineHealth,
   filters,
   home,
+  hybridBenefit,
   insights,
   opportunities,
   report,

@@ -121,6 +121,23 @@ export interface FinOpsRecommendation {
   ProcessingStatus: string;
   Error: string;
   rundate: string;
+  // Added in engines 6.5.14-6.7.0 (idle/allocation, license, commitment, redundancy).
+  FlatZeroMetrics: string;
+  IdleMonthlyCost: number | null;
+  CostIsAllocated: boolean;
+  ManagedBy: string;
+  ManagedByDetail: string;
+  LicenseMonthlyCost: number | null;
+  LicenseProducts: string;
+  LicenseBenefitStatus: string;
+  LicenseMonthlySavings: number | null;
+  CommitmentCoverage: number | null;
+  SavingsRealization: string;
+  CommitmentEligibleMonthlyCost: number | null;
+  CommitmentMonthlySavings: number | null;
+  CommitmentMonthlySavings3Y: number | null;
+  CommitmentOffer: string;
+  RedundancyMonthlySavings: number | null;
 }
 
 export interface FinOpsRun {
@@ -327,6 +344,39 @@ export interface ExecutiveData {
   priorityDistribution: NamedValue[];
   costVsSavingsByService: DualNamedValue[];
   topResources: ResourceSummary[];
+  // Added in engines 6.5.14-6.7.0 (idle/allocation, license, commitment, redundancy).
+  idleCostCeiling: number;
+  probableSavingsFloor: number;
+  licenseSavings: number;
+  commitmentSavings1Year: number;
+  commitmentSavings3Years: number;
+  redundancySavings: number;
+  /** Validated (PRICED) savings by service, split into cash-now vs commitment-freed. Never summed together with the other reading. */
+  validatedSavingsCashVsCommitment: { name: string; current: number; target: number }[];
+}
+
+/** Row of the Hybrid Benefit table: resources still paying a license the company could bring. */
+export interface HybridBenefitRow {
+  ResourceId: string;
+  ResourceName: string;
+  ServiceType: string;
+  SubscriptionName: string;
+  LicenseProducts: string;
+  LicenseBenefitStatus: string;
+  LicenseMonthlyCost: number | null;
+  LicenseMonthlySavings: number | null;
+  ActionLabel: string;
+}
+
+export interface HybridBenefitData {
+  currency: string;
+  licenseCostWithoutBenefit: number;
+  licenseSavings: number;
+  resourcesWithoutHybridBenefit: number;
+  resourcesWithHybridBenefit: number;
+  savingsByLicenseProduct: NamedValue[];
+  savingsBySubscription: NamedValue[];
+  rows: HybridBenefitRow[];
 }
 
 export interface ShowbackRow {
@@ -592,6 +642,7 @@ export interface FinOpsRepository {
   getExecutiveData(filters: FinOpsFilters): Promise<ExecutiveData>;
   getShowback(filters: FinOpsFilters): Promise<ShowbackData>;
   getOpportunities(filters: FinOpsFilters): Promise<OpportunitiesData>;
+  getHybridBenefit(filters: FinOpsFilters): Promise<HybridBenefitData>;
   getSizing(filters: FinOpsFilters, profile?: SizingProfile): Promise<SizingData>;
   getResources(filters: FinOpsFilters): Promise<ResourcesData>;
   getResourceById(resourceId: string): Promise<ResourceDetailData | null>;

@@ -19,4 +19,6 @@ export const charts = {
   weekOf: "Week of",
   current: "current",
   target: "target",
+  cashNow: "Cash now",
+  commitmentFreed: "Commitment freed",
 } as const;

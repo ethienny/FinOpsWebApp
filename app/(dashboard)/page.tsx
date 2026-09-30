@@ -14,7 +14,7 @@ import { hasModule } from "@/lib/entitlements/catalog";
 import { getFormatters } from "@/lib/i18n/get-formatters";
 import { KpiCard } from "@/components/kpi/KpiCard";
 import { StatusBadge } from "@/components/badges";
-import { ChartCard, GroupedBars, HorizontalBars } from "@/components/charts/Charts";
+import { ChartCard, CompareBars, GroupedBars, HorizontalBars } from "@/components/charts/Charts";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { getDictionary } from "@/lib/i18n/dictionary";
 import { decisionLabelsFromDict } from "@/lib/i18n/decision-labels";
@@ -146,12 +146,61 @@ export default async function ExecutivePage({
       </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <KpiCard
+          label={dict.home.kpi.idleCostCeiling.label}
+          value={formatMoney(data.idleCostCeiling, data.currency)}
+          hint={dict.home.kpi.idleCostCeiling.hint}
+          accent="amber"
+        />
+        <KpiCard
+          label={dict.home.kpi.probableSavingsFloor.label}
+          value={formatMoney(data.probableSavingsFloor, data.currency)}
+          hint={dict.home.kpi.probableSavingsFloor.hint}
+          accent="amber"
+        />
+        <KpiCard
+          label={dict.home.kpi.licenseSavings.label}
+          value={formatMoney(data.licenseSavings, data.currency)}
+          hint={dict.home.kpi.licenseSavings.hint}
+          accent="teal"
+          href="/hybrid-benefit"
+          linkLabel={dict.home.kpi.licenseSavings.link}
+        />
+        <KpiCard
+          label={dict.home.kpi.commitmentSavings1Year.label}
+          value={formatMoney(data.commitmentSavings1Year, data.currency)}
+          hint={dict.home.kpi.commitmentSavings1Year.hint}
+          accent="blue"
+        />
+        <KpiCard
+          label={dict.home.kpi.commitmentSavings3Years.label}
+          value={formatMoney(data.commitmentSavings3Years, data.currency)}
+          hint={dict.home.kpi.commitmentSavings3Years.hint}
+          accent="blue"
+        />
+        <KpiCard
+          label={dict.home.kpi.redundancySavings.label}
+          value={formatMoney(data.redundancySavings, data.currency)}
+          hint={dict.home.kpi.redundancySavings.hint}
+          accent="cyan"
+        />
+      </div>
+      <p className="text-xs text-slate-400">{dict.home.keepThemApart}</p>
+
+      <div className="grid gap-4 xl:grid-cols-3">
         <ChartCard title={dict.home.charts.costVsSavingsTitle} subtitle={dict.home.charts.costVsSavingsSubtitle}>
           <GroupedBars data={data.costVsSavingsByService} currency={data.currency} />
         </ChartCard>
         <ChartCard title={dict.home.charts.savingsByActionTitle}>
           <HorizontalBars data={data.savingsByAction} currency={data.currency} />
+        </ChartCard>
+        <ChartCard title={dict.home.charts.cashVsCommitmentTitle} subtitle={dict.home.charts.cashVsCommitmentSubtitle}>
+          <CompareBars
+            data={data.validatedSavingsCashVsCommitment}
+            currency={data.currency}
+            labels={{ current: dict.charts.cashNow, target: dict.charts.commitmentFreed }}
+          />
         </ChartCard>
       </div>
 
