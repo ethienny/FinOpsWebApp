@@ -12,6 +12,7 @@ import type {
   FinOpsRecommendation,
   FinOpsRepository,
   FinOpsRun,
+  HybridBenefitData,
   OpportunitiesData,
   RecommendationAging,
   ResourceDetailData,
@@ -147,6 +148,30 @@ export class StoreFinOpsRepository implements FinOpsRepository {
     const costMap = new Map(costByService.map((x) => [x.name, x.value]));
     const savMap = new Map(savingsByService.map((x) => [x.name, x.value]));
 
+    // Idle ceiling/floor, license, commitment and redundancy - engines 6.5.14-6.7.0.
+    // Ceiling and floor are never added to each other, nor to validated savings or
+    // estimated opportunity. Cash now and commitment freed are two parts of validated
+    // savings and add up to it; commitment savings 1 year and 3 years are alternatives
+    // for the same compute and are never summed.
+    const idleCostCeiling = sum(rows.map((r) => r.IdleMonthlyCost));
+    const probableSavingsFloor = sum(
+      rows.filter((r) => r.RecommendationAction === "Evaluate-Idle").map((r) => r.SecondaryMonthlySavings),
+    );
+    const licenseSavings = sum(
+      rows.filter((r) => r.LicenseBenefitStatus === "NOT_APPLIED").map((r) => r.LicenseMonthlySavings),
+    );
+    const commitmentSavings1Year = sum(rows.map((r) => r.CommitmentMonthlySavings));
+    const commitmentSavings3Years = sum(rows.map((r) => r.CommitmentMonthlySavings3Y));
+    const redundancySavings = sum(rows.map((r) => r.RedundancyMonthlySavings));
+
+    const cashRows = priced.filter((r) => r.SavingsRealization === "CASH");
+    const commitmentRows = priced.filter((r) => r.SavingsRealization === "COMMITMENT" || r.SavingsRealization === "MIXED");
+    const cashByService = groupSum(cashRows, (r) => serviceName(r), (r) => r.EstimatedMonthlySavings, 8);
+    const commitByService = groupSum(commitmentRows, (r) => serviceName(r), (r) => r.EstimatedMonthlySavings, 8);
+    const cvcKeys = uniqueSorted([...cashByService, ...commitByService].map((x) => x.name));
+    const cashMap = new Map(cashByService.map((x) => [x.name, x.value]));
+    const commitMap = new Map(commitByService.map((x) => [x.name, x.value]));
+
     return {
       currency: currency(rows.length ? rows : latest),
       publishedRun: latestPublished(runs),
@@ -166,6 +191,46 @@ export class StoreFinOpsRepository implements FinOpsRepository {
         savings: savMap.get(name) ?? 0,
       })),
       topResources,
+      idleCostCeiling,
+      probableSavingsFloor,
+      licenseSavings,
+      commitmentSavings1Year,
+      commitmentSavings3Years,
+      redundancySavings,
+      validatedSavingsCashVsCommitment: cvcKeys.map((name) => ({
+        name,
+        current: cashMap.get(name) ?? 0,
+        target: commitMap.get(name) ?? 0,
+      })),
+    };
+  }
+
+  async getHybridBenefit(filters: FinOpsFilters): Promise<HybridBenefitData> {
+    const { latest } = await getDataStore();
+    const rows = latest.filter((r) => matchesFilters(r, filters));
+    const withoutBenefit = rows.filter((r) => r.LicenseBenefitStatus === "NOT_APPLIED");
+    const withBenefit = rows.filter((r) => r.LicenseBenefitStatus === "APPLIED");
+    return {
+      currency: currency(rows.length ? rows : latest),
+      licenseCostWithoutBenefit: sum(withoutBenefit.map((r) => r.LicenseMonthlyCost)),
+      licenseSavings: sum(withoutBenefit.map((r) => r.LicenseMonthlySavings)),
+      resourcesWithoutHybridBenefit: withoutBenefit.length,
+      resourcesWithHybridBenefit: withBenefit.length,
+      savingsByLicenseProduct: groupSum(withoutBenefit, (r) => r.LicenseProducts || "Unknown", (r) => r.LicenseMonthlySavings, 8),
+      savingsBySubscription: groupSum(withoutBenefit, (r) => r.SubscriptionName || "Unassigned", (r) => r.LicenseMonthlySavings, 15),
+      rows: withoutBenefit
+        .map((r) => ({
+          ResourceId: r.ResourceId,
+          ResourceName: r.ResourceName,
+          ServiceType: serviceName(r),
+          SubscriptionName: r.SubscriptionName,
+          LicenseProducts: r.LicenseProducts,
+          LicenseBenefitStatus: r.LicenseBenefitStatus,
+          LicenseMonthlyCost: r.LicenseMonthlyCost,
+          LicenseMonthlySavings: r.LicenseMonthlySavings,
+          ActionLabel: r.ActionLabel,
+        }))
+        .sort((a, b) => (b.LicenseMonthlySavings ?? 0) - (a.LicenseMonthlySavings ?? 0)),
     };
   }
 

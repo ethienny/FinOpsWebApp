@@ -121,7 +121,24 @@ CREATE TABLE dbo.FinOpsRecommendations (
     EngineVersion NVARCHAR(MAX) NULL,
     ProcessingStatus NVARCHAR(MAX) NULL,
     Error NVARCHAR(MAX) NULL,
-    rundate NVARCHAR(64) NULL
+    rundate NVARCHAR(64) NULL,
+    -- Added in engines 6.5.14-6.7.0 (Databricks Azure Savings Opportunities PBIP, 2026-09-29).
+    FlatZeroMetrics NVARCHAR(MAX) NULL,
+    IdleMonthlyCost FLOAT NULL,
+    CostIsAllocated BIT NULL,
+    ManagedBy NVARCHAR(MAX) NULL,
+    ManagedByDetail NVARCHAR(MAX) NULL,
+    LicenseMonthlyCost FLOAT NULL,
+    LicenseProducts NVARCHAR(MAX) NULL,
+    LicenseBenefitStatus NVARCHAR(MAX) NULL,
+    LicenseMonthlySavings FLOAT NULL,
+    CommitmentCoverage FLOAT NULL,
+    SavingsRealization NVARCHAR(MAX) NULL,
+    CommitmentEligibleMonthlyCost FLOAT NULL,
+    CommitmentMonthlySavings FLOAT NULL,
+    CommitmentMonthlySavings3Y FLOAT NULL,
+    CommitmentOffer NVARCHAR(MAX) NULL,
+    RedundancyMonthlySavings FLOAT NULL
 );
 CREATE INDEX IX_FinOpsRecommendations_RunId ON dbo.FinOpsRecommendations (RunId);
 CREATE INDEX IX_FinOpsRecommendations_ResourceId ON dbo.FinOpsRecommendations (ResourceId);

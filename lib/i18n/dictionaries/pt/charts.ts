@@ -18,4 +18,6 @@ export const charts: Widen<typeof en> = {
   weekOf: "Semana de",
   current: "atual",
   target: "alvo",
+  cashNow: "Cash agora",
+  commitmentFreed: "Commitment liberado",
 };

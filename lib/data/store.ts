@@ -149,6 +149,22 @@ function recommendation(row: Record<string, unknown>): FinOpsRecommendation {
     ProcessingStatus: asString(row.ProcessingStatus),
     Error: asString(row.Error),
     rundate: asString(row.rundate),
+    FlatZeroMetrics: asString(row.FlatZeroMetrics),
+    IdleMonthlyCost: parseNumber(row.IdleMonthlyCost),
+    CostIsAllocated: parseBoolean(row.CostIsAllocated),
+    ManagedBy: asString(row.ManagedBy),
+    ManagedByDetail: asString(row.ManagedByDetail),
+    LicenseMonthlyCost: parseNumber(row.LicenseMonthlyCost),
+    LicenseProducts: asString(row.LicenseProducts),
+    LicenseBenefitStatus: asString(row.LicenseBenefitStatus),
+    LicenseMonthlySavings: parseNumber(row.LicenseMonthlySavings),
+    CommitmentCoverage: parseNumber(row.CommitmentCoverage),
+    SavingsRealization: asString(row.SavingsRealization),
+    CommitmentEligibleMonthlyCost: parseNumber(row.CommitmentEligibleMonthlyCost),
+    CommitmentMonthlySavings: parseNumber(row.CommitmentMonthlySavings),
+    CommitmentMonthlySavings3Y: parseNumber(row.CommitmentMonthlySavings3Y),
+    CommitmentOffer: asString(row.CommitmentOffer),
+    RedundancyMonthlySavings: parseNumber(row.RedundancyMonthlySavings),
   };
 }
 

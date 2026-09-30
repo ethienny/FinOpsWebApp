@@ -23,6 +23,7 @@ export const shell = {
       opportunities: "Opportunities",
       insights: "Insights",
       sizing: "Sizing",
+      hybridBenefit: "Hybrid Benefit",
       tracking: "Tracking",
       costAnomalies: "Cost Anomalies",
       resources: "Resources",
@@ -92,6 +93,10 @@ export const shell = {
     sizing: {
       title: "Sizing",
       subtitle: "Rightsizing analysis by conservative, moderate and aggressive target profiles.",
+    },
+    hybridBenefit: {
+      title: "Hybrid Benefit",
+      subtitle: "Resources still paying a Windows Server, SQL Server, RHEL or SQL License meter without the benefit applied.",
     },
     resources: {
       title: "Resources",

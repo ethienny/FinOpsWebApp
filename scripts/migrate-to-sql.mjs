@@ -68,6 +68,12 @@ const RECOMMENDATION_COLUMNS = [
   ["TagCostCenter", "s"], ["MonthsAvailable", "n"], ["CostCoverageStatus", "s"], ["SavingsReliability", "s"],
   ["RunId", "s", 200], ["RunStartedAt", "s", 64], ["EngineVersion", "s"], ["ProcessingStatus", "s"], ["Error", "s"],
   ["rundate", "s", 64],
+  // Added in engines 6.5.14-6.7.0 (see the Databricks Azure Savings Opportunities PBIP update).
+  ["FlatZeroMetrics", "s"], ["IdleMonthlyCost", "n"], ["CostIsAllocated", "b"], ["ManagedBy", "s"],
+  ["ManagedByDetail", "s"], ["LicenseMonthlyCost", "n"], ["LicenseProducts", "s"], ["LicenseBenefitStatus", "s"],
+  ["LicenseMonthlySavings", "n"], ["CommitmentCoverage", "n"], ["SavingsRealization", "s"],
+  ["CommitmentEligibleMonthlyCost", "n"], ["CommitmentMonthlySavings", "n"], ["CommitmentMonthlySavings3Y", "n"],
+  ["CommitmentOffer", "s"], ["RedundancyMonthlySavings", "n"],
 ];
 
 const ENGINE_RUN_COLUMNS = [

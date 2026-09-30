@@ -31,11 +31,21 @@ export const home: Widen<typeof en> = {
       hint: "Alto valor, baixo risco de execução, ainda não realizado",
       link: "Abrir insights",
     },
+    idleCostCeiling: { label: "Custo Ocioso (Teto)", hint: "Custo total dos recursos ociosos em análise" },
+    probableSavingsFloor: { label: "Economia Provável (Piso)", hint: "Economia se o responsável mantiver o recurso num tamanho menor" },
+    licenseSavings: { label: "Economia de Licença (Hybrid Benefit)", hint: "O que ativar o Hybrid Benefit economizaria", link: "Abrir Hybrid Benefit" },
+    commitmentSavings1Year: { label: "Economia de Commitment, 1 Ano", hint: "Figura oficial - nunca somar com a alternativa de 3 anos" },
+    commitmentSavings3Years: { label: "Economia de Commitment, 3 Anos", hint: "Alternativa à figura de 1 ano, nunca as duas juntas" },
+    redundancySavings: { label: "Economia de Redundância (Backup)", hint: "Cofres não-produtivos migrados de geo para redundância local" },
   },
+  keepThemApart:
+    "Mantenha-os separados. Teto e piso são duas leituras dos mesmos recursos ociosos. Nenhum dos dois é somado à Economia Validada ou à Oportunidade Estimada, nem somados entre si. Economia de Licença, Economia de Commitment e Economia de Redundância são alavancas separadas, cada uma em seu próprio card. Economia de Commitment de 1 ano e 3 anos são duas alternativas para o mesmo compute: mostre uma ou outra, nunca a soma. Cash agora e commitment liberado são duas partes da Economia Validada e somam o total dela.",
   charts: {
     costVsSavingsTitle: "Custo vs Economia por Tipo de Serviço",
     costVsSavingsSubtitle: "Custo da última execução vs economia PRECIFICADA",
     savingsByActionTitle: "Economia por Categoria de Ação",
+    cashVsCommitmentTitle: "Economia Validada, Cash vs Commitment",
+    cashVsCommitmentSubtitle: "Economia PRECIFICADA por serviço, dividida por como o dinheiro chega",
   },
   topResources: {
     title: "Top 10 Recursos por Economia Validada",
